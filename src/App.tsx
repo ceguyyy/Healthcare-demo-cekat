@@ -7,13 +7,12 @@ import { LandingPage } from './components/LandingPage';
 import { MockupGeneratorModal } from './components/MockupGeneratorModal';
 import { CategoryModal } from './components/CategoryModal';
 import { ImportJsonModal } from './components/ImportJsonModal';
-import { VideoExporterModal } from './components/VideoExporterModal';
 import { MoveScenarioModal } from './components/MoveScenarioModal';
 import { 
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, Video, FolderOutput
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput
 } from 'lucide-react';
 
 export function App() {
@@ -34,7 +33,6 @@ export function App() {
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isImportJsonOpen, setIsImportJsonOpen] = useState(false);
-  const [isVideoExporterOpen, setIsVideoExporterOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
 
@@ -259,45 +257,6 @@ export function App() {
     }, 2000 / playbackSpeed);
   };
 
-  // Real-Time Play Scenario for Video Recording
-  const handlePlayScenarioForVideo = async (onStepCaptured: (stepName: string) => Promise<void>): Promise<void> => {
-    setIsPlaying(false);
-    clearTimeout(timerRef.current);
-
-    const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-    // Step 0: Initial text
-    if (currentScenario.triggerType === 'OUTBOUND_SYSTEM') {
-      setChatHistory([{ id: 'init', role: 'rs-bot', text: currentScenario.initialText, time: nowStr }]);
-    } else {
-      setChatHistory([{ id: 'init', role: 'patient', text: currentScenario.initialText, time: nowStr }]);
-    }
-
-    await onStepCaptured('Awal Percakapan');
-
-    if (currentScenario.steps && currentScenario.steps.length > 0) {
-      for (let i = 0; i < currentScenario.steps.length; i++) {
-        const step = currentScenario.steps[i];
-
-        // 1. User reply
-        setChatHistory(prev => [
-          ...prev,
-          { id: `vid_user_${i}`, role: 'patient', text: step.userReply, time: nowStr }
-        ]);
-
-        await onStepCaptured(`Balasan User Step ${i + 1}`);
-
-        // 2. AI Bot response + card
-        setChatHistory(prev => [
-          ...prev,
-          { id: `vid_bot_${i}`, role: 'rs-bot', text: step.aiResponse, time: nowStr, card: step.card }
-        ]);
-
-        await onStepCaptured(`Jawaban AI Bot Step ${i + 1}`);
-      }
-    }
-  };
-
   const handleChipClick = (txt: string) => {
     clearTimeout(timerRef.current);
     if (txt.includes('Telepon') || txt.includes('Panggilan')) {
@@ -506,17 +465,6 @@ export function App() {
           >
             <RotateCcw size={13} />
             <span>Reset</span>
-          </button>
-
-          <div className="h-3 w-px bg-slate-200"></div>
-
-          <button
-            onClick={() => setIsVideoExporterOpen(true)}
-            className="flex items-center gap-1 text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
-            title="Export Simulasi ke Video (.webm)"
-          >
-            <Video size={13} />
-            <span>Export Video</span>
           </button>
 
           {currentScenario && (
@@ -855,14 +803,6 @@ export function App() {
           setCurrentScenario(updatedSc);
           window.location.hash = `#/category/${updatedSc.categoryId}/scenario/${updatedSc.id}`;
         }}
-      />
-
-      <VideoExporterModal
-        isOpen={isVideoExporterOpen}
-        onClose={() => setIsVideoExporterOpen(false)}
-        iphoneElement={iphoneRef.current}
-        scenario={currentScenario}
-        onPlayScenarioForVideo={handlePlayScenarioForVideo}
       />
 
       <CategoryModal
