@@ -7,44 +7,53 @@ interface ImportJsonModalProps {
   isOpen: boolean;
   onClose: () => void;
   activeCategory: Category | null;
-  onScenarioImported: (scenario: Scenario) => void;
+  onScenarioImported: (scenarios: Scenario[]) => void;
 }
 
-const scenarioJsonTemplate = {
-  name: "17. Contoh Skenario Import",
-  title: "17. Contoh Skenario Use Case via JSON Import",
-  tag: "Core Feature",
-  triggerType: "INBOUND_USER",
-  outboundPill: "🔔 OUTBOUND SYSTEM TRIGGER",
-  description: "Deskripsi alur percakapan yang dapat di-import langsung secara instan.",
-  initialText: "Halo, saya ingin mengajukan permohonan layanan ini.",
-  cekatComponents: ["AI Agent", "WA Flows", "API Tools"],
-  apiScopes: ["POST /api/v1/services/request"],
-  ruleNote: "Data diproses dan disimpan secara terintegrasi.",
-  stepsDetail: [
-    "Step 1 — Intake permintaan user via WhatsApp",
-    "Step 2 — Validasi identitas & persyaratan",
-    "Step 3 — Penerbitan E-Tiket konfirmasi transaksi"
-  ],
-  steps: [
-    {
-      userReply: "Konfirmasi Layanan",
-      aiResponse: "Permohonan Anda telah disetujui dan tercatat di sistem.",
-      chips: ["📍 Lihat Detail", "Menu Utama"],
-      enableCard: true,
-      card: {
-        title: "🎫 E-Tiket Struk Layanan",
-        sub: "Cekat AI Enterprise System",
-        status: "CONFIRMED & LOCKED",
-        items: [
-          { label: "Kode Transaksi", val: "#TRX-99801" },
-          { label: "Tanggal", val: "Hari Ini" },
-          { label: "Status", val: "SUCCESS" }
-        ]
+const scenarioJsonTemplate = [
+  {
+    name: "1. Cek Saldo & Mutasi",
+    title: "1. Pengecekan Saldo / Mutasi Rekening (Verifikasi PII Ketat)",
+    tag: "Security · PII",
+    triggerType: "INBOUND_USER",
+    outboundPill: "🔔 OUTBOUND SYSTEM TRIGGER",
+    description: "Cek saldo/mutasi dengan verifikasi OTP; AI tak pernah menampilkan angka sebelum tervalidasi backend.",
+    initialText: "Saya mau cek saldo tabungan saya.",
+    cekatComponents: ["AI Agent", "API Tools", "Automation", "WA Flows"],
+    apiScopes: ["POST /otp/send", "POST /otp/verify", "GET /account/balance"],
+    ruleNote: "POJK 22/2023 & UU PDP 27/2022 — saldo/PIN/OTP tak disimpan di Custom Fields; output wajib tersandi.",
+    stepsDetail: [
+      "Step 1 — Nasabah minta saldo/mutasi via WhatsApp",
+      "Step 2 — AI tahan angka; Automation kirim OTP ke nomor terdaftar",
+      "Step 3 — Backend bank memvalidasi OTP/DOB",
+      "Step 4 — Tampilkan hasil tersandi (rek ****1234)"
+    ],
+    steps: [
+      {
+        userReply: "Cek saldo tabungan",
+        aiResponse: "Demi keamanan, saya kirim OTP ke nomor terdaftar •••• 8231. Masukkan 6 digit OTP untuk melanjutkan.",
+        chips: ["Masukkan OTP ••••••"],
+        enableCard: false
+      },
+      {
+        userReply: "••••••",
+        aiResponse: "Verifikasi berhasil. Berikut ringkasan rekening Anda dalam format tersandi.",
+        chips: ["Lihat mutasi", "Menu Utama"],
+        enableCard: true,
+        card: {
+          title: "💳 Saldo Rekening",
+          sub: "Verified · Masked",
+          status: "TERVERIFIKASI",
+          items: [
+            { label: "Rekening", val: "•••• 1234" },
+            { label: "Saldo Aktif", val: "Rp 12.480.000" },
+            { label: "Pembaruan", val: "Real-time" }
+          ]
+        }
       }
-    }
-  ]
-};
+    ]
+  }
+];
 
 export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
   isOpen,
@@ -101,7 +110,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'cekat-scenario-template.json';
+    a.download = 'cekat-bulk-scenarios-template.json';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -114,35 +123,50 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
 
     try {
       const parsed = JSON.parse(jsonText);
+      const itemsToProcess = Array.isArray(parsed) ? parsed : [parsed];
 
-      // Validate required fields
-      if (!parsed.name || !parsed.title || !parsed.initialText) {
-        setParseError('JSON harus memiliki field: name, title, dan initialText!');
+      if (itemsToProcess.length === 0) {
+        setParseError('JSON Array kosong!');
         return;
       }
 
-      const categoryId = activeCategory ? activeCategory.id : (parsed.categoryId || 'healthcare');
+      // Validate all items
+      for (let i = 0; i < itemsToProcess.length; i++) {
+        const item = itemsToProcess[i];
+        if (!item.name || !item.title || !item.initialText) {
+          setParseError(`Elemen ke-${i + 1} harus memiliki field wajib: name, title, dan initialText!`);
+          return;
+        }
+      }
 
-      const scenarioToImport: Scenario = {
-        id: generateUUID(),
-        categoryId,
-        name: parsed.name,
-        title: parsed.title,
-        tag: parsed.tag || 'Core Feature',
-        saAuthor: parsed.saAuthor || 'SA Team Cekat',
-        triggerType: parsed.triggerType === 'OUTBOUND_SYSTEM' ? 'OUTBOUND_SYSTEM' : 'INBOUND_USER',
-        outboundPill: parsed.outboundPill,
-        description: parsed.description || '',
-        initialText: parsed.initialText,
-        cekatComponents: Array.isArray(parsed.cekatComponents) ? parsed.cekatComponents : ['AI Agent', 'API Tools'],
-        apiScopes: Array.isArray(parsed.apiScopes) ? parsed.apiScopes : ['GET /api/v1/status'],
-        ruleNote: parsed.ruleNote || 'Data dibaca real-time dari backend sistem.',
-        stepsDetail: Array.isArray(parsed.stepsDetail) ? parsed.stepsDetail : ['Step 1 — Process'],
-        steps: Array.isArray(parsed.steps) ? parsed.steps : []
-      };
+      const importedScenarios: Scenario[] = [];
 
-      await SupabaseService.saveScenario(scenarioToImport);
-      onScenarioImported(scenarioToImport);
+      for (const item of itemsToProcess) {
+        const categoryId = activeCategory ? activeCategory.id : (item.categoryId || 'healthcare');
+
+        const scenario: Scenario = {
+          id: generateUUID(),
+          categoryId,
+          name: item.name,
+          title: item.title,
+          tag: item.tag || 'Core Feature',
+          saAuthor: item.saAuthor || 'SA Team Cekat',
+          triggerType: item.triggerType === 'OUTBOUND_SYSTEM' ? 'OUTBOUND_SYSTEM' : 'INBOUND_USER',
+          outboundPill: item.outboundPill,
+          description: item.description || '',
+          initialText: item.initialText,
+          cekatComponents: Array.isArray(item.cekatComponents) ? item.cekatComponents : ['AI Agent', 'API Tools'],
+          apiScopes: Array.isArray(item.apiScopes) ? item.apiScopes : ['GET /api/v1/status'],
+          ruleNote: item.ruleNote || 'Data dibaca real-time dari backend sistem.',
+          stepsDetail: Array.isArray(item.stepsDetail) ? item.stepsDetail : ['Step 1 — Process'],
+          steps: Array.isArray(item.steps) ? item.steps : []
+        };
+
+        await SupabaseService.saveScenario(scenario);
+        importedScenarios.push(scenario);
+      }
+
+      onScenarioImported(importedScenarios);
       onClose();
     } catch (err: any) {
       setParseError(`JSON Syntax Error: ${err.message}`);
@@ -160,8 +184,8 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
               <FileJson size={18} />
             </div>
             <div>
-              <h3 className="font-extrabold text-base leading-tight">Import Scenario JSON</h3>
-              <p className="text-[11px] text-slate-400">Import skenario kustom dari file atau struktur JSON</p>
+              <h3 className="font-extrabold text-base leading-tight">Import & Bulk Upload Scenario JSON</h3>
+              <p className="text-[11px] text-slate-400">Import satu atau banyak (Bulk) skenario JSON sekaligus</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer">✕</button>
@@ -175,7 +199,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
             </div>
             <div className="text-center">
               <h4 className="font-bold text-slate-900 text-base">Otentikasi SA Team Required</h4>
-              <p className="text-xs text-slate-500 max-w-sm mt-1">Masukkan password otorisasi SA Team untuk melakukan Import JSON skenario.</p>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">Masukkan password otorisasi SA Team untuk melakukan Bulk Import JSON skenario.</p>
             </div>
 
             <div className="w-full max-w-xs space-y-2">
@@ -204,7 +228,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                  <FileJson size={15} className="text-blue-600" /> Template JSON Skenario
+                  <FileJson size={15} className="text-blue-600" /> Template JSON (Single & Bulk)
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -222,7 +246,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
                 </div>
               </div>
               <p className="text-[11.5px] text-slate-600">
-                Gunakan template JSON di bawah sebagai referensi struktur skenario. Anda dapat mengunduh atau menyalinnya.
+                Sistem mendukung import **Single Scenario Object** `{`...`}` maupun **Bulk Scenario Array** `[` `{`...`}`, `{`...`}` `]`.
               </p>
             </div>
 
@@ -231,7 +255,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
               <Upload size={24} className="text-blue-600" />
               <div>
                 <span className="font-bold text-slate-900">Upload File JSON Skenario</span>
-                <p className="text-[11px] text-slate-500">Pilih file .json dari komputer Anda</p>
+                <p className="text-[11px] text-slate-500">Pilih file .json single atau bulk array dari komputer Anda</p>
               </div>
               <input
                 type="file"
@@ -243,10 +267,10 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
 
             {/* Raw JSON Code Editor Textarea */}
             <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-slate-700">Atau Tempelkan (Paste) Kode JSON di Sini:</label>
+              <label className="block text-[11px] font-semibold text-slate-700">Atau Tempelkan (Paste) Kode JSON di Sini (Single Object / Bulk Array):</label>
               <textarea
-                rows={9}
-                placeholder="Paste JSON skenario di sini..."
+                rows={10}
+                placeholder="Paste JSON single object {...} atau bulk array [{...}, {...}] di sini..."
                 value={jsonText}
                 onChange={(e) => {
                   setJsonText(e.target.value);

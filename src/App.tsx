@@ -771,13 +771,17 @@ export function App() {
         isOpen={isImportJsonOpen}
         onClose={() => setIsImportJsonOpen(false)}
         activeCategory={selectedCategory}
-        onScenarioImported={(importedSc) => {
-          setAllScenarios(prev => [...prev, importedSc]);
-          const targetCat = categories.find(c => c.id === importedSc.categoryId) || selectedCategory;
-          if (targetCat) {
-            setSelectedCategory(targetCat);
+        onScenarioImported={(importedScs) => {
+          const scList = Array.isArray(importedScs) ? importedScs : [importedScs];
+          setAllScenarios(prev => [...prev, ...scList]);
+          if (scList.length > 0) {
+            const firstSc = scList[0];
+            const targetCat = categories.find(c => c.id === firstSc.categoryId) || selectedCategory;
+            if (targetCat) {
+              setSelectedCategory(targetCat);
+            }
+            handleSelectScenario(firstSc);
           }
-          handleSelectScenario(importedSc);
         }}
       />
 
