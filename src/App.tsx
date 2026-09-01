@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Scenario, Category, FlowData, generateUUID } from './types/scenario';
 import { initialWorkflows } from './data/scenarios';
 import { defaultCategories } from './data/categories';
@@ -96,43 +97,57 @@ export function App() {
     }
   };
 
-  // Load Categories & Scenarios from Supabase / localStorage
+  const queryClient = useQueryClient();
+
+  // 1. Fetch Remote Categories using TanStack Query (5-minute RAM Cache)
+  const { data: remoteCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => SupabaseService.fetchCategories(),
+    staleTime: 5 * 60 * 1000
+  });
+
+  // 2. Fetch Remote Scenarios using TanStack Query (5-minute RAM Cache)
+  const { data: remoteScenarios } = useQuery({
+    queryKey: ['scenarios'],
+    queryFn: () => SupabaseService.fetchScenarios(),
+    staleTime: 5 * 60 * 1000
+  });
+
+  // Synchronize remote categories into state
   useEffect(() => {
-    async function loadRemoteData() {
-      let finalCats = defaultCategories;
-      const remoteCats = await SupabaseService.fetchCategories();
-      if (remoteCats && remoteCats.length > 0) {
-        const customOnly = remoteCats.filter(rc => !defaultCategories.some(p => p.id === rc.id));
-        finalCats = [...defaultCategories, ...customOnly];
-        setCategories(finalCats);
-      }
-
-      let finalScenarios = initialWorkflows;
-      const remoteScenarios = await SupabaseService.fetchScenarios();
-      if (remoteScenarios && remoteScenarios.length > 0) {
-        const merged = [...initialWorkflows];
-        remoteScenarios.forEach(rs => {
-          const idx = merged.findIndex(m => m.id === rs.id);
-          if (idx >= 0) {
-            merged[idx] = rs;
-          } else {
-            merged.push(rs);
-          }
-        });
-        finalScenarios = merged;
-        setAllScenarios(finalScenarios);
-      }
-
-      syncFromUrlHash(finalCats, finalScenarios);
+    if (remoteCategories && remoteCategories.length > 0) {
+      const customOnly = remoteCategories.filter(rc => !defaultCategories.some(p => p.id === rc.id));
+      const finalCats = [...defaultCategories, ...customOnly];
+      setCategories(finalCats);
+      syncFromUrlHash(finalCats, allScenarios);
     }
-    loadRemoteData();
+  }, [remoteCategories]);
 
+  // Synchronize remote scenarios into state
+  useEffect(() => {
+    if (remoteScenarios && remoteScenarios.length > 0) {
+      const merged = [...initialWorkflows];
+      remoteScenarios.forEach(rs => {
+        const idx = merged.findIndex(m => m.id === rs.id);
+        if (idx >= 0) {
+          merged[idx] = rs;
+        } else {
+          merged.push(rs);
+        }
+      });
+      setAllScenarios(merged);
+      syncFromUrlHash(categories, merged);
+    }
+  }, [remoteScenarios]);
+
+  // URL Hash Navigation Listener
+  useEffect(() => {
     const handleHashChange = () => {
       syncFromUrlHash();
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  }, [categories, allScenarios]);
 
   const [scenarioSearchQuery, setScenarioSearchQuery] = useState('');
 
@@ -1266,11 +1281,13 @@ export function App() {
         categories={categories}
         scenarioToEdit={scenarioToEdit}
         onScenarioCreated={(newSc) => {
+          queryClient.invalidateQueries({ queryKey: ['scenarios'] });
           setAllScenarios(prev => [...prev, newSc]);
           const targetCat = categories.find(c => c.id === newSc.categoryId) || selectedCategory || categories[0];
           handleSelectScenario(newSc, targetCat);
         }}
         onScenarioUpdated={(updatedSc) => {
+          queryClient.invalidateQueries({ queryKey: ['scenarios'] });
           setAllScenarios(prev => {
             const idx = prev.findIndex(s => s.id === updatedSc.id);
             if (idx >= 0) {
@@ -1290,6 +1307,7 @@ export function App() {
         onClose={() => setIsImportJsonOpen(false)}
         activeCategory={selectedCategory}
         onScenarioImported={(importedScs) => {
+          queryClient.invalidateQueries({ queryKey: ['scenarios'] });
           const scList = Array.isArray(importedScs) ? importedScs : [importedScs];
           setAllScenarios(prev => {
             const merged = [...prev];
