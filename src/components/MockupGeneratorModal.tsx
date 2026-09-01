@@ -38,7 +38,9 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   const [stepsDetailStr, setStepsDetailStr] = useState('Step 1 — Intake\nStep 2 — Processing\nStep 3 — Confirmation');
 
   useEffect(() => {
-    setTargetCategoryId(activeCategoryId);
+    if (activeCategoryId) {
+      setTargetCategoryId(activeCategoryId);
+    }
   }, [activeCategoryId, isOpen]);
 
   // Step Sequence Builder State
@@ -161,9 +163,11 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       return s;
     });
 
+    const finalCatId = targetCategoryId || activeCategoryId || 'healthcare';
+
     const newScenario: Scenario = {
       id: `custom_${Date.now()}`,
-      categoryId: targetCategoryId,
+      categoryId: finalCatId,
       name,
       title,
       tag,

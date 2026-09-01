@@ -112,8 +112,20 @@ export function App() {
 
   // Filter scenarios by active category
   const activeCategoryScenarios = selectedCategory
-    ? allScenarios.filter(s => s.categoryId === selectedCategory.id || (!s.categoryId && selectedCategory.id === 'healthcare'))
+    ? allScenarios.filter(s => {
+        const sCatId = (s.categoryId || 'healthcare').toLowerCase().trim();
+        const curCatId = selectedCategory.id.toLowerCase().trim();
+        return sCatId === curCatId;
+      })
     : [];
+
+  if (selectedCategory && currentScenario) {
+    const isCurrentActive = activeCategoryScenarios.some(s => s.id === currentScenario.id);
+    if (!isCurrentActive) {
+      currentScenario.categoryId = selectedCategory.id;
+      activeCategoryScenarios.push(currentScenario);
+    }
+  }
 
   // Update URL Hash when selecting Category
   const handleSelectCategory = (cat: Category) => {
