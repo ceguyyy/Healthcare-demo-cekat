@@ -2,52 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  }
+*, *::before, *::after { box-sizing: border-box; }
+body { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; background: #ffffff; color: #0f172a; }
+
+/* Scrollbars */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(241, 245, 249, 0.8); }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.8); border-radius: 99px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 1); }
+
+/* iPhone Frame */
+.iphone-case {
+  width: 365px;
+  height: 690px;
+  background: #1c1c1e;
+  border-radius: 46px;
+  padding: 12px;
+  position: relative;
+  box-shadow: 0 0 0 1.5px #e2e8f0, 0 20px 40px rgba(0,0,0,0.15);
+  flex-shrink: 0;
+}
+.iphone-case::before {
+  content: ''; position: absolute; left: -3px; top: 100px; width: 3px; height: 32px; background: #3a3a3c; border-radius: 2px 0 0 2px;
+  box-shadow: 0 44px 0 #3a3a3c, 0 88px 0 #3a3a3c;
+}
+.iphone-case::after {
+  content: ''; position: absolute; right: -3px; top: 140px; width: 3px; height: 58px; background: #3a3a3c; border-radius: 0 2px 2px 0;
 }
 
-/* Custom Scrollbars */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.4);
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
-  border-radius: 9999px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 189, 248, 0.5);
+.iphone-screen {
+  background: #ECE5DD;
+  border-radius: 34px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
 }
 
-/* Widget Internal Scrollbar */
-.widget-scrollbar::-webkit-scrollbar {
-  width: 4px;
+.dynamic-island {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  width: 92px; height: 26px; background: #1c1c1e; border-radius: 20px; z-index: 30;
+  display: flex; align-items: center; justify-content: flex-end; padding-right: 10px;
 }
-.widget-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.widget-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-.dark .widget-scrollbar::-webkit-scrollbar-thumb {
-  background: #334155;
-}
+.camera-lens { width: 10px; height: 10px; border-radius: 50%; background: #0c0c0e; border: 1px solid #2c2c2e; }
 
-/* Pulse Typing Dots Animation */
+/* Keyframe Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
 @keyframes pulseDot {
   0%, 100% { opacity: 0.3; transform: scale(0.8); }
   50% { opacity: 1; transform: scale(1.15); }
@@ -56,27 +65,9 @@
 .dot-2 { animation: pulseDot 1.4s infinite 0.2s; }
 .dot-3 { animation: pulseDot 1.4s infinite 0.4s; }
 
-/* Subtle Glow Effects */
-.glow-blue {
-  box-shadow: 0 0 25px -5px rgba(0, 149, 255, 0.3);
+@keyframes rippleCall {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 0.4; }
+  100% { transform: scale(0.95); opacity: 0.8; }
 }
-.glow-emerald {
-  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
-}
-.glow-danger {
-  box-shadow: 0 0 25px -5px rgba(239, 68, 68, 0.3);
-}
-
-/* Glassmorphism Classes */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-card {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
+.call-ripple { animation: rippleCall 2s infinite ease-in-out; }
