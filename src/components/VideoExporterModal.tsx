@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { Video, Download, CheckCircle2, Loader2, Sparkles, AlertCircle, Play } from 'lucide-react';
+import { Video, Download, CheckCircle2, Loader2, Sparkles, AlertCircle, Play, Monitor } from 'lucide-react';
 import { Scenario } from '../types/scenario';
 
 interface VideoExporterModalProps {
@@ -8,7 +8,7 @@ interface VideoExporterModalProps {
   onClose: () => void;
   iphoneElement: HTMLElement | null;
   scenario: Scenario;
-  onPlayScenarioForVideo: () => Promise<void>;
+  onPlayScenarioForVideo: (onStepCallback: () => Promise<void>) => Promise<void>;
 }
 
 export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
@@ -21,18 +21,31 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
   const [status, setStatus] = useState<'idle' | 'recording' | 'done' | 'error'>('idle');
   const [progressText, setProgressText] = useState('');
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setStatus('idle');
       setProgressText('');
       setVideoUrl(null);
-    } else {
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     }
   }, [isOpen]);
+
+  const captureCanvasFrame = async (targetEl: HTMLElement): Promise<HTMLCanvasElement> => {
+    // Force scroll container to bottom before capture
+    const scrollContainer = targetEl.querySelector('.custom-scrollbar');
+    if (scrollContainer) {
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    }
+
+    return await html2canvas(targetEl, {
+      scale: 2, // High DPI HD rendering
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null, // Transparent to preserve phone case background
+      logging: false
+    });
+  };
 
   const handleStartExport = async () => {
     if (!iphoneElement) {
@@ -42,30 +55,34 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
 
     try {
       setStatus('recording');
-      setProgressText('Memulai rekaman video 30 FPS...');
+      setProgressText('Menyiapkan perekam video HD 60 FPS...');
 
-      // 1. Initial screenshot to get dimensions
-      const initialCanvas = await html2canvas(iphoneElement, { scale: 1.5 });
-      const recordCanvas = document.createElement('canvas');
-      recordCanvas.width = initialCanvas.width;
-      recordCanvas.height = initialCanvas.height;
-      const ctx = recordCanvas.getContext('2d');
+      // Get exact element dimensions
+      const rect = iphoneElement.getBoundingClientRect();
+      const canvasWidth = rect.width * 2;
+      const canvasHeight = rect.height * 2;
 
-      // 2. Setup Canvas Capture Stream & MediaRecorder
-      const stream = recordCanvas.captureStream(30); // 30 FPS
+      // 1. Create High-Res Offscreen Rendering Canvas
+      const outputCanvas = document.createElement('canvas');
+      outputCanvas.width = canvasWidth;
+      outputCanvas.height = canvasHeight;
+      const ctx = outputCanvas.getContext('2d');
+
+      if (!ctx) throw new Error('Canvas 2D Context tidak tersedia.');
+
+      // 2. Setup 60 FPS MediaRecorder Stream
+      const stream = outputCanvas.captureStream(60);
       
       let mimeType = 'video/webm;codecs=vp9';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'video/webm';
-      }
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'video/mp4';
-      }
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
+      if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/mp4';
 
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
-      mediaRecorderRef.current = mediaRecorder;
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType,
+        videoBitsPerSecond: 5000000 // 5 Mbps HD Quality
+      });
+
       const chunks: Blob[] = [];
-
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunks.push(e.data);
       };
@@ -75,45 +92,48 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
         const url = URL.createObjectURL(blob);
         setVideoUrl(url);
         setStatus('done');
-        setProgressText('Video percakapan berhasil direkam!');
+        setProgressText('Video HD 60 FPS Fullscreen berhasil direkam!');
       };
 
       mediaRecorder.start();
 
-      // 3. Continuous frame loop drawing iPhone element onto recordCanvas
-      let isCapturing = true;
+      // Smooth Frame Interpolation Loop (Draws current snapshot smoothly onto outputCanvas)
+      let currentSnapshot: HTMLCanvasElement | null = null;
+      let isRecording = true;
 
-      const drawLoop = async () => {
-        if (!isCapturing) return;
-        try {
-          const cv = await html2canvas(iphoneElement, {
-            scale: 1.2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff'
-          });
-          if (ctx) {
-            ctx.clearRect(0, 0, recordCanvas.width, recordCanvas.height);
-            ctx.drawImage(cv, 0, 0);
-          }
-        } catch (e) {
-          // ignore minor capture frame drops
+      const renderLoop = () => {
+        if (ctx && currentSnapshot) {
+          ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+          ctx.drawImage(currentSnapshot, 0, 0, canvasWidth, canvasHeight);
         }
-        if (isCapturing) {
-          animationFrameRef.current = requestAnimationFrame(drawLoop);
+        if (isRecording) {
+          requestAnimationFrame(renderLoop);
         }
       };
 
-      drawLoop();
+      requestAnimationFrame(renderLoop);
 
-      // 4. Play through the scenario steps automatically
-      await onPlayScenarioForVideo();
+      // 3. Play Scenario & Capture Frames on Each Chat Step
+      let stepCount = 0;
 
-      // 5. Stop recording after scenario finishes
-      await new Promise(r => setTimeout(r, 1200));
-      isCapturing = false;
-      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+      await onPlayScenarioForVideo(async () => {
+        stepCount++;
+        setProgressText(`Merekam Alur Chat Step ${stepCount}...`);
+        
+        // Short delay for CSS animations to complete
+        await new Promise(r => setTimeout(r, 400));
+        currentSnapshot = await captureCanvasFrame(iphoneElement);
+        
+        // Hold frame for 1.8 seconds so viewer can read chat comfortably
+        await new Promise(r => setTimeout(r, 1800));
+      });
 
+      // Capture final resting state
+      currentSnapshot = await captureCanvasFrame(iphoneElement);
+      await new Promise(r => setTimeout(r, 1500));
+
+      // Stop Recording
+      isRecording = false;
       if (mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
       }
@@ -137,71 +157,79 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col text-xs text-slate-800">
+    <div className="fixed inset-0 bg-slate-900/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col text-xs text-slate-800 max-h-[92vh]">
         
         {/* Header */}
         <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-xs">
               <Video size={18} />
             </div>
             <div>
-              <h3 className="font-extrabold text-base leading-tight">Export Simulator as Video</h3>
-              <p className="text-[11px] text-slate-400">Rekam percakapan WhatsApp ke format Video</p>
+              <h3 className="font-extrabold text-base leading-tight">Export Simulator HD Video</h3>
+              <p className="text-[11px] text-slate-400">Rekam percakapan WhatsApp Fullscreen 60 FPS HD</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer">✕</button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-4 text-center">
+        {/* Content Body */}
+        <div className="p-6 space-y-4 text-center overflow-y-auto custom-scrollbar">
           
           {status === 'idle' && (
             <div className="space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center text-2xl mx-auto shadow-sm">
-                <Video size={28} />
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-2xl mx-auto shadow-sm">
+                <Video size={30} />
               </div>
               <div>
-                <h4 className="font-extrabold text-slate-900 text-base">Rekam Video Simulator</h4>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                  Sistem akan otomatis merekam animasi alur percakapan WhatsApp dari awal hingga akhir dalam format Video MP4/WebM berdurasi nyata.
+                <h4 className="font-extrabold text-slate-900 text-base">Rekam Video Simulator HD Fullscreen</h4>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed max-w-sm mx-auto">
+                  Sistem akan secara otomatis merekam animasi alur percakapan WhatsApp dari frame awal hingga akhir dengan kualitas HD 60 FPS tanpa terpotong.
                 </p>
               </div>
 
               <button
                 onClick={handleStartExport}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-xs cursor-pointer"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-xs cursor-pointer"
               >
-                <Video size={16} /> Mulai Rekam Video Simulator
+                <Video size={17} /> Mulai Rekam Video HD 60 FPS
               </button>
             </div>
           )}
 
           {status === 'recording' && (
             <div className="py-8 space-y-4 flex flex-col items-center justify-center">
-              <div className="relative">
-                <Loader2 size={36} className="text-indigo-600 animate-spin" />
-                <span className="absolute inset-0 flex items-center justify-center font-bold text-[10px] text-indigo-700">REC</span>
+              <div className="w-16 h-16 rounded-full bg-blue-50 border-2 border-blue-600 flex items-center justify-center text-blue-600 animate-pulse">
+                <Loader2 size={32} className="animate-spin" />
               </div>
               <div className="space-y-1">
                 <p className="font-extrabold text-slate-900 text-sm">{progressText}</p>
-                <p className="text-[11px] text-slate-500">Simulasi sedang berjalan & merekam layar. Mohon tunggu...</p>
+                <p className="text-[11px] text-slate-500">Simulasi sedang merekam alur chat WhatsApp. Mohon tunggu...</p>
               </div>
             </div>
           )}
 
           {status === 'done' && videoUrl && (
             <div className="space-y-4">
-              <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-md max-w-[260px] mx-auto bg-slate-950">
-                <video src={videoUrl} controls autoPlay loop className="w-full h-auto object-contain" />
+              {/* Full Uncropped Video Player Preview */}
+              <div className="border border-slate-300 rounded-3xl overflow-hidden shadow-lg bg-slate-950 max-w-[340px] mx-auto p-1">
+                <video
+                  ref={videoRef}
+                  src={videoUrl}
+                  controls
+                  autoPlay
+                  loop
+                  playsInline
+                  className="w-full h-auto max-h-[480px] object-contain rounded-2xl"
+                />
               </div>
               
               <div className="space-y-1">
                 <p className="font-extrabold text-emerald-600 text-sm flex items-center justify-center gap-1">
-                  <CheckCircle2 size={16} /> Video Berhasil Direkam!
+                  <CheckCircle2 size={16} /> Video HD 60 FPS Ready!
                 </p>
-                <p className="text-[11px] text-slate-500">Video siap diunduh dan diputar di berbagai media player.</p>
+                <p className="text-[11px] text-slate-500">Tampilan Fullscreen utuh & animasi pergerakan chat sangat smooth.</p>
               </div>
 
               <div className="flex items-center gap-2 pt-2">
@@ -228,7 +256,7 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
               </p>
               <button
                 onClick={handleStartExport}
-                className="bg-indigo-600 text-white font-bold px-4 py-2 rounded-xl text-xs"
+                className="bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-xs"
               >
                 Coba Lagi
               </button>

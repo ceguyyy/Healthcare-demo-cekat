@@ -247,35 +247,38 @@ export function App() {
   };
 
   // Play scenario step-by-step for Video recording
-  const handlePlayScenarioForVideo = async (): Promise<void> => {
+  const handlePlayScenarioForVideo = async (onStepCallback: () => Promise<void>): Promise<void> => {
     setIsPlaying(false);
     clearTimeout(timerRef.current);
 
     const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
+    // Step 0: Initial message
     if (currentScenario.triggerType === 'OUTBOUND_SYSTEM') {
       setChatHistory([{ id: 'init', role: 'rs-bot', text: currentScenario.initialText, time: nowStr }]);
     } else {
       setChatHistory([{ id: 'init', role: 'patient', text: currentScenario.initialText, time: nowStr }]);
     }
 
-    await new Promise(r => setTimeout(r, 1200));
+    await onStepCallback();
 
     if (currentScenario.steps && currentScenario.steps.length > 0) {
       for (let i = 0; i < currentScenario.steps.length; i++) {
         const step = currentScenario.steps[i];
 
+        // 1. User reply
         setChatHistory(prev => [
           ...prev,
           { id: `vid_user_${i}`, role: 'patient', text: step.userReply, time: nowStr }
         ]);
-        await new Promise(r => setTimeout(r, 1400));
+        await onStepCallback();
 
+        // 2. AI Bot Response + Card
         setChatHistory(prev => [
           ...prev,
           { id: `vid_bot_${i}`, role: 'rs-bot', text: step.aiResponse, time: nowStr, card: step.card }
         ]);
-        await new Promise(r => setTimeout(r, 2000));
+        await onStepCallback();
       }
     }
   };
