@@ -12,12 +12,38 @@ export interface CardData {
   status: string;
 }
 
+export interface FlowInputField {
+  id: string;
+  label: string;
+  type: 'text' | 'select' | 'date' | 'radio' | 'checkbox';
+  placeholder?: string;
+  options?: string[];
+  defaultValue?: string;
+}
+
+export interface FlowData {
+  title: string;
+  description?: string;
+  buttonText?: string;
+  fields: FlowInputField[];
+  submitResponseText?: string;
+}
+
 export interface Step {
   userReply: string;
   aiResponse: string;
   chips?: string[];
   enableCard?: boolean;
   card?: CardData;
+  enableFlow?: boolean;
+  flow?: FlowData;
+}
+
+export interface CustomBranding {
+  botName?: string;
+  botAvatarUrl?: string;
+  subTitle?: string;
+  headerColor?: string;
 }
 
 export interface Scenario {
@@ -37,6 +63,7 @@ export interface Scenario {
   initialText: string;
   hideInitialMessage?: boolean;
   startFromStepIdx?: number;
+  customBranding?: CustomBranding;
   steps: Step[];
 }
 
@@ -53,5 +80,9 @@ export const generateUUID = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  return 'uuid_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 };

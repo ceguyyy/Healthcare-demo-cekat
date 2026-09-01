@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Scenario, Category } from './types/scenario';
+import { Scenario, Category, FlowData, generateUUID } from './types/scenario';
 import { initialWorkflows } from './data/scenarios';
 import { defaultCategories } from './data/categories';
 import { SupabaseService } from './services/supabase';
@@ -12,7 +12,7 @@ import {
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp, Copy, FileText, X
 } from 'lucide-react';
 
 export function App() {
@@ -25,7 +25,7 @@ export function App() {
   const [isPlaying, setIsPlaying] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [chatHistory, setChatHistory] = useState<Array<{ id: string; role: 'rs-bot' | 'patient'; text: string; time: string; card?: any }>>([]);
+  const [chatHistory, setChatHistory] = useState<Array<{ id: string; role: 'rs-bot' | 'patient'; text: string; time: string; card?: any; flow?: FlowData; stepIdx?: number }>>([]);
   const [userInput, setUserInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
@@ -35,6 +35,10 @@ export function App() {
   // Jump Step & Hide Welcome Message State
   const [hideInitialMsgState, setHideInitialMsgState] = useState<boolean>(false);
   const [startFromStepIdx, setStartFromStepIdx] = useState<number>(0);
+
+  // WhatsApp Flow Form Overlay State
+  const [activeFlowStep, setActiveFlowStep] = useState<{ stepIdx: number; flow: FlowData } | null>(null);
+  const [flowFormValues, setFlowFormValues] = useState<Record<string, any>>({});
 
   // Modals State
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
@@ -154,6 +158,7 @@ export function App() {
     if (currentScenario) {
       setHideInitialMsgState(Boolean(currentScenario.hideInitialMessage));
       setStartFromStepIdx(0);
+      setActiveFlowStep(null);
     }
   }, [currentScenario]);
 
@@ -195,10 +200,11 @@ export function App() {
   const handleJumpToStep = (jumpStepIdx: number, hideInitial = hideInitialMsgState, scenario = currentScenario) => {
     clearTimeout(timerRef.current);
     setIsTyping(false);
+    setActiveFlowStep(null);
     if (!scenario) return;
 
     const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    const history: Array<{ id: string; role: 'rs-bot' | 'patient'; text: string; time: string; card?: any }> = [];
+    const history: Array<{ id: string; role: 'rs-bot' | 'patient'; text: string; time: string; card?: any; flow?: FlowData; stepIdx?: number }> = [];
 
     // 1. Initial Welcome Message (if not hidden)
     if (!hideInitial && scenario.initialText) {
@@ -215,7 +221,7 @@ export function App() {
       for (let i = 0; i < limit; i++) {
         const s = scenario.steps[i];
         history.push({ id: `hist_user_${i}`, role: 'patient', text: s.userReply, time: nowStr });
-        history.push({ id: `hist_bot_${i}`, role: 'rs-bot', text: s.aiResponse, time: nowStr, card: s.card });
+        history.push({ id: `hist_bot_${i}`, role: 'rs-bot', text: s.aiResponse, time: nowStr, card: s.card, flow: s.flow, stepIdx: i });
       }
     }
 
@@ -231,7 +237,8 @@ export function App() {
   };
 
   const restartScenario = (scenario = currentScenario) => {
-    handleJumpToStep(startFromStepIdx, hideInitialMsgState, scenario);
+    const startIdx = scenario.startFromStepIdx || 0;
+    handleJumpToStep(startIdx, hideInitialMsgState, scenario);
   };
 
   useEffect(() => {
@@ -239,6 +246,27 @@ export function App() {
       restartScenario(currentScenario);
     }
   }, [currentScenario]);
+
+  // 1-Click Duplicate Scenario
+  const handleDuplicateScenario = async () => {
+    if (!currentScenario) return;
+
+    const clonedScenario: Scenario = {
+      ...currentScenario,
+      id: generateUUID(),
+      name: `${currentScenario.name} (Copy)`,
+      title: `${currentScenario.title} (Copy)`,
+      steps: currentScenario.steps.map(s => ({
+        ...s,
+        card: s.card ? { ...s.card, items: s.card.items ? [...s.card.items] : [] } : undefined,
+        flow: s.flow ? { ...s.flow, fields: s.flow.fields ? [...s.flow.fields] : [] } : undefined
+      }))
+    };
+
+    await SupabaseService.saveScenario(clonedScenario);
+    setAllScenarios(prev => [...prev, clonedScenario]);
+    handleSelectScenario(clonedScenario);
+  };
 
   const handleDeleteScenario = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus skenario ini?')) {
@@ -268,7 +296,15 @@ export function App() {
 
       setChatHistory(prev => [
         ...prev,
-        { id: `bot_${Date.now()}`, role: 'rs-bot', text: botResponse, time: nowStr, card: step?.card }
+        { 
+          id: `bot_${Date.now()}`, 
+          role: 'rs-bot', 
+          text: botResponse, 
+          time: nowStr, 
+          card: step?.card,
+          flow: step?.enableFlow ? step?.flow : undefined,
+          stepIdx
+        }
       ]);
 
       const nextIdx = stepIdx + 1;
@@ -301,6 +337,31 @@ export function App() {
       handleChipClick(val);
       setUserInput('');
     }
+  };
+
+  // WhatsApp Flow Form Handlers
+  const openFlowForm = (stepIdx: number, flow: FlowData) => {
+    setActiveFlowStep({ stepIdx, flow });
+    const initialVals: Record<string, any> = {};
+    if (flow.fields) {
+      flow.fields.forEach(f => {
+        initialVals[f.label] = f.defaultValue || (f.options && f.options.length > 0 ? f.options[0] : '');
+      });
+    }
+    setFlowFormValues(initialVals);
+  };
+
+  const handleFlowSubmit = () => {
+    if (!activeFlowStep) return;
+    const { stepIdx, flow } = activeFlowStep;
+
+    const summaryStr = Object.entries(flowFormValues)
+      .map(([k, v]) => `• ${k}: ${v}`)
+      .join('\n');
+    const userMsg = `📝 Data Form WhatsApp Flow Terkirim:\n${summaryStr}`;
+
+    setActiveFlowStep(null);
+    runStep(stepIdx, userMsg);
   };
 
   // Call Handlers
@@ -339,6 +400,13 @@ export function App() {
       clearTimeout(timerRef.current);
     }
   };
+
+  // Dynamic Branding Props
+  const branding = currentScenario?.customBranding;
+  const botName = branding?.botName || 'Cekat AI Assistant';
+  const botAvatar = branding?.botAvatarUrl || '/cekat-logo.png';
+  const botSubTitle = branding?.subTitle || 'Online';
+  const headerBgColor = branding?.headerColor || '#075E54';
 
   // Render Landing Page if no Category selected
   if (!selectedCategory) {
@@ -505,11 +573,23 @@ export function App() {
                     setIsGeneratorOpen(true);
                   }}
                   className="flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
-                  title="Edit Skenario, Pindah Kategori, & Jump Step"
+                  title="Edit Skenario, WA Flow, Branding, & Jump Step"
                 >
                   <Edit3 size={13} />
                   <span>Edit Skenario</span>
                 </button>
+                <div className="h-3 w-px bg-slate-200"></div>
+                
+                {/* 1-Click Duplicate Button */}
+                <button
+                  onClick={handleDuplicateScenario}
+                  className="flex items-center gap-1 text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
+                  title="Duplikat 1-Click Skenario Ini"
+                >
+                  <Copy size={13} />
+                  <span>Duplikat</span>
+                </button>
+
                 <div className="h-3 w-px bg-slate-200"></div>
                 <button
                   onClick={() => handleDeleteScenario(currentScenario.id)}
@@ -551,15 +631,18 @@ export function App() {
             
             {/* iPhone Frame Canvas */}
             <div ref={iphoneRef} className="iphone-case">
-              <div className="iphone-screen">
+              <div className="iphone-screen relative">
                 
                 {/* Dynamic Island Notch */}
                 <div className="dynamic-island">
                   <div className="camera-lens"></div>
                 </div>
 
-                {/* Status Bar */}
-                <div className="bg-[#075E54] pt-11 pb-1 px-5 flex items-center justify-between text-white text-[11px] font-bold shrink-0">
+                {/* Status Bar with Dynamic Header Color */}
+                <div 
+                  className="pt-11 pb-1 px-5 flex items-center justify-between text-white text-[11px] font-bold shrink-0 transition-colors duration-300"
+                  style={{ backgroundColor: headerBgColor }}
+                >
                   <span>09:41</span>
                   <div className="flex items-center gap-1.5 text-xs">
                     <Wifi size={12} />
@@ -567,14 +650,17 @@ export function App() {
                   </div>
                 </div>
 
-                {/* WhatsApp Chat Header with Official Cekat AI Avatar */}
-                <div className="bg-[#075E54] px-4 py-2.5 flex items-center gap-3 text-white shrink-0">
+                {/* WhatsApp Chat Header with Dynamic Custom Branding */}
+                <div 
+                  className="px-4 py-2.5 flex items-center gap-3 text-white shrink-0 transition-colors duration-300"
+                  style={{ backgroundColor: headerBgColor }}
+                >
                   <ChevronLeft size={16} className="opacity-80 cursor-pointer" />
-                  <img src="/cekat-logo.png" alt="Cekat AI Avatar" className="w-9 h-9 rounded-full object-cover shrink-0 border border-emerald-400 shadow-xs bg-white p-0.5" />
+                  <img src={botAvatar} alt="Bot Avatar" className="w-9 h-9 rounded-full object-cover shrink-0 border border-white/40 shadow-xs bg-white p-0.5" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-xs leading-tight truncate">Cekat AI Assistant</div>
-                    <div className="text-[10px] text-emerald-300 font-semibold flex items-center gap-1 leading-tight">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online
+                    <div className="font-bold text-xs leading-tight truncate">{botName}</div>
+                    <div className="text-[10px] text-white/90 font-semibold flex items-center gap-1 leading-tight">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> {botSubTitle}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 text-sm opacity-90">
@@ -614,6 +700,7 @@ export function App() {
                         {msg.text}
                       </div>
 
+                      {/* E-Ticket / Card Renderer */}
                       {msg.card && (
                         <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200 w-full max-w-[90%] text-xs mt-1.5">
                           <div className="p-3">
@@ -631,6 +718,24 @@ export function App() {
                           <div className="bg-[#075E54] text-white text-[10px] font-bold py-1.5 px-3 text-center tracking-wide uppercase">
                             {msg.card.status}
                           </div>
+                        </div>
+                      )}
+
+                      {/* WhatsApp Flow Form Card Renderer */}
+                      {msg.flow && (
+                        <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-purple-200 w-full max-w-[90%] text-xs mt-1.5 p-3.5 space-y-2">
+                          <div className="flex items-center gap-1.5 text-purple-700 font-extrabold text-xs">
+                            <FileText size={15} /> {msg.flow.title}
+                          </div>
+                          {msg.flow.description && (
+                            <p className="text-[10.5px] text-slate-600 leading-snug">{msg.flow.description}</p>
+                          )}
+                          <button
+                            onClick={() => openFlowForm(msg.stepIdx !== undefined ? msg.stepIdx : 0, msg.flow!)}
+                            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2 rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                          >
+                            <FileText size={13} /> {msg.flow.buttonText || '📋 Buka Form Registrasi'}
+                          </button>
                         </div>
                       )}
 
@@ -670,6 +775,96 @@ export function App() {
                     <Send size={12} />
                   </button>
                 </div>
+
+                {/* Interactive WhatsApp Flow Overlay Form Screen */}
+                {activeFlowStep && (
+                  <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-xs z-50 flex flex-col justify-end animate-fade-up">
+                    <div className="bg-white rounded-t-3xl p-5 space-y-4 max-h-[80%] overflow-y-auto shadow-2xl border-t border-slate-200">
+                      
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <div>
+                          <h4 className="font-extrabold text-sm text-purple-900 flex items-center gap-1.5">
+                            <FileText size={16} className="text-purple-600" /> {activeFlowStep.flow.title}
+                          </h4>
+                          <p className="text-[10.5px] text-slate-500">{activeFlowStep.flow.description || 'WhatsApp Flow Form Simulator'}</p>
+                        </div>
+                        <button
+                          onClick={() => setActiveFlowStep(null)}
+                          className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
+                        >
+                          <X size={15} />
+                        </button>
+                      </div>
+
+                      {/* Render Form Fields */}
+                      <div className="space-y-3">
+                        {activeFlowStep.flow.fields && activeFlowStep.flow.fields.map((f) => (
+                          <div key={f.id} className="space-y-1">
+                            <label className="block text-[11px] font-bold text-slate-700">{f.label}</label>
+                            
+                            {f.type === 'text' && (
+                              <input
+                                type="text"
+                                placeholder={f.placeholder || 'Isi data...'}
+                                value={flowFormValues[f.label] || ''}
+                                onChange={(e) => setFlowFormValues(prev => ({ ...prev, [f.label]: e.target.value }))}
+                                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-medium focus:outline-none focus:border-purple-600"
+                              />
+                            )}
+
+                            {f.type === 'date' && (
+                              <input
+                                type="date"
+                                value={flowFormValues[f.label] || ''}
+                                onChange={(e) => setFlowFormValues(prev => ({ ...prev, [f.label]: e.target.value }))}
+                                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-medium focus:outline-none focus:border-purple-600"
+                              />
+                            )}
+
+                            {f.type === 'select' && (
+                              <select
+                                value={flowFormValues[f.label] || ''}
+                                onChange={(e) => setFlowFormValues(prev => ({ ...prev, [f.label]: e.target.value }))}
+                                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-bold text-purple-900 focus:outline-none focus:border-purple-600"
+                              >
+                                {f.options && f.options.map((opt, i) => (
+                                  <option key={i} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            )}
+
+                            {(f.type === 'radio' || f.type === 'checkbox') && (
+                              <div className="flex items-center gap-3 flex-wrap pt-0.5">
+                                {f.options && f.options.map((opt, i) => (
+                                  <label key={i} className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold cursor-pointer">
+                                    <input
+                                      type={f.type === 'radio' ? 'radio' : 'checkbox'}
+                                      name={f.id}
+                                      value={opt}
+                                      checked={flowFormValues[f.label] === opt}
+                                      onChange={(e) => setFlowFormValues(prev => ({ ...prev, [f.label]: e.target.value }))}
+                                      className="text-purple-600"
+                                    />
+                                    <span>{opt}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleFlowSubmit}
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs py-2.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer pt-2"
+                      >
+                        <CheckCircle2 size={16} /> Submit Form WA Flow
+                      </button>
+
+                    </div>
+                  </div>
+                )}
 
                 {/* Dummy WA Call Overlay Modal */}
                 {isCallActive && (

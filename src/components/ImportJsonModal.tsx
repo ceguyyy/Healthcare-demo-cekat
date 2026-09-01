@@ -203,11 +203,27 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
           outboundPill: item.outboundPill,
           description: item.description || '',
           initialText: item.initialText,
+          hideInitialMessage: Boolean(item.hideInitialMessage),
+          startFromStepIdx: item.startFromStepIdx || 0,
+          customBranding: item.customBranding ? {
+            botName: item.customBranding.botName,
+            botAvatarUrl: item.customBranding.botAvatarUrl,
+            subTitle: item.customBranding.subTitle,
+            headerColor: item.customBranding.headerColor
+          } : undefined,
           cekatComponents: Array.isArray(item.cekatComponents) ? item.cekatComponents : ['AI Agent', 'API Tools'],
           apiScopes: Array.isArray(item.apiScopes) ? item.apiScopes : ['GET /api/v1/status'],
           ruleNote: item.ruleNote || 'Data dibaca real-time dari backend sistem.',
           stepsDetail: Array.isArray(item.stepsDetail) ? item.stepsDetail : ['Step 1 — Process'],
-          steps: Array.isArray(item.steps) ? item.steps : []
+          steps: Array.isArray(item.steps) ? item.steps.map((st: any) => ({
+            userReply: st.userReply || '',
+            aiResponse: st.aiResponse || '',
+            chips: Array.isArray(st.chips) ? st.chips : [],
+            enableCard: Boolean(st.enableCard),
+            card: st.card,
+            enableFlow: Boolean(st.enableFlow),
+            flow: st.flow
+          })) : []
         };
 
         await SupabaseService.saveScenario(scenario);

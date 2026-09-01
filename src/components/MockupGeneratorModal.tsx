@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Scenario, Step, TriggerType, CardData, CardItem, Category, generateUUID } from '../types/scenario';
+import { Scenario, Step, TriggerType, CardData, CardItem, Category, FlowData, FlowInputField, CustomBranding, generateUUID } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
-import { Lock, Plus, Trash2, CheckCircle2, ShieldCheck, Database, Layers, ArrowRight, CreditCard, Edit3 } from 'lucide-react';
+import { Lock, Plus, Trash2, CheckCircle2, ShieldCheck, Database, Layers, ArrowRight, CreditCard, Edit3, Palette, FileText } from 'lucide-react';
 
 interface MockupGeneratorModalProps {
   isOpen: boolean;
@@ -43,6 +43,12 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   const [ruleNote, setRuleNote] = useState('Data dibaca real-time dari backend sistem.');
   const [stepsDetailStr, setStepsDetailStr] = useState('Step 1 — Intake\nStep 2 — Processing\nStep 3 — Confirmation');
 
+  // Custom Branding State
+  const [botName, setBotName] = useState('');
+  const [botAvatarUrl, setBotAvatarUrl] = useState('');
+  const [subTitle, setSubTitle] = useState('');
+  const [headerColor, setHeaderColor] = useState('#075E54');
+
   // Step Sequence Builder State
   const [steps, setSteps] = useState<Step[]>([
     {
@@ -75,6 +81,20 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       setInitialText(scenarioToEdit.initialText || '');
       setHideInitialMessage(Boolean(scenarioToEdit.hideInitialMessage));
       setStartFromStepIdx(scenarioToEdit.startFromStepIdx || 0);
+      
+      // Branding
+      if (scenarioToEdit.customBranding) {
+        setBotName(scenarioToEdit.customBranding.botName || '');
+        setBotAvatarUrl(scenarioToEdit.customBranding.botAvatarUrl || '');
+        setSubTitle(scenarioToEdit.customBranding.subTitle || '');
+        setHeaderColor(scenarioToEdit.customBranding.headerColor || '#075E54');
+      } else {
+        setBotName('');
+        setBotAvatarUrl('');
+        setSubTitle('');
+        setHeaderColor('#075E54');
+      }
+
       setCekatComponentsStr(scenarioToEdit.cekatComponents ? scenarioToEdit.cekatComponents.join(', ') : '');
       setApiScopesStr(scenarioToEdit.apiScopes ? scenarioToEdit.apiScopes.join(', ') : '');
       setRuleNote(scenarioToEdit.ruleNote || '');
@@ -99,6 +119,12 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       setInitialText('');
       setHideInitialMessage(false);
       setStartFromStepIdx(0);
+
+      setBotName('');
+      setBotAvatarUrl('');
+      setSubTitle('');
+      setHeaderColor('#075E54');
+
       setCekatComponentsStr('AI Agent, API Tools, WA Flows');
       setApiScopesStr('GET /api/v1/status');
       setRuleNote('Data dibaca real-time dari backend sistem.');
@@ -156,6 +182,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
     setSteps(newSteps);
   };
 
+  // Card Controls
   const toggleStepCard = (idx: number, enabled: boolean) => {
     const newSteps = [...steps];
     newSteps[idx].enableCard = enabled;
@@ -194,20 +221,72 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
     setSteps(newSteps);
   };
 
+  // WhatsApp Flow Controls
+  const toggleStepFlow = (idx: number, enabled: boolean) => {
+    const newSteps = [...steps];
+    newSteps[idx].enableFlow = enabled;
+    if (enabled && !newSteps[idx].flow) {
+      newSteps[idx].flow = {
+        title: '📋 Form Registrasi / Booking Interaktif',
+        description: 'Silakan isi data diri Anda di bawah ini.',
+        buttonText: '📋 Buka Form Registrasi',
+        submitResponseText: 'Formulir berhasil dikirimkan.',
+        fields: [
+          { id: generateUUID(), label: 'Nama Lengkap Pasien/Nasabah', type: 'text', placeholder: 'Masukkan nama lengkap...' },
+          { id: generateUUID(), label: 'Poliklinik / Layanan', type: 'select', options: ['Poli Umum', 'Poli Anak', 'Poli Gigi'] }
+        ]
+      };
+    }
+    setSteps(newSteps);
+  };
+
+  const addFlowField = (stepIdx: number) => {
+    const newSteps = [...steps];
+    if (!newSteps[stepIdx].flow) return;
+    const fields = newSteps[stepIdx].flow!.fields || [];
+    newSteps[stepIdx].flow!.fields = [
+      ...fields,
+      { id: generateUUID(), label: 'Field Input Baru', type: 'text', placeholder: 'Isi data...' }
+    ];
+    setSteps(newSteps);
+  };
+
+  const updateFlowField = (stepIdx: number, fieldIdx: number, key: keyof FlowInputField, val: any) => {
+    const newSteps = [...steps];
+    if (!newSteps[stepIdx].flow || !newSteps[stepIdx].flow!.fields) return;
+    const fields = [...newSteps[stepIdx].flow!.fields];
+    fields[fieldIdx] = { ...fields[fieldIdx], [key]: val };
+    newSteps[stepIdx].flow!.fields = fields;
+    setSteps(newSteps);
+  };
+
+  const removeFlowField = (stepIdx: number, fieldIdx: number) => {
+    const newSteps = [...steps];
+    if (!newSteps[stepIdx].flow || !newSteps[stepIdx].flow!.fields) return;
+    newSteps[stepIdx].flow!.fields = newSteps[stepIdx].flow!.fields.filter((_, i) => i !== fieldIdx);
+    setSteps(newSteps);
+  };
+
   const handleSaveScenario = async () => {
-    if (!name || !title || !initialText) {
+    if (!name || !title || (!initialText && !hideInitialMessage)) {
       alert('Mohon lengkapi Nama, Judul, dan Pesan Awal Skenario!');
       return;
     }
 
     const cleanSteps = steps.map(s => {
-      if (!s.enableCard) {
-        return { ...s, card: undefined };
+      const stepObj: Step = { ...s };
+      if (!stepObj.enableCard) {
+        stepObj.card = undefined;
       }
-      return s;
+      if (!stepObj.enableFlow) {
+        stepObj.flow = undefined;
+      }
+      return stepObj;
     });
 
     const finalCatId = targetCategoryId || activeCategoryId || 'healthcare';
+
+    const hasCustomBranding = botName || botAvatarUrl || subTitle || (headerColor && headerColor !== '#075E54');
 
     const finalScenario: Scenario = {
       id: scenarioToEdit ? scenarioToEdit.id : generateUUID(),
@@ -220,6 +299,14 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       outboundPill: triggerType === 'OUTBOUND_SYSTEM' ? outboundPill : undefined,
       description,
       initialText,
+      hideInitialMessage,
+      startFromStepIdx,
+      customBranding: hasCustomBranding ? {
+        botName: botName.trim() || undefined,
+        botAvatarUrl: botAvatarUrl.trim() || undefined,
+        subTitle: subTitle.trim() || undefined,
+        headerColor: headerColor || '#075E54'
+      } : undefined,
       cekatComponents: cekatComponentsStr.split(',').map(s => s.trim()).filter(Boolean),
       apiScopes: apiScopesStr.split(',').map(s => s.trim()).filter(Boolean),
       ruleNote,
@@ -255,7 +342,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                 {scenarioToEdit ? 'Edit Skenario Use Case' : 'SA Mockup Generator (Create Scenario)'}
               </h3>
               <p className="text-[11px] text-slate-400">
-                {scenarioToEdit ? 'Ubah parameter dan langkah skenario' : 'Buat skenario baru dan simpan ke Supabase DB'}
+                {scenarioToEdit ? 'Ubah parameter, alur WA Flow, branding client, dan langkah skenario' : 'Buat skenario baru dan simpan ke Supabase DB'}
               </p>
             </div>
           </div>
@@ -297,11 +384,13 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
             
             {/* Target Category Selector */}
             <div className="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 space-y-2">
-              <label className="block text-[11px] font-bold text-blue-900">Target Kategori Industri Skenario Ini:</label>
+              <label className="block text-[11px] font-extrabold text-blue-900">
+                📂 Target Kategori Industri Skenario Ini (Pindahkan Kategori):
+              </label>
               <select
                 value={targetCategoryId}
                 onChange={(e) => setTargetCategoryId(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl border border-blue-300 text-xs bg-white font-bold text-blue-700 focus:outline-none focus:border-blue-600 shadow-xs"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-blue-300 text-xs bg-white font-bold text-blue-700 focus:outline-none focus:border-blue-600 shadow-xs"
               >
                 {categories.map(c => (
                   <option key={c.id} value={c.id}>
@@ -421,6 +510,83 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               </div>
             </div>
 
+            {/* Client Custom Branding Overrides Section */}
+            <div className="bg-purple-50/70 border border-purple-200 rounded-2xl p-4 space-y-3">
+              <div className="font-extrabold text-purple-900 text-xs flex items-center gap-1.5 border-b border-purple-200 pb-1.5">
+                <Palette size={15} className="text-purple-600" /> Client Custom Branding Overrides (Demo Personalization)
+              </div>
+              <p className="text-[10.5px] text-purple-800">
+                Kustomisasi tampilan Header WhatsApp Simulator khusus untuk Pitching Klien tertentu (misal: Bank Mandiri, BCA, Siloam, Telkomsel). Kosongkan jika ingin memakai standar Cekat AI.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Nama Bot / Akun WA</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Bank Mandiri Assistant"
+                    value={botName}
+                    onChange={(e) => setBotName(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-lg border border-purple-300 text-xs bg-white font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">URL / Path Logo Avatar</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. /cekat-logo.png atau URL Gambar"
+                    value={botAvatarUrl}
+                    onChange={(e) => setBotAvatarUrl(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-lg border border-purple-300 text-xs bg-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Sub-Title Status Header</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Official Business Account"
+                    value={subTitle}
+                    onChange={(e) => setSubTitle(e.target.value)}
+                    className="w-full px-3 py-1.5 rounded-lg border border-purple-300 text-xs bg-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Warna Header WhatsApp Simulator</label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {[
+                    { label: 'WA Green', color: '#075E54' },
+                    { label: 'Mandiri Blue', color: '#003366' },
+                    { label: 'BCA Blue', color: '#005B9A' },
+                    { label: 'Siloam Green', color: '#00805A' },
+                    { label: 'Telkomsel Red', color: '#C41230' },
+                    { label: 'Dark Slate', color: '#0F172A' }
+                  ].map((p, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setHeaderColor(p.color)}
+                      className={`px-2.5 py-1 rounded-full text-[10.5px] font-bold text-white transition flex items-center gap-1 cursor-pointer border ${
+                        headerColor === p.color ? 'ring-2 ring-purple-600 scale-105' : 'opacity-85'
+                      }`}
+                      style={{ backgroundColor: p.color }}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-white"></span>
+                      {p.label}
+                    </button>
+                  ))}
+                  <input
+                    type="color"
+                    value={headerColor}
+                    onChange={(e) => setHeaderColor(e.target.value)}
+                    className="w-8 h-7 rounded border border-purple-300 cursor-pointer bg-white"
+                    title="Pilih Warna Custom"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Technical Specs Section */}
             <div className="space-y-3 pt-2">
               <div className="font-bold text-slate-900 text-xs border-b border-slate-200 pb-1 flex items-center gap-1.5">
@@ -432,7 +598,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1">Komponen Cekat AI (Pisahkan Koma)</label>
                   <input
                     type="text"
-                    placeholder="AI Agent, API Tools, n8n"
+                    placeholder="AI Agent, API Tools, n8n, WA Flows"
                     value={cekatComponentsStr}
                     onChange={(e) => setCekatComponentsStr(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-mono bg-white"
@@ -655,6 +821,129 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                               >
                                 ✕
                               </button>
+                            </div>
+                          ))}
+                        </div>
+
+                      </div>
+                    )}
+                  </div>
+
+                  {/* WhatsApp Flow Form Toggle */}
+                  <div className="pt-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={st.enableFlow || false}
+                        onChange={(e) => toggleStepFlow(idx, e.target.checked)}
+                        className="w-4 h-4 text-purple-600 rounded"
+                      />
+                      <span className="font-bold text-purple-900 text-xs flex items-center gap-1">
+                        <FileText size={14} className="text-purple-600" /> Sertakan WhatsApp Flow (Form Interaktif) pada Step ini
+                      </span>
+                    </label>
+
+                    {st.enableFlow && st.flow && (
+                      <div className="mt-3 bg-purple-50/70 border border-purple-200 rounded-xl p-3 space-y-3">
+                        <div className="font-extrabold text-purple-900 text-xs border-b border-purple-200 pb-1">
+                          Konfigurasi WhatsApp Flow (Form Simulator)
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] font-semibold text-purple-900 mb-0.5">Judul Form Flow</label>
+                            <input
+                              type="text"
+                              value={st.flow.title}
+                              onChange={(e) => {
+                                const newSteps = [...steps];
+                                newSteps[idx].flow!.title = e.target.value;
+                                setSteps(newSteps);
+                              }}
+                              className="w-full px-2.5 py-1.5 rounded border border-purple-300 text-xs font-bold text-purple-900 bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-semibold text-purple-900 mb-0.5">Teks Tombol Buka Form WA</label>
+                            <input
+                              type="text"
+                              value={st.flow.buttonText || ''}
+                              onChange={(e) => {
+                                const newSteps = [...steps];
+                                newSteps[idx].flow!.buttonText = e.target.value;
+                                setSteps(newSteps);
+                              }}
+                              className="w-full px-2.5 py-1.5 rounded border border-purple-300 text-xs bg-white font-semibold text-purple-700"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-semibold text-purple-900 mb-0.5">Deskripsi Singkat Form</label>
+                          <input
+                            type="text"
+                            value={st.flow.description || ''}
+                            onChange={(e) => {
+                              const newSteps = [...steps];
+                              newSteps[idx].flow!.description = e.target.value;
+                              setSteps(newSteps);
+                            }}
+                            className="w-full px-2.5 py-1.5 rounded border border-purple-300 text-xs bg-white"
+                          />
+                        </div>
+
+                        {/* Fields List */}
+                        <div className="space-y-2 pt-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10.5px] font-extrabold text-purple-900">Input Fields Form:</span>
+                            <button
+                              type="button"
+                              onClick={() => addFlowField(idx)}
+                              className="text-purple-700 hover:text-purple-900 font-bold text-[10.5px] cursor-pointer"
+                            >
+                              + Tambah Input Field
+                            </button>
+                          </div>
+
+                          {st.flow.fields && st.flow.fields.map((f, fieldIdx) => (
+                            <div key={fieldIdx} className="bg-white border border-purple-200 rounded-lg p-2 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Label Input Field"
+                                  value={f.label}
+                                  onChange={(e) => updateFlowField(idx, fieldIdx, 'label', e.target.value)}
+                                  className="flex-1 px-2 py-1 rounded border border-slate-300 text-xs font-semibold"
+                                />
+                                <select
+                                  value={f.type}
+                                  onChange={(e) => updateFlowField(idx, fieldIdx, 'type', e.target.value)}
+                                  className="px-2 py-1 rounded border border-slate-300 text-xs bg-slate-50 font-bold"
+                                >
+                                  <option value="text">Teks Field</option>
+                                  <option value="select">Dropdown Select</option>
+                                  <option value="date">Tanggal</option>
+                                  <option value="radio">Radio Buttons</option>
+                                  <option value="checkbox">Checkbox</option>
+                                </select>
+                                <button
+                                  type="button"
+                                  onClick={() => removeFlowField(idx, fieldIdx)}
+                                  className="text-red-500 hover:text-red-700 font-bold text-xs p-1 cursor-pointer"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+
+                              {(f.type === 'select' || f.type === 'radio' || f.type === 'checkbox') && (
+                                <input
+                                  type="text"
+                                  placeholder="Opsi Pilihan (Pisahkan Koma, e.g. Opsi A, Opsi B)"
+                                  value={f.options ? f.options.join(', ') : ''}
+                                  onChange={(e) => updateFlowField(idx, fieldIdx, 'options', e.target.value.split(',').map(o => o.trim()).filter(Boolean))}
+                                  className="w-full px-2 py-1 rounded border border-slate-300 text-xs font-mono bg-slate-50"
+                                />
+                              )}
                             </div>
                           ))}
                         </div>
