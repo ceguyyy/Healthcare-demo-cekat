@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Category } from '../types/scenario';
-import { Plus, Settings, ArrowRight } from 'lucide-react';
+import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal, Sparkles } from 'lucide-react';
 
 interface LandingPageProps {
   categories: Category[];
@@ -15,6 +15,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onAddCategory,
   onEditCategory
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string>('ALL');
+  const [sortBy, setSortBy] = useState<'default' | 'name_asc' | 'name_desc'>('default');
+
+  // Extract unique badges for quick filter chips
+  const availableTags = useMemo(() => {
+    const tags = new Set<string>();
+    categories.forEach(c => {
+      if (c.badge) tags.add(c.badge);
+    });
+    return Array.from(tags);
+  }, [categories]);
+
+  // Filter & Sort logic
+  const filteredCategories = useMemo(() => {
+    return categories
+      .filter(cat => {
+        // Search query filter
+        const q = searchQuery.toLowerCase().trim();
+        const matchSearch = !q || 
+          cat.title.toLowerCase().includes(q) || 
+          cat.description.toLowerCase().includes(q) || 
+          cat.badge.toLowerCase().includes(q);
+
+        // Tag filter
+        const matchTag = selectedTag === 'ALL' || cat.badge.toLowerCase().trim() === selectedTag.toLowerCase().trim();
+
+        return matchSearch && matchTag;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'name_asc') {
+          return a.title.localeCompare(b.title);
+        }
+        if (sortBy === 'name_desc') {
+          return b.title.localeCompare(a.title);
+        }
+        return 0;
+      });
+  }, [categories, searchQuery, selectedTag, sortBy]);
+
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col items-center justify-start p-4 md:p-8 font-sans">
       
@@ -47,63 +87,169 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </p>
         </div>
 
-        {/* Category Cards Grid */}
+        {/* Search & Filter Controls Bar */}
+        <div className="bg-slate-50 border border-slate-200 rounded-3xl p-4 md:p-6 space-y-4 shadow-xs">
+          
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            {/* Live Search Input */}
+            <div className="relative w-full md:w-96">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari kategori, kata kunci, atau tag..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-9 py-2.5 rounded-2xl border border-slate-300 text-xs bg-white font-medium focus:outline-none focus:border-blue-600 shadow-xs"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* Sort & Filter Controls */}
+            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+              <div className="flex items-center gap-1.5 text-xs text-slate-600 font-bold">
+                <SlidersHorizontal size={14} className="text-blue-600" />
+                <span>Urutkan:</span>
+              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-semibold text-slate-800 focus:outline-none focus:border-blue-600 cursor-pointer shadow-xs"
+              >
+                <option value="default">Default (Urutan Asli)</option>
+                <option value="name_asc">Abjad (A - Z)</option>
+                <option value="name_desc">Abjad (Z - A)</option>
+              </select>
+            </div>
+
+          </div>
+
+          {/* Quick Filter Tag Chips */}
+          <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-200">
+            <span className="text-[11px] font-extrabold text-slate-500 uppercase flex items-center gap-1 mr-1">
+              <Filter size={11} /> Filter Badge:
+            </span>
+            
+            <button
+              onClick={() => setSelectedTag('ALL')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer border ${
+                selectedTag === 'ALL'
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Semua ({categories.length})
+            </button>
+
+            {availableTags.map((tag) => {
+              const count = categories.filter(c => c.badge.toLowerCase().trim() === tag.toLowerCase().trim()).length;
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setSelectedTag(tag)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer border ${
+                    selectedTag.toLowerCase().trim() === tag.toLowerCase().trim()
+                      ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {tag} ({count})
+                </button>
+              );
+            })}
+          </div>
+
+        </div>
+
+        {/* Category Cards Grid Header */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-extrabold text-xl text-slate-900 flex items-center gap-2">
               <span>Daftar Kategori Use Case</span>
               <span className="text-xs bg-slate-100 text-slate-600 border border-slate-200 font-bold px-2.5 py-0.5 rounded-full">
-                {categories.length} Domain Available
+                {filteredCategories.length} Domain Found
               </span>
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {categories.map((cat) => (
-              <div
-                key={cat.id}
-                className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4 group cursor-pointer border-l-4 border-l-blue-600"
-                onClick={() => onSelectCategory(cat)}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl border border-blue-200 font-black">
-                      <i className={cat.icon.includes('fa-') && (cat.icon.includes('fa-brands') || cat.icon.includes('fa-regular') || cat.icon.includes('fa-solid')) ? cat.icon : `fa-solid ${cat.icon}`}></i>
+          {/* Render Filtered Category Grid */}
+          {filteredCategories.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredCategories.map((cat) => (
+                <div
+                  key={cat.id}
+                  className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4 group cursor-pointer border-l-4 border-l-blue-600"
+                  onClick={() => onSelectCategory(cat)}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl border border-blue-200 font-black">
+                        <i className={cat.icon.includes('fa-') && (cat.icon.includes('fa-brands') || cat.icon.includes('fa-regular') || cat.icon.includes('fa-solid')) ? cat.icon : `fa-solid ${cat.icon}`}></i>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-slate-100 text-slate-700 font-mono font-bold text-[10px] px-3 py-1 rounded-full border border-slate-200">
+                          {cat.badge}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditCategory(cat);
+                          }}
+                          className="text-slate-400 hover:text-blue-600 text-xs p-1 font-semibold"
+                          title="Edit Kategori"
+                        >
+                          <Settings size={15} />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="bg-slate-100 text-slate-700 font-mono font-bold text-[10px] px-3 py-1 rounded-full border border-slate-200">
-                        {cat.badge}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditCategory(cat);
-                        }}
-                        className="text-slate-400 hover:text-blue-600 text-xs p-1 font-semibold"
-                        title="Edit Kategori"
-                      >
-                        <Settings size={15} />
-                      </button>
+
+                    <div>
+                      <h3 className="font-extrabold text-lg text-slate-900 group-hover:text-blue-600 transition">
+                        {cat.title}
+                      </h3>
+                      <p className="text-xs text-slate-600 leading-relaxed mt-1">
+                        {cat.description}
+                      </p>
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="font-extrabold text-lg text-slate-900 group-hover:text-blue-600 transition">
-                      {cat.title}
-                    </h3>
-                    <p className="text-xs text-slate-600 leading-relaxed mt-1">
-                      {cat.description}
-                    </p>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600 group-hover:translate-x-1 transition">
+                    <span>Buka Simulator & Alur Canvas</span>
+                    <ArrowRight size={16} />
                   </div>
                 </div>
-
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600 group-hover:translate-x-1 transition">
-                  <span>Buka Simulator & Alur Canvas</span>
-                  <ArrowRight size={16} />
-                </div>
+              ))}
+            </div>
+          ) : (
+            /* Empty Search State */
+            <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-10 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto">
+                <Search size={22} />
               </div>
-            ))}
-          </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">Tidak Ada Kategori Ditemukan</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Kategori dengan pencarian <span className="font-bold text-blue-600">"{searchQuery}"</span> atau tag <span className="font-bold text-blue-600">"{selectedTag}"</span> tidak tersedia.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedTag('ALL');
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer"
+              >
+                Reset Filter Pencarian
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
