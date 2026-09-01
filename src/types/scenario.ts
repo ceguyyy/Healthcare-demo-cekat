@@ -35,6 +35,7 @@ export interface Scenario {
   ruleNote: string;
   stepsDetail: string[];
   initialText: string;
+  hideInitialMessage?: boolean;
   steps: Step[];
 }
 

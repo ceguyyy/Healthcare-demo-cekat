@@ -12,7 +12,7 @@ import {
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff
 } from 'lucide-react';
 
 export function App() {
@@ -28,6 +28,10 @@ export function App() {
   const [chatHistory, setChatHistory] = useState<Array<{ id: string; role: 'rs-bot' | 'patient'; text: string; time: string; card?: any }>>([]);
   const [userInput, setUserInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+
+  // Jump Step & Hide Welcome Message State
+  const [hideInitialMsgState, setHideInitialMsgState] = useState<boolean>(false);
+  const [startFromStepIdx, setStartFromStepIdx] = useState<number>(0);
 
   // Modals State
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
@@ -142,6 +146,14 @@ export function App() {
     }
   }, [selectedCategory, allScenarios]);
 
+  // Sync hideInitialMsgState & reset startFromStepIdx when scenario changes
+  useEffect(() => {
+    if (currentScenario) {
+      setHideInitialMsgState(Boolean(currentScenario.hideInitialMessage));
+      setStartFromStepIdx(0);
+    }
+  }, [currentScenario]);
+
   // Update URL Hash when selecting Category
   const handleSelectCategory = (cat: Category) => {
     setSelectedCategory(cat);
@@ -176,38 +188,47 @@ export function App() {
     }
   }, [chatHistory, isTyping]);
 
-  // Restart current scenario
-  const restartScenario = (scenario = currentScenario) => {
+  // Jump to specific step or restart scenario
+  const handleJumpToStep = (jumpStepIdx: number, hideInitial = hideInitialMsgState, scenario = currentScenario) => {
     clearTimeout(timerRef.current);
-    setCurrentStepIdx(0);
-    setChatHistory([]);
     setIsTyping(false);
-
     if (!scenario) return;
 
     const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    const history: Array<{ id: string; role: 'rs-bot' | 'patient'; text: string; time: string; card?: any }> = [];
 
-    if (scenario.triggerType === 'OUTBOUND_SYSTEM') {
-      setChatHistory([
-        { id: '1', role: 'rs-bot', text: scenario.initialText, time: nowStr }
-      ]);
-
-      if (isPlaying && scenario.steps && scenario.steps.length > 0) {
-        timerRef.current = setTimeout(() => {
-          runStep(0, scenario.steps[0].userReply, scenario);
-        }, 2200 / playbackSpeed);
-      }
-    } else {
-      setChatHistory([
-        { id: '1', role: 'patient', text: scenario.initialText, time: nowStr }
-      ]);
-
-      if (isPlaying && scenario.steps && scenario.steps.length > 0) {
-        timerRef.current = setTimeout(() => {
-          runStep(0, scenario.steps[0].userReply, scenario);
-        }, 1600 / playbackSpeed);
+    // 1. Initial Welcome Message (if not hidden)
+    if (!hideInitial && scenario.initialText) {
+      if (scenario.triggerType === 'OUTBOUND_SYSTEM') {
+        history.push({ id: 'init', role: 'rs-bot', text: scenario.initialText, time: nowStr });
+      } else {
+        history.push({ id: 'init', role: 'patient', text: scenario.initialText, time: nowStr });
       }
     }
+
+    // 2. Pre-fill chat history up to jumpStepIdx - 1
+    if (scenario.steps && scenario.steps.length > 0 && jumpStepIdx > 0) {
+      const limit = Math.min(jumpStepIdx, scenario.steps.length);
+      for (let i = 0; i < limit; i++) {
+        const s = scenario.steps[i];
+        history.push({ id: `hist_user_${i}`, role: 'patient', text: s.userReply, time: nowStr });
+        history.push({ id: `hist_bot_${i}`, role: 'rs-bot', text: s.aiResponse, time: nowStr, card: s.card });
+      }
+    }
+
+    setChatHistory(history);
+    setCurrentStepIdx(jumpStepIdx);
+
+    // Continue playback from jumpStepIdx if playing
+    if (isPlaying && scenario.steps && jumpStepIdx < scenario.steps.length) {
+      timerRef.current = setTimeout(() => {
+        runStep(jumpStepIdx, scenario.steps[jumpStepIdx].userReply, scenario);
+      }, 2000 / playbackSpeed);
+    }
+  };
+
+  const restartScenario = (scenario = currentScenario) => {
+    handleJumpToStep(startFromStepIdx, hideInitialMsgState, scenario);
   };
 
   useEffect(() => {
@@ -423,13 +444,56 @@ export function App() {
         </div>
 
         {/* Controls Bar */}
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 text-xs text-slate-700 shadow-xs">
+        <div className="flex flex-wrap items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 text-xs text-slate-700 shadow-xs">
           <button
             onClick={togglePlayPause}
             className="flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-semibold transition hover:bg-amber-100 cursor-pointer"
           >
             {isPlaying ? <Pause size={13} /> : <Play size={13} />}
             <span>{isPlaying ? 'Pause' : 'Play'}</span>
+          </button>
+          
+          <div className="h-3 w-px bg-slate-200"></div>
+
+          {/* Jump to Specific Step Selector */}
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-[11px] text-slate-500">Mulai dari:</span>
+            <select
+              value={startFromStepIdx}
+              onChange={(e) => {
+                const idx = Number(e.target.value);
+                setStartFromStepIdx(idx);
+                handleJumpToStep(idx);
+              }}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-2.5 py-1 rounded-full border border-slate-300 focus:outline-none cursor-pointer"
+            >
+              <option value={0}>Awal Percakapan (Step 1)</option>
+              {currentScenario?.steps?.map((st, i) => (
+                <option key={i} value={i + 1}>
+                  Jump ke Step {i + 2}: "{st.userReply.length > 18 ? st.userReply.slice(0, 18) + '...' : st.userReply}"
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="h-3 w-px bg-slate-200"></div>
+
+          {/* Hide/Show Welcome Message Toggle */}
+          <button
+            onClick={() => {
+              const newHide = !hideInitialMsgState;
+              setHideInitialMsgState(newHide);
+              handleJumpToStep(startFromStepIdx, newHide);
+            }}
+            className={`flex items-center gap-1 font-bold px-2.5 py-1 rounded-full transition cursor-pointer border ${
+              hideInitialMsgState
+                ? 'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200'
+                : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
+            }`}
+            title="Sembunyikan / Tampilkan Pesan Awal (Welcome Text)"
+          >
+            {hideInitialMsgState ? <EyeOff size={13} /> : <Eye size={13} />}
+            <span>{hideInitialMsgState ? 'Welcome Hidden' : 'Welcome Visible'}</span>
           </button>
           
           <div className="h-3 w-px bg-slate-200"></div>

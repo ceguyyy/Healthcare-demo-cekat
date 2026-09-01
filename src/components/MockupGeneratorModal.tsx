@@ -36,6 +36,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   const [outboundPill, setOutboundPill] = useState('🔔 OUTBOUND SYSTEM TRIGGER');
   const [description, setDescription] = useState('');
   const [initialText, setInitialText] = useState('');
+  const [hideInitialMessage, setHideInitialMessage] = useState(false);
   const [cekatComponentsStr, setCekatComponentsStr] = useState('AI Agent, API Tools, WA Flows');
   const [apiScopesStr, setApiScopesStr] = useState('GET /api/v1/status');
   const [ruleNote, setRuleNote] = useState('Data dibaca real-time dari backend sistem.');
@@ -71,6 +72,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       setOutboundPill(scenarioToEdit.outboundPill || '🔔 OUTBOUND SYSTEM TRIGGER');
       setDescription(scenarioToEdit.description || '');
       setInitialText(scenarioToEdit.initialText || '');
+      setHideInitialMessage(Boolean(scenarioToEdit.hideInitialMessage));
       setCekatComponentsStr(scenarioToEdit.cekatComponents ? scenarioToEdit.cekatComponents.join(', ') : '');
       setApiScopesStr(scenarioToEdit.apiScopes ? scenarioToEdit.apiScopes.join(', ') : '');
       setRuleNote(scenarioToEdit.ruleNote || '');
@@ -93,6 +95,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       setOutboundPill('🔔 OUTBOUND SYSTEM TRIGGER');
       setDescription('');
       setInitialText('');
+      setHideInitialMessage(false);
       setCekatComponentsStr('AI Agent, API Tools, WA Flows');
       setApiScopesStr('GET /api/v1/status');
       setRuleNote('Data dibaca real-time dari backend sistem.');
@@ -401,6 +404,17 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                   onChange={(e) => setInitialText(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-semibold focus:outline-none focus:border-blue-600"
                 />
+                <label className="flex items-center gap-2 mt-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hideInitialMessage}
+                    onChange={(e) => setHideInitialMessage(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-[11px] text-slate-700 font-semibold">
+                    🚫 Sembunyikan Pesan Awal ini saat simulasi dimulai (Hide Welcome Message)
+                  </span>
+                </label>
               </div>
             </div>
 
