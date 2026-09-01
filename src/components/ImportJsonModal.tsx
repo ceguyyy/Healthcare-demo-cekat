@@ -190,21 +190,21 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
       const importedScenarios: Scenario[] = [];
 
       for (const item of itemsToProcess) {
-        const categoryId = activeCategory ? activeCategory.id : (item.categoryId || 'healthcare');
+        const categoryId = item.categoryId || (activeCategory ? activeCategory.id : 'healthcare');
 
         const scenario: Scenario = {
-          id: generateUUID(),
+          id: item.id || generateUUID(),
           categoryId,
           name: item.name,
           title: item.title,
           tag: item.tag || 'Core Feature',
-          saAuthor: item.saAuthor || 'SA Team Cekat',
+          saAuthor: item.saAuthor || 'Cekat AI Team',
           triggerType: item.triggerType === 'OUTBOUND_SYSTEM' ? 'OUTBOUND_SYSTEM' : 'INBOUND_USER',
           outboundPill: item.outboundPill,
           description: item.description || '',
           initialText: item.initialText,
           hideInitialMessage: Boolean(item.hideInitialMessage),
-          startFromStepIdx: item.startFromStepIdx || 0,
+          startFromStepIdx: typeof item.startFromStepIdx === 'number' ? item.startFromStepIdx : 0,
           customBranding: item.customBranding ? {
             botName: item.customBranding.botName,
             botAvatarUrl: item.customBranding.botAvatarUrl,
@@ -219,10 +219,10 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
             userReply: st.userReply || '',
             aiResponse: st.aiResponse || '',
             chips: Array.isArray(st.chips) ? st.chips : [],
-            enableCard: Boolean(st.enableCard),
-            card: st.card,
-            enableFlow: Boolean(st.enableFlow),
-            flow: st.flow
+            enableCard: st.enableCard !== undefined ? Boolean(st.enableCard) : Boolean(st.card),
+            card: st.card || undefined,
+            enableFlow: st.enableFlow !== undefined ? Boolean(st.enableFlow) : Boolean(st.flow),
+            flow: st.flow || undefined
           })) : []
         };
 

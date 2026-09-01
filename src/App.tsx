@@ -1223,10 +1223,22 @@ export function App() {
         activeCategory={selectedCategory}
         onScenarioImported={(importedScs) => {
           const scList = Array.isArray(importedScs) ? importedScs : [importedScs];
-          setAllScenarios(prev => [...prev, ...scList]);
+          setAllScenarios(prev => {
+            const merged = [...prev];
+            scList.forEach(sc => {
+              const idx = merged.findIndex(m => m.id === sc.id);
+              if (idx >= 0) {
+                merged[idx] = sc;
+              } else {
+                merged.push(sc);
+              }
+            });
+            return merged;
+          });
+
           if (scList.length > 0) {
             const firstSc = scList[0];
-            const targetCat = categories.find(c => c.id === firstSc.categoryId) || selectedCategory;
+            const targetCat = categories.find(c => c.id === firstSc.categoryId) || selectedCategory || categories[0];
             if (targetCat) {
               setSelectedCategory(targetCat);
             }

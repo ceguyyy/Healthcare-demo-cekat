@@ -40,6 +40,9 @@ export class SupabaseService {
   // --- SCENARIO CRUD ---
 
   static async fetchScenarios(): Promise<Scenario[]> {
+    const localData = localStorage.getItem(this.SCENARIOS_KEY);
+    const localScs: Scenario[] = localData ? JSON.parse(localData) : [];
+
     const key = this.getApiKey();
     if (key) {
       try {
@@ -51,8 +54,16 @@ export class SupabaseService {
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data)) {
-            localStorage.setItem(this.SCENARIOS_KEY, JSON.stringify(data));
-            return data as Scenario[];
+            // Merge remote items with local items so imported scenarios in localStorage are NEVER erased!
+            const merged = [...data];
+            localScs.forEach(loc => {
+              const idx = merged.findIndex(m => m.id === loc.id);
+              if (idx < 0) {
+                merged.push(loc);
+              }
+            });
+            localStorage.setItem(this.SCENARIOS_KEY, JSON.stringify(merged));
+            return merged as Scenario[];
           }
         }
       } catch (err) {
@@ -60,12 +71,13 @@ export class SupabaseService {
       }
     }
 
-    const localData = localStorage.getItem(this.SCENARIOS_KEY);
-    return localData ? JSON.parse(localData) : [];
+    return localScs;
   }
 
   static async saveScenario(scenario: Scenario): Promise<boolean> {
-    const existing = await this.fetchScenarios();
+    // 1. Immediately save to localStorage guaranteed
+    const localData = localStorage.getItem(this.SCENARIOS_KEY);
+    const existing: Scenario[] = localData ? JSON.parse(localData) : [];
     const idx = existing.findIndex(s => s.id === scenario.id);
     if (idx >= 0) {
       existing[idx] = scenario;
@@ -74,6 +86,7 @@ export class SupabaseService {
     }
     localStorage.setItem(this.SCENARIOS_KEY, JSON.stringify(existing));
 
+    // 2. Sync to Supabase REST API
     const key = this.getApiKey();
     if (!key) return true;
 
@@ -93,7 +106,8 @@ export class SupabaseService {
   }
 
   static async deleteScenario(id: string): Promise<boolean> {
-    const existing = await this.fetchScenarios();
+    const localData = localStorage.getItem(this.SCENARIOS_KEY);
+    const existing: Scenario[] = localData ? JSON.parse(localData) : [];
     const filtered = existing.filter(s => s.id !== id);
     localStorage.setItem(this.SCENARIOS_KEY, JSON.stringify(filtered));
 
@@ -114,6 +128,9 @@ export class SupabaseService {
   // --- CATEGORY CRUD ---
 
   static async fetchCategories(): Promise<Category[]> {
+    const localData = localStorage.getItem(this.CATEGORIES_KEY);
+    const localCats: Category[] = localData ? JSON.parse(localData) : [];
+
     const key = this.getApiKey();
     if (key) {
       try {
@@ -125,8 +142,15 @@ export class SupabaseService {
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data)) {
-            localStorage.setItem(this.CATEGORIES_KEY, JSON.stringify(data));
-            return data as Category[];
+            const merged = [...data];
+            localCats.forEach(loc => {
+              const idx = merged.findIndex(m => m.id === loc.id);
+              if (idx < 0) {
+                merged.push(loc);
+              }
+            });
+            localStorage.setItem(this.CATEGORIES_KEY, JSON.stringify(merged));
+            return merged as Category[];
           }
         }
       } catch (err) {
@@ -134,12 +158,12 @@ export class SupabaseService {
       }
     }
 
-    const localData = localStorage.getItem(this.CATEGORIES_KEY);
-    return localData ? JSON.parse(localData) : [];
+    return localCats;
   }
 
   static async saveCategory(category: Category): Promise<boolean> {
-    const existing = await this.fetchCategories();
+    const localData = localStorage.getItem(this.CATEGORIES_KEY);
+    const existing: Category[] = localData ? JSON.parse(localData) : [];
     const idx = existing.findIndex(c => c.id === category.id);
     if (idx >= 0) {
       existing[idx] = category;
@@ -167,7 +191,8 @@ export class SupabaseService {
   }
 
   static async deleteCategory(id: string): Promise<boolean> {
-    const existing = await this.fetchCategories();
+    const localData = localStorage.getItem(this.CATEGORIES_KEY);
+    const existing: Category[] = localData ? JSON.parse(localData) : [];
     const filtered = existing.filter(c => c.id !== id);
     localStorage.setItem(this.CATEGORIES_KEY, JSON.stringify(filtered));
 
