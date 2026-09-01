@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Scenario, Category } from '../types/scenario';
-import { X, Copy, Check, Share2, MessageSquare, ExternalLink, Sparkles } from 'lucide-react';
+import { X, Copy, Check, Share2 } from 'lucide-react';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -27,102 +27,65 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const whatsappShareText = encodeURIComponent(
-    `🏥 *${scenario.name}* (${category.title})\n\n${scenario.title}\n\nLihat simulasi interaktif Cekat AI di sini:\n${shareUrl}`
-  );
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden animate-scale-up">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-5 text-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/20 backdrop-blur-md rounded-2xl">
-              <Share2 size={22} className="text-white" />
-            </div>
-            <div>
-              <h3 className="font-extrabold text-lg tracking-tight">Share Use Case Link</h3>
-              <p className="text-xs text-purple-100">Bagikan tautan simulasi langsung ke klien atau tim</p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-fade-in">
+      <div className="bg-white rounded-3xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-scale-up">
+        {/* Clean Solid Header (No Gradient) */}
+        <div className="bg-slate-900 px-6 py-4 text-white flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Share2 size={18} className="text-blue-400" />
+            <h3 className="font-bold text-sm tracking-tight">Share Scenario Link</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition cursor-pointer"
+            className="p-1 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Content Body */}
-        <div className="p-6 space-y-5">
+        {/* Clean Content Body */}
+        <div className="p-6 space-y-4">
           {/* Scenario Info Preview */}
-          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="bg-purple-100 text-purple-800 font-extrabold text-[10px] uppercase px-2.5 py-0.5 rounded-full">
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="bg-blue-100 text-blue-800 font-extrabold text-[10px] px-2.5 py-0.5 rounded-full uppercase">
                 {category.title}
               </span>
-              <span className="bg-blue-100 text-blue-800 font-bold text-[10px] px-2.5 py-0.5 rounded-full">
-                {scenario.tag || 'Use Case Demo'}
-              </span>
             </div>
-            <h4 className="font-extrabold text-slate-900 text-base">{scenario.name}</h4>
+            <h4 className="font-bold text-slate-900 text-sm">{scenario.name}</h4>
             <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{scenario.title}</p>
           </div>
 
           {/* Share Link Input Bar */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 block">Direct Deep Link URL:</label>
+            <label className="text-xs font-bold text-slate-700 block">Direct URL Link:</label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 readOnly
                 value={shareUrl}
-                className="flex-1 bg-slate-100 border border-slate-300 text-slate-800 text-xs font-mono font-medium rounded-xl px-3.5 py-2.5 focus:outline-none select-all"
+                className="flex-1 bg-slate-100 border border-slate-200 text-slate-800 text-xs font-mono font-medium rounded-xl px-3 py-2.5 focus:outline-none select-all"
               />
               <button
                 onClick={handleCopy}
-                className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer ${
+                className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition cursor-pointer ${
                   copied
                     ? 'bg-emerald-600 text-white'
-                    : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs active:scale-95'
                 }`}
               >
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                <span>{copied ? 'Copied!' : 'Copy'}</span>
+                {copied ? <Check size={15} /> : <Copy size={15} />}
+                <span>{copied ? 'Copied!' : 'Copy Link'}</span>
               </button>
             </div>
           </div>
-
-          {/* Quick Action Share Buttons */}
-          <div className="pt-2 border-t border-slate-100 flex items-center gap-3">
-            <a
-              href={`https://api.whatsapp.com/send?text=${whatsappShareText}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-bold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer"
-            >
-              <MessageSquare size={16} />
-              <span>Share via WhatsApp</span>
-            </a>
-
-            <a
-              href={shareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold text-xs py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer"
-              title="Open link in new tab"
-            >
-              <ExternalLink size={15} />
-              <span>Open Link</span>
-            </a>
-          </div>
         </div>
 
-        {/* Footer Note */}
+        {/* Minimal Footer */}
         <div className="bg-slate-50 border-t border-slate-100 px-6 py-3 text-center">
-          <p className="text-[11px] text-slate-500 font-medium flex items-center justify-center gap-1">
-            <Sparkles size={12} className="text-amber-500" />
-            Tautan ini akan langsung membuka skenario ini secara otomatis.
+          <p className="text-[11px] text-slate-500 font-medium">
+            Copy and send this URL to directly open this scenario.
           </p>
         </div>
       </div>
