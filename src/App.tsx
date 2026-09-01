@@ -225,23 +225,29 @@ export function App() {
     const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     const history: Array<{ id: string; role: 'rs-bot' | 'patient'; text: string; time: string; card?: any; flow?: FlowData; stepIdx?: number }> = [];
 
-    // 1. Initial Welcome Message (if not hidden)
-    if (!hideInitial && scenario.initialText) {
-      if (scenario.triggerType === 'OUTBOUND_SYSTEM') {
-        history.push({ id: 'init', role: 'rs-bot', text: scenario.initialText, time: nowStr });
-      } else {
-        history.push({ id: 'init', role: 'patient', text: scenario.initialText, time: nowStr });
+    if (jumpStepIdx === 0) {
+      // Step 1: Initial Welcome / Trigger Message
+      if (!hideInitial && scenario.initialText) {
+        if (scenario.triggerType === 'OUTBOUND_SYSTEM') {
+          history.push({ id: 'init', role: 'rs-bot', text: scenario.initialText, time: nowStr });
+        } else {
+          history.push({ id: 'init', role: 'patient', text: scenario.initialText, time: nowStr });
+        }
       }
-    }
+    } else if (jumpStepIdx > 0 && scenario.steps && scenario.steps.length > 0) {
+      // Start At Step N (Clean start directly at target step with NO previous chat history above it)
+      const targetIdx = Math.min(jumpStepIdx - 1, scenario.steps.length - 1);
+      const targetStep = scenario.steps[targetIdx];
 
-    // 2. Pre-fill chat history up to jumpStepIdx - 1 for any arbitrary N steps
-    if (scenario.steps && scenario.steps.length > 0 && jumpStepIdx > 0) {
-      const limit = Math.min(jumpStepIdx, scenario.steps.length);
-      for (let i = 0; i < limit; i++) {
-        const s = scenario.steps[i];
-        history.push({ id: `hist_user_${i}`, role: 'patient', text: s.userReply, time: nowStr });
-        history.push({ id: `hist_bot_${i}`, role: 'rs-bot', text: s.aiResponse, time: nowStr, card: s.card, flow: s.enableFlow ? s.flow : undefined, stepIdx: i });
-      }
+      history.push({
+        id: `start_at_${targetIdx}`,
+        role: 'rs-bot',
+        text: targetStep.aiResponse,
+        time: nowStr,
+        card: targetStep.card,
+        flow: targetStep.enableFlow ? targetStep.flow : undefined,
+        stepIdx: targetIdx
+      });
     }
 
     setChatHistory(history);
@@ -625,7 +631,7 @@ export function App() {
                 <>
                   <div className="h-3 w-px bg-slate-200"></div>
                   <div className="flex items-center gap-1.5 font-semibold text-slate-700">
-                    <span className="text-[11px]">📍 Jump:</span>
+                    <span className="text-[11px]">📍 Start At:</span>
                     <select
                       value={startFromStepIdx}
                       onChange={(e) => {
