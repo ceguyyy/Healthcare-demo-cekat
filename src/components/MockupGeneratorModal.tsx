@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Scenario, Step, TriggerType, CardData, CardItem, Category, generateUUID } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
-import { Lock, Plus, Trash2, CheckCircle2, ShieldCheck, Database, Layers, ArrowRight, CreditCard } from 'lucide-react';
+import { Lock, Plus, Trash2, CheckCircle2, ShieldCheck, Database, Layers, ArrowRight, CreditCard, Edit3 } from 'lucide-react';
 
 interface MockupGeneratorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onScenarioCreated: (newScenario: Scenario) => void;
+  onScenarioUpdated?: (updatedScenario: Scenario) => void;
+  scenarioToEdit?: Scenario | null;
   activeCategoryId?: string;
   categories?: Category[];
 }
@@ -15,6 +17,8 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   isOpen,
   onClose,
   onScenarioCreated,
+  onScenarioUpdated,
+  scenarioToEdit,
   activeCategoryId = 'healthcare',
   categories = []
 }) => {
@@ -32,16 +36,10 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   const [outboundPill, setOutboundPill] = useState('🔔 OUTBOUND SYSTEM TRIGGER');
   const [description, setDescription] = useState('');
   const [initialText, setInitialText] = useState('');
-  const [cekatComponentsStr, setCekatComponentsStr] = useState('AI Agent, API Tools, n8n');
-  const [apiScopesStr, setApiScopesStr] = useState('GET /api/v1/availability, POST /api/v1/booking');
+  const [cekatComponentsStr, setCekatComponentsStr] = useState('AI Agent, API Tools, WA Flows');
+  const [apiScopesStr, setApiScopesStr] = useState('GET /api/v1/status');
   const [ruleNote, setRuleNote] = useState('Data dibaca real-time dari backend sistem.');
   const [stepsDetailStr, setStepsDetailStr] = useState('Step 1 — Intake\nStep 2 — Processing\nStep 3 — Confirmation');
-
-  useEffect(() => {
-    if (activeCategoryId) {
-      setTargetCategoryId(activeCategoryId);
-    }
-  }, [activeCategoryId, isOpen]);
 
   // Step Sequence Builder State
   const [steps, setSteps] = useState<Step[]>([
@@ -52,7 +50,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       enableCard: true,
       card: {
         title: '🎫 E-Tiket / Struk Transaksi',
-        sub: 'Cekat AI Enterprise',
+        sub: 'Cekat AI Enterprise System',
         items: [
           { label: 'Kode Transaksi', val: '#TRX-10029' },
           { label: 'Status', val: 'CONFIRMED' }
@@ -61,6 +59,63 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       }
     }
   ]);
+
+  useEffect(() => {
+    if (scenarioToEdit) {
+      setTargetCategoryId(scenarioToEdit.categoryId || activeCategoryId);
+      setName(scenarioToEdit.name || '');
+      setTitle(scenarioToEdit.title || '');
+      setTag(scenarioToEdit.tag || 'Core Feature');
+      setSaAuthor(scenarioToEdit.saAuthor || 'SA Team Cekat');
+      setTriggerType(scenarioToEdit.triggerType || 'INBOUND_USER');
+      setOutboundPill(scenarioToEdit.outboundPill || '🔔 OUTBOUND SYSTEM TRIGGER');
+      setDescription(scenarioToEdit.description || '');
+      setInitialText(scenarioToEdit.initialText || '');
+      setCekatComponentsStr(scenarioToEdit.cekatComponents ? scenarioToEdit.cekatComponents.join(', ') : '');
+      setApiScopesStr(scenarioToEdit.apiScopes ? scenarioToEdit.apiScopes.join(', ') : '');
+      setRuleNote(scenarioToEdit.ruleNote || '');
+      setStepsDetailStr(scenarioToEdit.stepsDetail ? scenarioToEdit.stepsDetail.join('\n') : '');
+      setSteps(scenarioToEdit.steps && scenarioToEdit.steps.length > 0 ? scenarioToEdit.steps : [
+        {
+          userReply: 'Konfirmasi Booking',
+          aiResponse: 'Terima kasih, janji/transaksi Anda telah terkonfirmasi di sistem.',
+          chips: ['📍 Lihat Detail', 'Menu Utama'],
+          enableCard: false
+        }
+      ]);
+    } else {
+      setTargetCategoryId(activeCategoryId);
+      setName('');
+      setTitle('');
+      setTag('Core Feature');
+      setSaAuthor('SA Team Cekat');
+      setTriggerType('INBOUND_USER');
+      setOutboundPill('🔔 OUTBOUND SYSTEM TRIGGER');
+      setDescription('');
+      setInitialText('');
+      setCekatComponentsStr('AI Agent, API Tools, WA Flows');
+      setApiScopesStr('GET /api/v1/status');
+      setRuleNote('Data dibaca real-time dari backend sistem.');
+      setStepsDetailStr('Step 1 — Intake\nStep 2 — Processing\nStep 3 — Confirmation');
+      setSteps([
+        {
+          userReply: 'Konfirmasi Booking',
+          aiResponse: 'Terima kasih, janji/transaksi Anda telah terkonfirmasi di sistem.',
+          chips: ['📍 Lihat Detail', 'Menu Utama'],
+          enableCard: true,
+          card: {
+            title: '🎫 E-Tiket / Struk Transaksi',
+            sub: 'Cekat AI Enterprise System',
+            items: [
+              { label: 'Kode Transaksi', val: '#TRX-10029' },
+              { label: 'Status', val: 'CONFIRMED' }
+            ],
+            status: 'SYSTEM LOCKED'
+          }
+        }
+      ]);
+    }
+  }, [scenarioToEdit, activeCategoryId, isOpen]);
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,67 +129,50 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   };
 
   const addStep = () => {
-    setSteps([
-      ...steps,
+    setSteps(prev => [
+      ...prev,
       {
-        userReply: `Langkah ${steps.length + 1}`,
-        aiResponse: 'Respons otomatis dari AI Bot...',
-        chips: ['Lanjut', 'Batal'],
+        userReply: 'Lanjut',
+        aiResponse: 'Informasi berhasil diproses.',
+        chips: ['Menu Utama'],
         enableCard: false
       }
     ]);
   };
 
-  const removeStep = (index: number) => {
-    setSteps(steps.filter((_, i) => i !== index));
+  const removeStep = (idx: number) => {
+    setSteps(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const updateStep = (index: number, field: keyof Step, val: any) => {
+  const updateStepField = (idx: number, field: keyof Step, val: any) => {
     const newSteps = [...steps];
-    newSteps[index] = { ...newSteps[index], [field]: val };
+    newSteps[idx] = { ...newSteps[idx], [field]: val };
     setSteps(newSteps);
   };
 
-  const toggleCardForStep = (stepIdx: number, enable: boolean) => {
+  const toggleStepCard = (idx: number, enabled: boolean) => {
     const newSteps = [...steps];
-    newSteps[stepIdx].enableCard = enable;
-    if (enable && !newSteps[stepIdx].card) {
-      newSteps[stepIdx].card = {
-        title: '🎫 E-Tiket / Struk Transaksi',
-        sub: 'Cekat AI Enterprise',
-        items: [
-          { label: 'Kode Transaksi', val: `#TRX-${Math.floor(10000 + Math.random() * 90000)}` },
-          { label: 'Status', val: 'CONFIRMED' }
-        ],
-        status: 'SYSTEM LOCKED'
+    newSteps[idx].enableCard = enabled;
+    if (enabled && !newSteps[idx].card) {
+      newSteps[idx].card = {
+        title: '💳 Saldo Rekening / Struk',
+        sub: 'Verified · Real-time',
+        items: [{ label: 'Status', val: 'SUCCESS' }],
+        status: 'TERVERIFIKASI'
       };
     }
-    setSteps(newSteps);
-  };
-
-  const updateCardField = (stepIdx: number, field: keyof CardData, val: any) => {
-    const newSteps = [...steps];
-    if (!newSteps[stepIdx].card) {
-      newSteps[stepIdx].card = {
-        title: '🎫 E-Tiket / Struk Transaksi',
-        sub: 'Cekat AI Enterprise',
-        items: [],
-        status: 'SYSTEM LOCKED'
-      };
-    }
-    newSteps[stepIdx].card = { ...newSteps[stepIdx].card!, [field]: val };
     setSteps(newSteps);
   };
 
   const addCardItem = (stepIdx: number) => {
     const newSteps = [...steps];
     if (!newSteps[stepIdx].card) return;
-    const currentItems = newSteps[stepIdx].card!.items || [];
-    newSteps[stepIdx].card!.items = [...currentItems, { label: 'Field Baru', val: 'Nilai' }];
+    const items = newSteps[stepIdx].card!.items || [];
+    newSteps[stepIdx].card!.items = [...items, { label: 'Label Baru', val: 'Nilai' }];
     setSteps(newSteps);
   };
 
-  const updateCardItem = (stepIdx: number, itemIdx: number, field: keyof CardItem, val: string) => {
+  const updateCardItem = (stepIdx: number, itemIdx: number, field: 'label' | 'val', val: string) => {
     const newSteps = [...steps];
     if (!newSteps[stepIdx].card || !newSteps[stepIdx].card!.items) return;
     const items = [...newSteps[stepIdx].card!.items];
@@ -165,8 +203,8 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
 
     const finalCatId = targetCategoryId || activeCategoryId || 'healthcare';
 
-    const newScenario: Scenario = {
-      id: generateUUID(),
+    const finalScenario: Scenario = {
+      id: scenarioToEdit ? scenarioToEdit.id : generateUUID(),
       categoryId: finalCatId,
       name,
       title,
@@ -183,8 +221,14 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       steps: cleanSteps
     };
 
-    await SupabaseService.saveScenario(newScenario);
-    onScenarioCreated(newScenario);
+    await SupabaseService.saveScenario(finalScenario);
+
+    if (scenarioToEdit && onScenarioUpdated) {
+      onScenarioUpdated(finalScenario);
+    } else {
+      onScenarioCreated(finalScenario);
+    }
+
     onClose();
   };
 
@@ -198,11 +242,15 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
         <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-              SA
+              {scenarioToEdit ? <Edit3 size={18} /> : <Plus size={18} />}
             </div>
             <div>
-              <h3 className="font-extrabold text-base leading-tight">SA Mockup Generator & Flow Builder</h3>
-              <p className="text-[11px] text-slate-400">Buat skenario kustom & urutan percakapan Inbound/Outbound</p>
+              <h3 className="font-extrabold text-base leading-tight">
+                {scenarioToEdit ? 'Edit Skenario Use Case' : 'SA Mockup Generator (Create Scenario)'}
+              </h3>
+              <p className="text-[11px] text-slate-400">
+                {scenarioToEdit ? 'Ubah parameter dan langkah skenario' : 'Buat skenario baru dan simpan ke Supabase DB'}
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer">✕</button>
@@ -216,7 +264,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
             </div>
             <div className="text-center">
               <h4 className="font-bold text-slate-900 text-base">Otentikasi SA Team Required</h4>
-              <p className="text-xs text-slate-500 max-w-sm mt-1">Masukkan password otorisasi SA Team untuk membuka Mockup Generator & Supabase DB Sync.</p>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">Masukkan password otorisasi SA Team untuk membuat atau mengedit skenario.</p>
             </div>
 
             <div className="w-full max-w-xs space-y-2">
@@ -234,99 +282,110 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               type="submit"
               className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
-              <ShieldCheck size={16} /> Buka Mockup Generator
+              <ShieldCheck size={16} /> Buka Form Skenario
             </button>
           </form>
         ) : (
           /* Main Generator Form */
-          <div className="p-6 overflow-y-auto custom-scrollbar space-y-6 text-xs text-slate-800">
+          <div className="p-6 overflow-y-auto custom-scrollbar space-y-5 text-xs text-slate-800">
             
-            {/* Basic Scenario Properties */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-              <h4 className="font-bold text-blue-700 flex items-center gap-2 text-xs">
-                <Layers size={16} /> 1. Metadata Skenario & Trigger
-              </h4>
+            {/* Target Category Selector */}
+            <div className="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 space-y-2">
+              <label className="block text-[11px] font-bold text-blue-900">Target Kategori Industri Skenario Ini:</label>
+              <select
+                value={targetCategoryId}
+                onChange={(e) => setTargetCategoryId(e.target.value)}
+                className="w-full px-3.5 py-2 rounded-xl border border-blue-300 text-xs bg-white font-bold text-blue-700 focus:outline-none focus:border-blue-600 shadow-xs"
+              >
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.title} ({c.badge})
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Basic Info Section */}
+            <div className="space-y-3">
+              <div className="font-bold text-slate-900 text-xs border-b border-slate-200 pb-1 flex items-center gap-1.5">
+                <Database size={14} className="text-blue-600" /> Information & Metadata
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Target Kategori Industri</label>
-                  <select
-                    value={targetCategoryId}
-                    onChange={(e) => setTargetCategoryId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-bold text-blue-700 focus:outline-none"
-                  >
-                    {categories.map(c => (
-                      <option key={c.id} value={c.id}>{c.title}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nama Tab Carousel</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nama Skenario (Tab Pill)</label>
                   <input
                     type="text"
-                    placeholder="e.g. 17. Booking Radiologi"
+                    placeholder="e.g. 1. Gejala Ambigu"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-bold focus:outline-none focus:border-blue-600"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Judul Skenario Lengkap</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Judul Lengkap Use Case</label>
                   <input
                     type="text"
-                    placeholder="e.g. 17. Booking Radiologi Real-Time SIMRS"
+                    placeholder="e.g. 1. Penanganan Gejala Ambigu & Larangan Saran Poli"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-bold focus:outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tipe Trigger Percakapan</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tag / Category Label</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Guardrail / Compliance"
+                    value={tag}
+                    onChange={(e) => setTag(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tipe Trigger</label>
                   <select
                     value={triggerType}
                     onChange={(e) => setTriggerType(e.target.value as TriggerType)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600 font-bold text-blue-700"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-semibold"
                   >
-                    <option value="INBOUND_USER">📥 INBOUND USER CHAT (Mulai dari Pasien)</option>
-                    <option value="OUTBOUND_SYSTEM">🔔 OUTBOUND SYSTEM TRIGGER (Mulai dari RS)</option>
+                    <option value="INBOUND_USER">USER INBOUND CHAT</option>
+                    <option value="OUTBOUND_SYSTEM">SYSTEM OUTBOUND TRIGGER</option>
                   </select>
                 </div>
-
-                {triggerType === 'OUTBOUND_SYSTEM' && (
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Label Outbound System Pill</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 🔔 OUTBOUND REMINDER H-1"
-                      value={outboundPill}
-                      onChange={(e) => setOutboundPill(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
-                    />
-                  </div>
-                )}
-
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tag / Kategori</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Author SA Team</label>
                   <input
                     type="text"
-                    placeholder="e.g. Core Feature / Broadcast / Routing"
-                    value={tag}
-                    onChange={(e) => setTag(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
+                    placeholder="e.g. SA Team Cekat"
+                    value={saAuthor}
+                    onChange={(e) => setSaAuthor(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white"
                   />
                 </div>
               </div>
 
+              {triggerType === 'OUTBOUND_SYSTEM' && (
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Outbound Pill Badge Text</label>
+                  <input
+                    type="text"
+                    placeholder="🔔 OUTBOUND SYSTEM TRIGGER"
+                    value={outboundPill}
+                    onChange={(e) => setOutboundPill(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-semibold text-blue-600"
+                  />
+                </div>
+              )}
+
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Deskripsi Skenario & Tujuan</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Deskripsi & Tujuan Skenario</label>
                 <textarea
                   rows={2}
-                  placeholder="Jelaskan tujuan dan konteks skenario ini..."
+                  placeholder="Penjelasan ringkas fungsi dan arsitektur skenario ini..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
@@ -334,197 +393,51 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Pesan Awal (Initial Chat Text)</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Pesan Awal Chat (Initial Text)</label>
                 <textarea
                   rows={2}
-                  placeholder={triggerType === 'INBOUND_USER' ? 'Pertanyaan pertama pasien...' : 'Pesan outbound otomatis dari RS...'}
+                  placeholder="Pesan pertama yang dikirimkan pasien/sistem..."
                   value={initialText}
                   onChange={(e) => setInitialText(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600 font-mono"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-semibold focus:outline-none focus:border-blue-600"
                 />
               </div>
             </div>
 
-            {/* Step Sequence Builder */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-bold text-blue-700 flex items-center gap-2 text-xs">
-                  <ArrowRight size={16} /> 2. Urutan Step Percakapan (Flow Steps)
-                </h4>
-                <button
-                  type="button"
-                  onClick={addStep}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer"
-                >
-                  <Plus size={14} /> Tambah Step
-                </button>
+            {/* Technical Specs Section */}
+            <div className="space-y-3 pt-2">
+              <div className="font-bold text-slate-900 text-xs border-b border-slate-200 pb-1 flex items-center gap-1.5">
+                <Layers size={14} className="text-blue-600" /> Technical Inspector Specs
               </div>
-
-              {steps.map((step, idx) => (
-                <div key={idx} className="bg-white border border-slate-200 rounded-xl p-3.5 space-y-3 shadow-xs relative">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <span className="font-extrabold text-blue-700 text-xs flex items-center gap-1.5">
-                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">{idx + 1}</span> Step {idx + 1}
-                    </span>
-                    {steps.length > 1 && (
-                      <button onClick={() => removeStep(idx)} className="text-red-500 hover:text-red-700 text-xs flex items-center gap-1 font-semibold cursor-pointer">
-                        <Trash2 size={13} /> Hapus Step
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-600 mb-1">Balasan User (Pesan Kanan)</label>
-                      <input
-                        type="text"
-                        value={step.userReply}
-                        onChange={(e) => updateStep(idx, 'userReply', e.target.value)}
-                        className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-600 mb-1">Respons AI Bot (Pesan Kiri)</label>
-                      <textarea
-                        rows={2}
-                        value={step.aiResponse}
-                        onChange={(e) => updateStep(idx, 'aiResponse', e.target.value)}
-                        className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  {/* 💳 E-Tiket / Payload Card Customizer per Step */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <label className="flex items-center gap-2 cursor-pointer font-bold text-xs text-emerald-700">
-                        <input
-                          type="checkbox"
-                          checked={step.enableCard || false}
-                          onChange={(e) => toggleCardForStep(idx, e.target.checked)}
-                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
-                        />
-                        <CreditCard size={15} /> Lampirkan Kartu E-Tiket / Struk Transaksi pada Step ini
-                      </label>
-                      {step.enableCard && (
-                        <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-                          CARD ACTIVE
-                        </span>
-                      )}
-                    </div>
-
-                    {step.enableCard && step.card && (
-                      <div className="space-y-2.5 pt-1">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                          <div>
-                            <label className="block text-[9.5px] font-semibold text-slate-600 mb-0.5">Judul Kartu</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. 🎫 E-Tiket Janji Dokter"
-                              value={step.card.title}
-                              onChange={(e) => updateCardField(idx, 'title', e.target.value)}
-                              className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white font-bold"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[9.5px] font-semibold text-slate-600 mb-0.5">Sub-Judul / Keterangan</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. Cekat AI Enterprise"
-                              value={step.card.sub}
-                              onChange={(e) => updateCardField(idx, 'sub', e.target.value)}
-                              className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[9.5px] font-semibold text-slate-600 mb-0.5">Footer Status Banner</label>
-                            <input
-                              type="text"
-                              placeholder="e.g. SYSTEM LOCKED"
-                              value={step.card.status}
-                              onChange={(e) => updateCardField(idx, 'status', e.target.value)}
-                              className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white font-mono uppercase"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Dynamic Key-Value Pairs List */}
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-slate-700">Daftar Baris Data (Key - Value):</span>
-                            <button
-                              type="button"
-                              onClick={() => addCardItem(idx)}
-                              className="text-[10px] text-blue-600 font-bold hover:underline flex items-center gap-1 cursor-pointer"
-                            >
-                              <Plus size={12} /> Tambah Row Data
-                            </button>
-                          </div>
-
-                          {step.card.items.map((item, itemIdx) => (
-                            <div key={itemIdx} className="flex items-center gap-2 bg-white p-1.5 rounded border border-slate-200">
-                              <input
-                                type="text"
-                                placeholder="Label (e.g. Kode Booking)"
-                                value={item.label}
-                                onChange={(e) => updateCardItem(idx, itemIdx, 'label', e.target.value)}
-                                className="flex-1 px-2 py-1 rounded border border-slate-200 text-xs"
-                              />
-                              <input
-                                type="text"
-                                placeholder="Value (e.g. #BK-10029)"
-                                value={item.val}
-                                onChange={(e) => updateCardItem(idx, itemIdx, 'val', e.target.value)}
-                                className="flex-1 px-2 py-1 rounded border border-slate-200 text-xs font-bold"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeCardItem(idx, itemIdx)}
-                                className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Technical Architecture Specs */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-              <h4 className="font-bold text-blue-700 flex items-center gap-2 text-xs">
-                <Database size={16} /> 3. Komponen Cekat & Scope API
-              </h4>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Komponen Cekat AI (Pisahkan koma)</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Komponen Cekat AI (Pisahkan Koma)</label>
                   <input
                     type="text"
+                    placeholder="AI Agent, API Tools, n8n"
                     value={cekatComponentsStr}
                     onChange={(e) => setCekatComponentsStr(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-mono bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Scope API Systems (Pisahkan koma)</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Scope API (Pisahkan Koma)</label>
                   <input
                     type="text"
+                    placeholder="GET /api/v1/availability, POST /api/v1/booking"
                     value={apiScopesStr}
                     onChange={(e) => setApiScopesStr(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-mono"
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs font-mono bg-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Rules & Safeguard Note</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Rule Safeguard & Note</label>
                 <input
                   type="text"
+                  placeholder="Catatan aturan keamanan / instruksi ketat AI..."
                   value={ruleNote}
                   onChange={(e) => setRuleNote(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white italic"
@@ -532,18 +445,193 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Step-by-Step Flowchart Nodes (Per baris)</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Langkah Alur / Flowchart (Satu per baris)</label>
                 <textarea
                   rows={3}
+                  placeholder="Step 1 — Intake&#10;Step 2 — Safety Gate&#10;Step 3 — Handoff"
                   value={stepsDetailStr}
                   onChange={(e) => setStepsDetailStr(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-mono"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-mono focus:outline-none focus:border-blue-600"
                 />
               </div>
             </div>
 
-            {/* Save Action Button */}
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-200">
+            {/* Conversation Step Sequence Builder */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                  <ArrowRight size={14} className="text-blue-600" /> Alur Percakapan (Interactive Steps)
+                </div>
+                <button
+                  type="button"
+                  onClick={addStep}
+                  className="bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 font-bold text-[11px] px-3 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer"
+                >
+                  <Plus size={13} /> Tambah Step Percakapan
+                </button>
+              </div>
+
+              {steps.map((st, idx) => (
+                <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 relative">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-blue-700 text-xs">Step #{idx + 1}</span>
+                    {steps.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeStep(idx)}
+                        className="text-red-600 hover:text-red-700 text-xs flex items-center gap-1 font-semibold cursor-pointer"
+                      >
+                        <Trash2 size={13} /> Hapus Step
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Pesan Balasan User/Nasabah</label>
+                      <input
+                        type="text"
+                        placeholder="Teks yang dikirim user..."
+                        value={st.userReply}
+                        onChange={(e) => updateStepField(idx, 'userReply', e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Teks Opsi Chips (Pisahkan Koma)</label>
+                      <input
+                        type="text"
+                        placeholder="Option 1, Option 2, Option 3"
+                        value={st.chips ? st.chips.join(', ') : ''}
+                        onChange={(e) => updateStepField(idx, 'chips', e.target.value.split(',').map(c => c.trim()).filter(Boolean))}
+                        className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Jawaban AI Assistant</label>
+                    <textarea
+                      rows={2}
+                      placeholder="Balasan otomatis dari bot Cekat AI..."
+                      value={st.aiResponse}
+                      onChange={(e) => updateStepField(idx, 'aiResponse', e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+
+                  {/* Card Toggle */}
+                  <div className="pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={st.enableCard || false}
+                        onChange={(e) => toggleStepCard(idx, e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="font-bold text-slate-800 text-xs flex items-center gap-1">
+                        <CreditCard size={14} className="text-blue-600" /> Sertakan Kartu / E-Tiket Struk pada Step ini
+                      </span>
+                    </label>
+
+                    {st.enableCard && st.card && (
+                      <div className="mt-3 bg-white border border-blue-200 rounded-xl p-3 space-y-3">
+                        <div className="font-bold text-blue-700 text-xs border-b border-slate-100 pb-1">
+                          Konfigurasi Kartu Struk WA
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                          <div>
+                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Judul Kartu</label>
+                            <input
+                              type="text"
+                              value={st.card.title}
+                              onChange={(e) => {
+                                const newSteps = [...steps];
+                                newSteps[idx].card!.title = e.target.value;
+                                setSteps(newSteps);
+                              }}
+                              className="w-full px-2.5 py-1.5 rounded border border-slate-300 text-xs font-bold text-emerald-800"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Sub-judul Status</label>
+                            <input
+                              type="text"
+                              value={st.card.sub}
+                              onChange={(e) => {
+                                const newSteps = [...steps];
+                                newSteps[idx].card!.sub = e.target.value;
+                                setSteps(newSteps);
+                              }}
+                              className="w-full px-2.5 py-1.5 rounded border border-slate-300 text-xs"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Status Banner Bawah</label>
+                            <input
+                              type="text"
+                              value={st.card.status}
+                              onChange={(e) => {
+                                const newSteps = [...steps];
+                                newSteps[idx].card!.status = e.target.value;
+                                setSteps(newSteps);
+                              }}
+                              className="w-full px-2.5 py-1.5 rounded border border-slate-300 text-xs font-bold uppercase"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Card Key-Value Items */}
+                        <div className="space-y-2 pt-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10.5px] font-bold text-slate-700">Data Baris Kartu:</span>
+                            <button
+                              type="button"
+                              onClick={() => addCardItem(idx)}
+                              className="text-blue-600 hover:text-blue-800 font-bold text-[10.5px] cursor-pointer"
+                            >
+                              + Tambah Baris Data
+                            </button>
+                          </div>
+
+                          {st.card.items && st.card.items.map((item, itemIdx) => (
+                            <div key={itemIdx} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                placeholder="Label"
+                                value={item.label}
+                                onChange={(e) => updateCardItem(idx, itemIdx, 'label', e.target.value)}
+                                className="flex-1 px-2 py-1 rounded border border-slate-300 text-xs"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Nilai"
+                                value={item.val}
+                                onChange={(e) => updateCardItem(idx, itemIdx, 'val', e.target.value)}
+                                className="flex-1 px-2 py-1 rounded border border-slate-300 text-xs font-bold"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeCardItem(idx, itemIdx)}
+                                className="text-red-500 hover:text-red-700 font-bold text-xs p-1 cursor-pointer"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
               <button
                 type="button"
                 onClick={onClose}
@@ -556,7 +644,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                 onClick={handleSaveScenario}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
               >
-                <CheckCircle2 size={16} /> Simpan Skenario Ke Supabase DB
+                <CheckCircle2 size={16} /> {scenarioToEdit ? 'Simpan Perubahan Skenario' : 'Simpan & Publikasikan Skenario Baru'}
               </button>
             </div>
 

@@ -12,7 +12,7 @@ import {
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3
 } from 'lucide-react';
 
 export function App() {
@@ -31,6 +31,7 @@ export function App() {
 
   // Modals State
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  const [scenarioToEdit, setScenarioToEdit] = useState<Scenario | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isImportJsonOpen, setIsImportJsonOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
@@ -387,7 +388,10 @@ export function App() {
               <FileJson size={14} /> Import JSON
             </button>
             <button
-              onClick={() => setIsGeneratorOpen(true)}
+              onClick={() => {
+                setScenarioToEdit(null);
+                setIsGeneratorOpen(true);
+              }}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
             >
               <Plus size={14} /> Create Mockup (SA Team)
@@ -469,6 +473,18 @@ export function App() {
 
           {currentScenario && (
             <>
+              <div className="h-3 w-px bg-slate-200"></div>
+              <button
+                onClick={() => {
+                  setScenarioToEdit(currentScenario);
+                  setIsGeneratorOpen(true);
+                }}
+                className="flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
+                title="Edit Skenario Ini"
+              >
+                <Edit3 size={13} />
+                <span>Edit Skenario</span>
+              </button>
               <div className="h-3 w-px bg-slate-200"></div>
               <button
                 onClick={() => setIsMoveModalOpen(true)}
@@ -754,9 +770,13 @@ export function App() {
       {/* Modals */}
       <MockupGeneratorModal
         isOpen={isGeneratorOpen}
-        onClose={() => setIsGeneratorOpen(false)}
+        onClose={() => {
+          setIsGeneratorOpen(false);
+          setScenarioToEdit(null);
+        }}
         activeCategoryId={selectedCategory ? selectedCategory.id : 'healthcare'}
         categories={categories}
+        scenarioToEdit={scenarioToEdit}
         onScenarioCreated={(newSc) => {
           setAllScenarios(prev => [...prev, newSc]);
           const targetCat = categories.find(c => c.id === newSc.categoryId) || selectedCategory;
@@ -764,6 +784,22 @@ export function App() {
             setSelectedCategory(targetCat);
           }
           handleSelectScenario(newSc);
+        }}
+        onScenarioUpdated={(updatedSc) => {
+          setAllScenarios(prev => {
+            const idx = prev.findIndex(s => s.id === updatedSc.id);
+            if (idx >= 0) {
+              const updated = [...prev];
+              updated[idx] = updatedSc;
+              return updated;
+            }
+            return prev;
+          });
+          const targetCat = categories.find(c => c.id === updatedSc.categoryId) || selectedCategory;
+          if (targetCat) {
+            setSelectedCategory(targetCat);
+          }
+          setCurrentScenario(updatedSc);
         }}
       />
 
