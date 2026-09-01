@@ -53,7 +53,8 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === 'SAteamCekat@') {
+    const validPassword = import.meta.env.VITE_SA_PASSWORD || 'SAteamCekat@';
+    if (passwordInput === validPassword) {
       setIsAuthenticated(true);
       setAuthError('');
     } else {

@@ -1,6 +1,6 @@
 import { Scenario, Category } from '../types/scenario';
 
-const SUPABASE_REST_URL = 'https://sxavoyplmlgzlctphnxb.supabase.co/rest/v1';
+const SUPABASE_REST_URL = import.meta.env.VITE_SUPABASE_URL || 'https://sxavoyplmlgzlctphnxb.supabase.co/rest/v1';
 
 export class SupabaseService {
   private static SCENARIOS_KEY = 'cekat_ai_custom_scenarios_v2';
@@ -8,6 +8,8 @@ export class SupabaseService {
   private static API_KEY_STORAGE = 'cekat_supabase_anon_key';
 
   static getApiKey(): string {
+    const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (envKey && envKey.trim()) return envKey.trim();
     return localStorage.getItem(this.API_KEY_STORAGE) || '';
   }
 
@@ -42,7 +44,6 @@ export class SupabaseService {
         if (response.ok) {
           const data = await response.json();
           if (Array.isArray(data)) {
-            // Also sync to local storage
             localStorage.setItem(this.SCENARIOS_KEY, JSON.stringify(data));
             return data as Scenario[];
           }
@@ -57,7 +58,6 @@ export class SupabaseService {
   }
 
   static async saveScenario(scenario: Scenario): Promise<boolean> {
-    // Local persistence
     const existing = await this.fetchScenarios();
     const idx = existing.findIndex(s => s.id === scenario.id);
     if (idx >= 0) {
@@ -67,7 +67,6 @@ export class SupabaseService {
     }
     localStorage.setItem(this.SCENARIOS_KEY, JSON.stringify(existing));
 
-    // Supabase REST Persistence
     const key = this.getApiKey();
     if (!key) return true;
 
