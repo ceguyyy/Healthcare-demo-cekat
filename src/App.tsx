@@ -401,10 +401,8 @@ export function App() {
             >
               <ArrowLeft size={16} />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white text-base font-black shadow-xs">
-                C
-              </div>
+            <div className="flex items-center gap-2.5">
+              <img src="/cekat-logo.png" alt="Cekat.AI Logo" className="w-9 h-9 object-contain rounded-xl shadow-xs" />
               <div>
                 <span className="font-extrabold text-lg tracking-tight text-slate-900 leading-none block">Cekat.AI</span>
                 <span className="text-[10.5px] font-bold text-blue-600 block">{selectedCategory.title}</span>
@@ -548,12 +546,10 @@ export function App() {
                   </div>
                 </div>
 
-                {/* WhatsApp Chat Header */}
+                {/* WhatsApp Chat Header with Official Cekat AI Avatar */}
                 <div className="bg-[#075E54] px-4 py-2.5 flex items-center gap-3 text-white shrink-0">
                   <ChevronLeft size={16} className="opacity-80 cursor-pointer" />
-                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0 border border-emerald-400 font-extrabold text-xs text-[#075E54]">
-                    AI
-                  </div>
+                  <img src="/cekat-logo.png" alt="Cekat AI Avatar" className="w-9 h-9 rounded-full object-cover shrink-0 border border-emerald-400 shadow-xs bg-white p-0.5" />
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-xs leading-tight truncate">Cekat AI Assistant</div>
                     <div className="text-[10px] text-emerald-300 font-semibold flex items-center gap-1 leading-tight">

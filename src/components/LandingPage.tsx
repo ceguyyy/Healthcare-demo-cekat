@@ -20,12 +20,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       
       <div className="w-full max-w-6xl space-y-8">
         
-        {/* Clean Top Navbar */}
+        {/* Clean Top Navbar with Official Cekat.AI Logo */}
         <div className="w-full bg-white text-slate-900 rounded-2xl px-6 py-4 shadow-sm flex items-center justify-between border border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white text-lg font-black shadow-xs">
-              C
-            </div>
+            <img src="/cekat-logo.png" alt="Cekat.AI Logo" className="w-10 h-10 object-contain rounded-xl shadow-xs" />
             <span className="font-extrabold text-2xl tracking-tight text-slate-900">Cekat.AI</span>
           </div>
 
