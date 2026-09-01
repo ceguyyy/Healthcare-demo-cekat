@@ -11,6 +11,7 @@ import { ImportJsonModal } from './components/ImportJsonModal';
 import { MoveScenarioModal } from './components/MoveScenarioModal';
 import { ShareModal } from './components/ShareModal';
 import { CekatIframeModal } from './components/CekatIframeModal';
+import { AuthConfirmModal } from './components/AuthConfirmModal';
 import { 
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, ChevronRight, Phone, MoreVertical, 
@@ -92,6 +93,43 @@ export function App() {
       iconType: 'chat'
     });
   };
+
+  // Auth Confirm Modal State for Password Guarded Actions (Clone & Delete)
+  const [authConfirmState, setAuthConfirmState] = useState<{
+    isOpen: boolean;
+    actionType: 'clone' | 'delete' | null;
+    targetScenarioId?: string;
+    scenarioName?: string;
+  }>({ isOpen: false, actionType: null });
+
+  const requestCloneScenario = () => {
+    if (!currentScenario) return;
+    setAuthConfirmState({
+      isOpen: true,
+      actionType: 'clone',
+      targetScenarioId: currentScenario.id,
+      scenarioName: currentScenario.name
+    });
+  };
+
+  const requestDeleteScenario = (id: string, name?: string) => {
+    const target = allScenarios.find(s => s.id === id) || currentScenario;
+    setAuthConfirmState({
+      isOpen: true,
+      actionType: 'delete',
+      targetScenarioId: id,
+      scenarioName: name || target?.name
+    });
+  };
+
+  const handleConfirmAuthAction = async () => {
+    if (authConfirmState.actionType === 'clone') {
+      await handleDuplicateScenario();
+    } else if (authConfirmState.actionType === 'delete' && authConfirmState.targetScenarioId) {
+      await handleDeleteScenario(authConfirmState.targetScenarioId);
+    }
+  };
+
   const [copiedToast, setCopiedToast] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
 
@@ -345,7 +383,7 @@ export function App() {
     }
   }, [currentScenario]);
 
-  // 1-Click Duplicate Scenario
+  // 1-Click Duplicate Scenario (Requires SA Password Auth)
   const handleDuplicateScenario = async () => {
     if (!currentScenario) return;
 
@@ -362,18 +400,19 @@ export function App() {
     };
 
     await SupabaseService.saveScenario(clonedScenario);
+    queryClient.invalidateQueries({ queryKey: ['scenarios'] });
     setAllScenarios(prev => [...prev, clonedScenario]);
     handleSelectScenario(clonedScenario);
   };
 
+  // Delete Scenario (Requires SA Password Auth)
   const handleDeleteScenario = async (id: string) => {
-    if (confirm('Apakah Anda yakin ingin menghapus skenario ini?')) {
-      await SupabaseService.deleteScenario(id);
-      setAllScenarios(prev => prev.filter(s => s.id !== id));
-      const remaining = activeCategoryScenarios.filter(s => s.id !== id);
-      if (remaining.length > 0) {
-        handleSelectScenario(remaining[0]);
-      }
+    await SupabaseService.deleteScenario(id);
+    queryClient.invalidateQueries({ queryKey: ['scenarios'] });
+    setAllScenarios(prev => prev.filter(s => s.id !== id));
+    const remaining = activeCategoryScenarios.filter(s => s.id !== id);
+    if (remaining.length > 0) {
+      handleSelectScenario(remaining[0]);
     }
   };
 
@@ -562,6 +601,14 @@ export function App() {
           title={iframeModalState.title}
           badge={iframeModalState.badge}
           iconType={iframeModalState.iconType}
+        />
+
+        <AuthConfirmModal
+          isOpen={authConfirmState.isOpen}
+          onClose={() => setAuthConfirmState(prev => ({ ...prev, isOpen: false }))}
+          actionType={authConfirmState.actionType}
+          scenarioName={authConfirmState.scenarioName}
+          onConfirm={handleConfirmAuthAction}
         />
       </>
     );
@@ -794,9 +841,9 @@ export function App() {
                   </button>
                   <div className="h-3 w-px bg-slate-200"></div>
                   
-                  {/* 1-Click Duplicate Button */}
+                  {/* 1-Click Duplicate Button (Guarded with SA Password Auth) */}
                   <button
-                    onClick={handleDuplicateScenario}
+                    onClick={requestCloneScenario}
                     className="flex items-center gap-1 text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
                     title="Clone Scenario"
                   >
@@ -818,7 +865,7 @@ export function App() {
 
                   <div className="h-3 w-px bg-slate-200"></div>
                   <button
-                    onClick={() => handleDeleteScenario(currentScenario.id)}
+                    onClick={() => requestDeleteScenario(currentScenario.id, currentScenario.name)}
                     className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold transition cursor-pointer"
                     title="Delete Scenario"
                   >
@@ -1486,6 +1533,14 @@ export function App() {
         title={iframeModalState.title}
         badge={iframeModalState.badge}
         iconType={iframeModalState.iconType}
+      />
+
+      <AuthConfirmModal
+        isOpen={authConfirmState.isOpen}
+        onClose={() => setAuthConfirmState(prev => ({ ...prev, isOpen: false }))}
+        actionType={authConfirmState.actionType}
+        scenarioName={authConfirmState.scenarioName}
+        onConfirm={handleConfirmAuthAction}
       />
 
       {copiedToast && (
