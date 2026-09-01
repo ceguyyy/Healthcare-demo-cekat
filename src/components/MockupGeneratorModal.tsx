@@ -166,7 +166,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
     const finalCatId = targetCategoryId || activeCategoryId || 'healthcare';
 
     const newScenario: Scenario = {
-      id: `custom_${Date.now()}`,
+      id: generateUUID(),
       categoryId: finalCatId,
       name,
       title,

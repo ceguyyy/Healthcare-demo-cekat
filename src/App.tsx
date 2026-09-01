@@ -122,13 +122,24 @@ export function App() {
       })
     : [];
 
-  if (selectedCategory && currentScenario) {
-    const isCurrentActive = activeCategoryScenarios.some(s => s.id === currentScenario.id);
-    if (!isCurrentActive) {
-      currentScenario.categoryId = selectedCategory.id;
-      activeCategoryScenarios.push(currentScenario);
+  // Synchronize current scenario when selected category or scenarios list changes
+  useEffect(() => {
+    if (selectedCategory) {
+      const activeScs = allScenarios.filter(s => {
+        const sCatId = (s.categoryId || 'healthcare').toLowerCase().trim();
+        const curCatId = selectedCategory.id.toLowerCase().trim();
+        return sCatId === curCatId;
+      });
+
+      if (activeScs.length > 0) {
+        const isBelongs = activeScs.some(s => s.id === currentScenario?.id);
+        if (!isBelongs) {
+          setCurrentScenario(activeScs[0]);
+          window.location.hash = `#/category/${selectedCategory.id}/scenario/${activeScs[0].id}`;
+        }
+      }
     }
-  }
+  }, [selectedCategory, allScenarios]);
 
   // Update URL Hash when selecting Category
   const handleSelectCategory = (cat: Category) => {

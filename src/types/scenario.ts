@@ -16,13 +16,13 @@ export interface Step {
   userReply: string;
   aiResponse: string;
   chips?: string[];
-  card?: CardData;
   enableCard?: boolean;
+  card?: CardData;
 }
 
 export interface Scenario {
   id: string;
-  categoryId: string; // Belongs to a Category (e.g., 'healthcare', 'banking', etc.)
+  categoryId: string;
   name: string;
   title: string;
   tag: string;
@@ -42,8 +42,14 @@ export interface Category {
   id: string;
   title: string;
   description: string;
-  icon: string; // FontAwesome icon class or Lucide name (e.g. 'fa-hospital', 'fa-building-columns')
+  icon: string;
   badge: string;
-  scenarioCount?: number;
   isCustom?: boolean;
 }
+
+export const generateUUID = (): string => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'uuid_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+};

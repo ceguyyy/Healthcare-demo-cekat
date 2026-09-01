@@ -60,7 +60,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     }
 
     const cat: Category = {
-      id: categoryToEdit ? categoryToEdit.id : `cat_${Date.now()}`,
+      id: categoryToEdit ? categoryToEdit.id : generateUUID(),
       title,
       description,
       icon,

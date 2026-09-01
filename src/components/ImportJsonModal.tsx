@@ -124,7 +124,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
       const categoryId = activeCategory ? activeCategory.id : (parsed.categoryId || 'healthcare');
 
       const scenarioToImport: Scenario = {
-        id: `custom_${Date.now()}`,
+        id: generateUUID(),
         categoryId,
         name: parsed.name,
         title: parsed.title,
