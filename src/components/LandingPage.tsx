@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Category } from '../types/scenario';
-import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal } from 'lucide-react';
+import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface LandingPageProps {
   categories: Category[];
@@ -8,6 +8,8 @@ interface LandingPageProps {
   onAddCategory: () => void;
   onEditCategory: (category: Category) => void;
 }
+
+const ITEMS_PER_PAGE = 6;
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   categories,
@@ -18,6 +20,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<'default' | 'name_asc' | 'name_desc'>('default');
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Extract unique badges for quick filter chips
   const availableTags = useMemo(() => {
@@ -52,6 +55,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         return 0;
       });
   }, [categories, searchQuery, selectedTag, sortBy]);
+
+  // Reset to page 1 whenever filters or search query change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedTag, sortBy]);
+
+  const totalPages = Math.ceil(filteredCategories.length / ITEMS_PER_PAGE) || 1;
+
+  const paginatedCategories = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredCategories.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredCategories, currentPage]);
+
+  const startIndex = filteredCategories.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endIndex = Math.min(currentPage * ITEMS_PER_PAGE, filteredCategories.length);
 
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col items-center justify-start p-4 md:p-8 font-sans">
@@ -166,8 +184,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
 
-        {/* Category Cards Grid */}
-        <div className="space-y-4">
+        {/* Category Cards Grid & Pagination */}
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="font-extrabold text-xl text-slate-900 flex items-center gap-2">
               <span>Use Case Categories</span>
@@ -177,54 +195,103 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </h2>
           </div>
 
-          {/* Render Filtered Category Grid */}
+          {/* Render Paginated Category Grid (Max 6 per page) */}
           {filteredCategories.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredCategories.map((cat) => (
-                <div
-                  key={cat.id}
-                  className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4 group cursor-pointer border-l-4 border-l-blue-600"
-                  onClick={() => onSelectCategory(cat)}
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl border border-blue-200 font-black">
-                        <i className={cat.icon.includes('fa-') && (cat.icon.includes('fa-brands') || cat.icon.includes('fa-regular') || cat.icon.includes('fa-solid')) ? cat.icon : `fa-solid ${cat.icon}`}></i>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {paginatedCategories.map((cat) => (
+                  <div
+                    key={cat.id}
+                    className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4 group cursor-pointer border-l-4 border-l-blue-600"
+                    onClick={() => onSelectCategory(cat)}
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl border border-blue-200 font-black">
+                          <i className={cat.icon.includes('fa-') && (cat.icon.includes('fa-brands') || cat.icon.includes('fa-regular') || cat.icon.includes('fa-solid')) ? cat.icon : `fa-solid ${cat.icon}`}></i>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="bg-slate-100 text-slate-700 font-mono font-bold text-[10px] px-3 py-1 rounded-full border border-slate-200">
+                            {cat.badge}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditCategory(cat);
+                            }}
+                            className="text-slate-400 hover:text-blue-600 text-xs p-1 font-semibold"
+                            title="Edit Category"
+                          >
+                            <Settings size={15} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-slate-100 text-slate-700 font-mono font-bold text-[10px] px-3 py-1 rounded-full border border-slate-200">
-                          {cat.badge}
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEditCategory(cat);
-                          }}
-                          className="text-slate-400 hover:text-blue-600 text-xs p-1 font-semibold"
-                          title="Edit Category"
-                        >
-                          <Settings size={15} />
-                        </button>
+
+                      <div>
+                        <h3 className="font-extrabold text-lg text-slate-900 group-hover:text-blue-600 transition">
+                          {cat.title}
+                        </h3>
+                        <p className="text-xs text-slate-600 leading-relaxed mt-1">
+                          {cat.description}
+                        </p>
                       </div>
                     </div>
 
-                    <div>
-                      <h3 className="font-extrabold text-lg text-slate-900 group-hover:text-blue-600 transition">
-                        {cat.title}
-                      </h3>
-                      <p className="text-xs text-slate-600 leading-relaxed mt-1">
-                        {cat.description}
-                      </p>
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600 group-hover:translate-x-1 transition">
+                      <span>Open Simulator & Canvas Flow</span>
+                      <ArrowRight size={16} />
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600 group-hover:translate-x-1 transition">
-                    <span>Open Simulator & Canvas Flow</span>
-                    <ArrowRight size={16} />
-                  </div>
+              {/* Pagination Bar & Indexing */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200 text-xs text-slate-600 font-medium">
+                
+                {/* Indexing Info */}
+                <div>
+                  Showing <span className="font-bold text-slate-900">{startIndex}–{endIndex}</span> of <span className="font-bold text-slate-900">{filteredCategories.length}</span> categories
                 </div>
-              ))}
-            </div>
+
+                {/* Page Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 font-bold bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition shadow-xs flex items-center gap-1"
+                    >
+                      <ChevronLeft size={14} /> Previous
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setCurrentPage(p)}
+                          className={`w-8 h-8 rounded-xl font-extrabold text-xs transition cursor-pointer flex items-center justify-center ${
+                            currentPage === p
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 font-bold bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition shadow-xs flex items-center gap-1"
+                    >
+                      Next <ChevronRight size={14} />
+                    </button>
+                  </div>
+                )}
+
+              </div>
+            </>
           ) : (
             /* Empty Search State */
             <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-10 text-center space-y-4">
