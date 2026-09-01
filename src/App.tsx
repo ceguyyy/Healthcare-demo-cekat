@@ -7,11 +7,12 @@ import { LandingPage } from './components/LandingPage';
 import { MockupGeneratorModal } from './components/MockupGeneratorModal';
 import { CategoryModal } from './components/CategoryModal';
 import { ImportJsonModal } from './components/ImportJsonModal';
+import { GifExporterModal } from './components/GifExporterModal';
 import { 
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, Film
 } from 'lucide-react';
 
 export function App() {
@@ -32,6 +33,7 @@ export function App() {
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isImportJsonOpen, setIsImportJsonOpen] = useState(false);
+  const [isGifExporterOpen, setIsGifExporterOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
 
   // Call Modal State
@@ -42,6 +44,7 @@ export function App() {
   const [isCallMuted, setIsCallMuted] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement>(null);
+  const iphoneRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<any>(null);
   const callTimerRef = useRef<any>(null);
 
@@ -455,6 +458,17 @@ export function App() {
             <span>Reset</span>
           </button>
 
+          <div className="h-3 w-px bg-slate-200"></div>
+
+          <button
+            onClick={() => setIsGifExporterOpen(true)}
+            className="flex items-center gap-1 text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
+            title="Export Simulasi ke Animated GIF"
+          >
+            <Film size={13} />
+            <span>Export GIF</span>
+          </button>
+
           {currentScenario && currentScenario.id.startsWith('custom_') && (
             <>
               <div className="h-3 w-px bg-slate-200"></div>
@@ -475,7 +489,7 @@ export function App() {
           <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 mt-1">
             
             {/* iPhone Frame Canvas */}
-            <div className="iphone-case">
+            <div ref={iphoneRef} className="iphone-case">
               <div className="iphone-screen">
                 
                 {/* Dynamic Island Notch */}
@@ -760,6 +774,13 @@ export function App() {
           }
           handleSelectScenario(importedSc);
         }}
+      />
+
+      <GifExporterModal
+        isOpen={isGifExporterOpen}
+        onClose={() => setIsGifExporterOpen(false)}
+        iphoneElement={iphoneRef.current}
+        scenario={currentScenario}
       />
 
       <CategoryModal
