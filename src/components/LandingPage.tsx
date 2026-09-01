@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Category } from '../types/scenario';
-import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal, ChevronLeft, ChevronRight, Lock, Globe } from 'lucide-react';
+import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal, ChevronLeft, ChevronRight, Lock, Globe, BookOpen } from 'lucide-react';
 
 interface LandingPageProps {
   categories: Category[];
@@ -8,6 +8,7 @@ interface LandingPageProps {
   onAddCategory: () => void;
   onEditCategory: (category: Category) => void;
   onOpenLiveChat?: () => void;
+  onOpenDocs?: () => void;
 }
 
 const ITEMS_PER_PAGE = 6;
@@ -17,7 +18,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onSelectCategory,
   onAddCategory,
   onEditCategory,
-  onOpenLiveChat
+  onOpenLiveChat,
+  onOpenDocs
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('ALL');
@@ -86,12 +88,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {onOpenDocs && (
+              <button
+                onClick={onOpenDocs}
+                className="bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <BookOpen size={14} className="text-blue-600" /> Docs
+              </button>
+            )}
             {onOpenLiveChat && (
               <button
                 onClick={onOpenLiveChat}
                 className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
               >
-                <Globe size={14} className="text-emerald-600" /> Live Web Chat
+                <Globe size={14} className="text-emerald-600" /> Live Chat
               </button>
             )}
             <button

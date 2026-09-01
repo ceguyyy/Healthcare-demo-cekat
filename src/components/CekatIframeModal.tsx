@@ -1,22 +1,35 @@
-import React, { useState } from 'react';
-import { X, RefreshCw, ExternalLink, Globe, Maximize2, Minimize2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, RefreshCw, ExternalLink, Globe, BookOpen, Maximize2, Minimize2 } from 'lucide-react';
 
-interface CekatChatIframeModalProps {
+interface CekatIframeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  url: string;
+  title: string;
+  badge?: string;
+  iconType?: 'chat' | 'docs';
 }
 
-export const CekatChatIframeModal: React.FC<CekatChatIframeModalProps> = ({
+export const CekatIframeModal: React.FC<CekatIframeModalProps> = ({
   isOpen,
-  onClose
+  onClose,
+  url,
+  title,
+  badge = 'CEKAT.AI',
+  iconType = 'docs'
 }) => {
   const [iframeKey, setIframeKey] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoading(true);
+      setIframeKey(prev => prev + 1);
+    }
+  }, [url, isOpen]);
 
-  const chatUrl = 'https://chat.cekat.ai/chat';
+  if (!isOpen) return null;
 
   const handleRefresh = () => {
     setIsLoading(true);
@@ -33,17 +46,23 @@ export const CekatChatIframeModal: React.FC<CekatChatIframeModalProps> = ({
         {/* Modal Top Header (Solid Slate-900) */}
         <div className="bg-slate-900 px-5 py-3.5 text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs">
-              <Globe size={18} />
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-xs ${
+              iconType === 'chat' ? 'bg-emerald-600' : 'bg-blue-600'
+            }`}>
+              {iconType === 'chat' ? <Globe size={18} /> : <BookOpen size={18} />}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-sm tracking-tight">Cekat AI Live Web Chat</h3>
-                <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-400/30">
-                  LIVE IFRAME
+                <h3 className="font-extrabold text-sm tracking-tight">{title}</h3>
+                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                  iconType === 'chat'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+                    : 'bg-blue-500/20 text-blue-300 border-blue-400/30'
+                }`}>
+                  {badge}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-mono">https://chat.cekat.ai/chat</p>
+              <p className="text-[11px] text-slate-400 font-mono">{url}</p>
             </div>
           </div>
 
@@ -58,7 +77,7 @@ export const CekatChatIframeModal: React.FC<CekatChatIframeModalProps> = ({
             </button>
 
             <a
-              href={chatUrl}
+              href={url}
               target="_blank"
               rel="noopener noreferrer"
               className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition cursor-pointer"
@@ -91,16 +110,16 @@ export const CekatChatIframeModal: React.FC<CekatChatIframeModalProps> = ({
           {isLoading && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white space-y-3">
               <div className="w-10 h-10 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-xs font-bold text-slate-600">Loading Live Cekat AI Chat (chat.cekat.ai)...</p>
+              <p className="text-xs font-bold text-slate-600">Loading {title} ({url})...</p>
             </div>
           )}
 
           <iframe
             key={iframeKey}
-            src={chatUrl}
+            src={url}
             onLoad={() => setIsLoading(false)}
             className="w-full h-full border-0"
-            title="Cekat AI Live Web Chat"
+            title={title}
             allow="microphone; camera; clipboard-write; autoplay"
           />
         </div>

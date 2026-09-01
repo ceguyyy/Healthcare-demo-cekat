@@ -10,12 +10,12 @@ import { CategoryModal } from './components/CategoryModal';
 import { ImportJsonModal } from './components/ImportJsonModal';
 import { MoveScenarioModal } from './components/MoveScenarioModal';
 import { ShareModal } from './components/ShareModal';
-import { CekatChatIframeModal } from './components/CekatChatIframeModal';
+import { CekatIframeModal } from './components/CekatIframeModal';
 import { 
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, ChevronRight, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp, Copy, FileText, X, Search, Share2, MessageSquare, ExternalLink, Check, Globe
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp, Copy, FileText, X, Search, Share2, MessageSquare, ExternalLink, Check, Globe, BookOpen
 } from 'lucide-react';
 
 export function App() {
@@ -59,7 +59,39 @@ export function App() {
   const [isImportJsonOpen, setIsImportJsonOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isLiveChatOpen, setIsLiveChatOpen] = useState(false);
+  const [iframeModalState, setIframeModalState] = useState<{
+    isOpen: boolean;
+    url: string;
+    title: string;
+    badge: string;
+    iconType: 'chat' | 'docs';
+  }>({
+    isOpen: false,
+    url: '',
+    title: '',
+    badge: '',
+    iconType: 'docs'
+  });
+
+  const openDocsIframe = () => {
+    setIframeModalState({
+      isOpen: true,
+      url: 'https://docs.cekat.ai/',
+      title: 'Cekat AI Documentation',
+      badge: 'OFFICIAL DOCS',
+      iconType: 'docs'
+    });
+  };
+
+  const openChatIframe = () => {
+    setIframeModalState({
+      isOpen: true,
+      url: 'https://chat.cekat.ai/chat',
+      title: 'Cekat AI Live Web Chat',
+      badge: 'LIVE CHAT',
+      iconType: 'chat'
+    });
+  };
   const [copiedToast, setCopiedToast] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
 
@@ -499,7 +531,8 @@ export function App() {
             setCategoryToEdit(cat);
             setIsCategoryModalOpen(true);
           }}
-          onOpenLiveChat={() => setIsLiveChatOpen(true)}
+          onOpenLiveChat={openChatIframe}
+          onOpenDocs={openDocsIframe}
         />
 
         <CategoryModal
@@ -552,11 +585,18 @@ export function App() {
           {hasValidScenario && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setIsLiveChatOpen(true)}
+                onClick={openDocsIframe}
+                className="bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-300 font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+                title="Open Cekat AI Docs (docs.cekat.ai)"
+              >
+                <BookOpen size={14} className="text-blue-600" /> Docs
+              </button>
+              <button
+                onClick={openChatIframe}
                 className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
                 title="Open Live Cekat Web Chat (chat.cekat.ai)"
               >
-                <Globe size={14} className="text-emerald-600" /> Live Web Chat
+                <Globe size={14} className="text-emerald-600" /> Live Chat
               </button>
               <button
                 onClick={() => setIsImportJsonOpen(true)}
@@ -1428,9 +1468,13 @@ export function App() {
         category={selectedCategory}
       />
 
-      <CekatChatIframeModal
-        isOpen={isLiveChatOpen}
-        onClose={() => setIsLiveChatOpen(false)}
+      <CekatIframeModal
+        isOpen={iframeModalState.isOpen}
+        onClose={() => setIframeModalState(prev => ({ ...prev, isOpen: false }))}
+        url={iframeModalState.url}
+        title={iframeModalState.title}
+        badge={iframeModalState.badge}
+        iconType={iframeModalState.iconType}
       />
 
       {copiedToast && (
