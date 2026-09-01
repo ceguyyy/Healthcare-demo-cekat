@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Category } from '../types/scenario';
-import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 
 interface LandingPageProps {
   categories: Category[];
@@ -74,13 +74,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col items-center justify-start p-4 md:p-8 font-sans">
       
-      <div className="w-full max-w-6xl space-y-8">
+      <div className="w-full max-w-6xl space-y-8 flex-1">
         
-        {/* Clean Top Navbar with Official Cekat.AI Logo */}
+        {/* Clean Top Navbar with Official Cekat.AI Logo & Internal Use Only Badge */}
         <div className="w-full bg-white text-slate-900 rounded-2xl px-6 py-4 shadow-sm flex items-center justify-between border border-slate-200">
           <div className="flex items-center gap-3">
             <img src="/cekat-logo.png" alt="Cekat.AI Logo" className="w-10 h-10 object-contain rounded-xl shadow-xs" />
             <span className="font-extrabold text-2xl tracking-tight text-slate-900">Cekat.AI</span>
+            <span className="bg-amber-50 text-amber-800 border border-amber-300 font-extrabold text-[10.5px] uppercase px-3 py-1 rounded-full tracking-wider flex items-center gap-1.5 shadow-2xs">
+              <Lock size={12} className="text-amber-600" /> Internal Use Only
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -93,9 +96,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
 
-        {/* Hero Banner with Prominent Search Input */}
+        {/* Hero Banner with Prominent Search Input & Internal Use Only Pill */}
         <div className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 space-y-6 text-center shadow-lg relative overflow-hidden">
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/40 text-amber-300 font-extrabold text-xs px-4 py-1.5 rounded-full uppercase tracking-wider shadow-xs">
+              <Lock size={13} className="text-amber-400" />
+              <span>Internal Use Only</span>
+            </div>
             <h1 className="font-black text-3xl md:text-5xl tracking-tight leading-tight">
               Showcase & Use Case Simulation Categories
             </h1>
@@ -318,6 +325,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           )}
         </div>
+
+        {/* Footer */}
+        <footer className="w-full text-center py-6 border-t border-slate-200 mt-8 text-xs text-slate-500 font-bold flex items-center justify-center gap-1.5">
+          <Lock size={13} className="text-amber-600" />
+          <span>Cekat.AI Enterprise Demo Platform — Internal Use Only</span>
+        </footer>
 
       </div>
 
