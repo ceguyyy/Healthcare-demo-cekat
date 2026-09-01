@@ -345,7 +345,11 @@ export function App() {
     const initialVals: Record<string, any> = {};
     if (flow.fields) {
       flow.fields.forEach(f => {
-        initialVals[f.label] = f.defaultValue || (f.options && f.options.length > 0 ? f.options[0] : '');
+        if (f.type === 'checkbox') {
+          initialVals[f.label] = f.defaultValue ? [f.defaultValue] : [];
+        } else {
+          initialVals[f.label] = f.defaultValue || (f.options && f.options.length > 0 ? f.options[0] : '');
+        }
       });
     }
     setFlowFormValues(initialVals);
@@ -356,9 +360,9 @@ export function App() {
     const { stepIdx, flow } = activeFlowStep;
 
     const summaryStr = Object.entries(flowFormValues)
-      .map(([k, v]) => `• ${k}: ${v}`)
+      .map(([k, v]) => Array.isArray(v) ? `• ${k}: ${v.join(', ')}` : `• ${k}: ${v}`)
       .join('\n');
-    const userMsg = `📝 Data Form WhatsApp Flow Terkirim:\n${summaryStr}`;
+    const userMsg = `📝 Data Form WA Flow Terkirim:\n${summaryStr}`;
 
     setActiveFlowStep(null);
     runStep(stepIdx, userMsg);
@@ -631,7 +635,7 @@ export function App() {
             
             {/* iPhone Frame Canvas */}
             <div ref={iphoneRef} className="iphone-case">
-              <div className="iphone-screen relative">
+              <div className="iphone-screen relative flex flex-col justify-between overflow-hidden">
                 
                 {/* Dynamic Island Notch */}
                 <div className="dynamic-island">
@@ -640,7 +644,7 @@ export function App() {
 
                 {/* Status Bar with Dynamic Header Color */}
                 <div 
-                  className="pt-11 pb-1 px-5 flex items-center justify-between text-white text-[11px] font-bold shrink-0 transition-colors duration-300"
+                  className="pt-11 pb-1 px-5 flex items-center justify-between text-white text-[11px] font-bold shrink-0 transition-colors duration-300 z-10"
                   style={{ backgroundColor: headerBgColor }}
                 >
                   <span>09:41</span>
@@ -652,7 +656,7 @@ export function App() {
 
                 {/* WhatsApp Chat Header with Dynamic Custom Branding */}
                 <div 
-                  className="px-4 py-2.5 flex items-center gap-3 text-white shrink-0 transition-colors duration-300"
+                  className="px-4 py-2.5 flex items-center gap-3 text-white shrink-0 transition-colors duration-300 z-10 shadow-xs"
                   style={{ backgroundColor: headerBgColor }}
                 >
                   <ChevronLeft size={16} className="opacity-80 cursor-pointer" />
@@ -721,20 +725,22 @@ export function App() {
                         </div>
                       )}
 
-                      {/* WhatsApp Flow Form Card Renderer */}
+                      {/* Official Meta WhatsApp Flow Form Card Renderer */}
                       {msg.flow && (
-                        <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-purple-200 w-full max-w-[90%] text-xs mt-1.5 p-3.5 space-y-2">
-                          <div className="flex items-center gap-1.5 text-purple-700 font-extrabold text-xs">
-                            <FileText size={15} /> {msg.flow.title}
+                        <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200 w-full max-w-[90%] text-xs mt-1.5 animate-fade-up">
+                          <div className="p-3.5 space-y-1.5">
+                            <div className="font-extrabold text-slate-900 text-sm leading-tight flex items-center gap-1.5">
+                              {msg.flow.title}
+                            </div>
+                            {msg.flow.description && (
+                              <p className="text-[11px] text-slate-600 leading-snug">{msg.flow.description}</p>
+                            )}
                           </div>
-                          {msg.flow.description && (
-                            <p className="text-[10.5px] text-slate-600 leading-snug">{msg.flow.description}</p>
-                          )}
                           <button
                             onClick={() => openFlowForm(msg.stepIdx !== undefined ? msg.stepIdx : 0, msg.flow!)}
-                            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-2 rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer mt-1"
+                            className="w-full bg-slate-50 hover:bg-slate-100 text-[#00A884] font-extrabold text-xs py-2.5 border-t border-slate-100 transition flex items-center justify-center gap-1.5 cursor-pointer"
                           >
-                            <FileText size={13} /> {msg.flow.buttonText || '📋 Buka Form Registrasi'}
+                            {msg.flow.buttonText || 'Buka Form WA Flow'}
                           </button>
                         </div>
                       )}
@@ -776,93 +782,163 @@ export function App() {
                   </button>
                 </div>
 
-                {/* Interactive WhatsApp Flow Overlay Form Screen */}
+                {/* Meta Official Native WhatsApp Flow Overlay Screen */}
                 {activeFlowStep && (
-                  <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-xs z-50 flex flex-col justify-end animate-fade-up">
-                    <div className="bg-white rounded-t-3xl p-5 space-y-4 max-h-[80%] overflow-y-auto shadow-2xl border-t border-slate-200">
+                  <div className="absolute inset-0 bg-white z-50 flex flex-col justify-between animate-fade-up">
+                    
+                    {/* Flow Screen Header Bar */}
+                    <div className="bg-white px-4 py-3 border-b border-slate-200 flex items-center justify-between shrink-0 shadow-xs">
+                      <button
+                        onClick={() => setActiveFlowStep(null)}
+                        className="text-slate-600 hover:text-slate-900 font-bold p-1 cursor-pointer"
+                        title="Tutup Form WA Flow"
+                      >
+                        <X size={18} />
+                      </button>
+                      <span className="font-extrabold text-xs text-slate-900 truncate max-w-[200px]">
+                        {activeFlowStep.flow.title}
+                      </span>
+                      <MoreVertical size={18} className="text-slate-500 cursor-pointer" />
+                    </div>
+
+                    {/* Flow Screen Body Form Fields */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-5 bg-[#FAFAFA]">
                       
-                      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                        <div>
-                          <h4 className="font-extrabold text-sm text-purple-900 flex items-center gap-1.5">
-                            <FileText size={16} className="text-purple-600" /> {activeFlowStep.flow.title}
-                          </h4>
-                          <p className="text-[10.5px] text-slate-500">{activeFlowStep.flow.description || 'WhatsApp Flow Form Simulator'}</p>
+                      {activeFlowStep.flow.description && (
+                        <div className="text-xs font-bold text-slate-900 leading-relaxed bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
+                          {activeFlowStep.flow.description}
                         </div>
-                        <button
-                          onClick={() => setActiveFlowStep(null)}
-                          className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
-                        >
-                          <X size={15} />
-                        </button>
-                      </div>
+                      )}
 
-                      {/* Render Form Fields */}
-                      <div className="space-y-3">
-                        {activeFlowStep.flow.fields && activeFlowStep.flow.fields.map((f) => (
-                          <div key={f.id} className="space-y-1">
-                            <label className="block text-[11px] font-bold text-slate-700">{f.label}</label>
-                            
-                            {f.type === 'text' && (
-                              <input
-                                type="text"
-                                placeholder={f.placeholder || 'Isi data...'}
-                                value={flowFormValues[f.label] || ''}
-                                onChange={(e) => setFlowFormValues(prev => ({ ...prev, [f.label]: e.target.value }))}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-medium focus:outline-none focus:border-purple-600"
-                              />
-                            )}
+                      {/* Fields Rendering */}
+                      {activeFlowStep.flow.fields && activeFlowStep.flow.fields.map((f) => (
+                        <div key={f.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+                          <label className="block text-xs font-extrabold text-slate-900">{f.label}</label>
 
-                            {f.type === 'date' && (
-                              <input
-                                type="date"
-                                value={flowFormValues[f.label] || ''}
-                                onChange={(e) => setFlowFormValues(prev => ({ ...prev, [f.label]: e.target.value }))}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-medium focus:outline-none focus:border-purple-600"
-                              />
-                            )}
+                          {/* Text Input */}
+                          {f.type === 'text' && (
+                            <input
+                              type="text"
+                              placeholder={f.placeholder || 'Isi jawaban...'}
+                              value={flowFormValues[f.label] || ''}
+                              onChange={(e) => setFlowFormValues(prev => ({ ...prev, [f.label]: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs bg-white font-medium focus:outline-none focus:border-[#00A884] shadow-xs"
+                            />
+                          )}
 
-                            {f.type === 'select' && (
-                              <select
-                                value={flowFormValues[f.label] || ''}
-                                onChange={(e) => setFlowFormValues(prev => ({ ...prev, [f.label]: e.target.value }))}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-bold text-purple-900 focus:outline-none focus:border-purple-600"
-                              >
-                                {f.options && f.options.map((opt, i) => (
-                                  <option key={i} value={opt}>{opt}</option>
-                                ))}
-                              </select>
-                            )}
+                          {/* Date Input */}
+                          {f.type === 'date' && (
+                            <input
+                              type="date"
+                              value={flowFormValues[f.label] || ''}
+                              onChange={(e) => setFlowFormValues(prev => ({ ...prev, [f.label]: e.target.value }))}
+                              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs bg-white font-medium focus:outline-none focus:border-[#00A884] shadow-xs"
+                            />
+                          )}
 
-                            {(f.type === 'radio' || f.type === 'checkbox') && (
-                              <div className="flex items-center gap-3 flex-wrap pt-0.5">
-                                {f.options && f.options.map((opt, i) => (
-                                  <label key={i} className="flex items-center gap-1.5 text-xs text-slate-700 font-semibold cursor-pointer">
-                                    <input
-                                      type={f.type === 'radio' ? 'radio' : 'checkbox'}
-                                      name={f.id}
-                                      value={opt}
-                                      checked={flowFormValues[f.label] === opt}
-                                      onChange={(e) => setFlowFormValues(prev => ({ ...prev, [f.label]: e.target.value }))}
-                                      className="text-purple-600"
-                                    />
-                                    <span>{opt}</span>
+                          {/* Select Dropdown / Meta Single Select List */}
+                          {f.type === 'select' && (
+                            <div className="space-y-1.5">
+                              {f.options && f.options.map((opt, i) => (
+                                <label
+                                  key={i}
+                                  onClick={() => setFlowFormValues(prev => ({ ...prev, [f.label]: opt }))}
+                                  className={`flex items-center justify-between p-3 rounded-xl border transition cursor-pointer ${
+                                    flowFormValues[f.label] === opt
+                                      ? 'border-[#00A884] bg-emerald-50/50 font-bold text-slate-900'
+                                      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  <span className="text-xs">{opt}</span>
+                                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                    flowFormValues[f.label] === opt ? 'border-[#00A884] bg-[#00A884]' : 'border-slate-300'
+                                  }`}>
+                                    {flowFormValues[f.label] === opt && <span className="w-1.5 h-1.5 rounded-full bg-white"></span>}
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Radio Buttons */}
+                          {f.type === 'radio' && (
+                            <div className="space-y-1.5">
+                              {f.options && f.options.map((opt, i) => (
+                                <label
+                                  key={i}
+                                  onClick={() => setFlowFormValues(prev => ({ ...prev, [f.label]: opt }))}
+                                  className={`flex items-center justify-between p-3 rounded-xl border transition cursor-pointer ${
+                                    flowFormValues[f.label] === opt
+                                      ? 'border-[#00A884] bg-emerald-50/50 font-bold text-slate-900'
+                                      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  <span className="text-xs">{opt}</span>
+                                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                    flowFormValues[f.label] === opt ? 'border-[#00A884] bg-[#00A884]' : 'border-slate-300'
+                                  }`}>
+                                    {flowFormValues[f.label] === opt && <span className="w-1.5 h-1.5 rounded-full bg-white"></span>}
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Checkbox Options */}
+                          {f.type === 'checkbox' && (
+                            <div className="space-y-1.5">
+                              {f.options && f.options.map((opt, i) => {
+                                const curVals: string[] = Array.isArray(flowFormValues[f.label]) ? flowFormValues[f.label] : [];
+                                const isChecked = curVals.includes(opt);
+                                return (
+                                  <label
+                                    key={i}
+                                    onClick={() => {
+                                      let nextVals: string[];
+                                      if (isChecked) {
+                                        nextVals = curVals.filter(v => v !== opt);
+                                      } else {
+                                        nextVals = [...curVals, opt];
+                                      }
+                                      setFlowFormValues(prev => ({ ...prev, [f.label]: nextVals }));
+                                    }}
+                                    className={`flex items-center justify-between p-3 rounded-xl border transition cursor-pointer ${
+                                      isChecked
+                                        ? 'border-[#00A884] bg-emerald-50/50 font-bold text-slate-900'
+                                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                    }`}
+                                  >
+                                    <span className="text-xs">{opt}</span>
+                                    <div className={`w-4 h-4 rounded flex items-center justify-center ${
+                                      isChecked ? 'bg-[#00A884] text-white' : 'border border-slate-300'
+                                    }`}>
+                                      {isChecked && <CheckCheck size={12} />}
+                                    </div>
                                   </label>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                                );
+                              })}
+                            </div>
+                          )}
 
+                        </div>
+                      ))}
+
+                    </div>
+
+                    {/* Flow Screen Fixed Bottom Footer Bar */}
+                    <div className="bg-white border-t border-slate-200 p-4 space-y-2 shrink-0 shadow-lg">
                       <button
                         type="button"
                         onClick={handleFlowSubmit}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs py-2.5 rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer pt-2"
+                        className="w-full bg-[#00A884] hover:bg-[#008f6f] text-white font-extrabold text-xs py-3 rounded-full shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
                       >
-                        <CheckCircle2 size={16} /> Submit Form WA Flow
+                        Continue
                       </button>
-
+                      <div className="text-[10px] text-slate-500 font-medium text-center flex items-center justify-center gap-1">
+                        <Lock size={10} className="text-emerald-600" /> Managed by Cekat AI. Learn more
+                      </div>
                     </div>
+
                   </div>
                 )}
 
