@@ -149,6 +149,8 @@ export function App() {
           setCurrentScenario(activeScs[0]);
           window.location.hash = `#/category/${selectedCategory.id}/scenario/${activeScs[0].id}`;
         }
+      } else {
+        setCurrentScenario(null);
       }
     }
   }, [selectedCategory, allScenarios]);
@@ -159,16 +161,23 @@ export function App() {
       setHideInitialMsgState(Boolean(currentScenario.hideInitialMessage));
       setStartFromStepIdx(0);
       setActiveFlowStep(null);
+    } else {
+      setChatHistory([]);
     }
   }, [currentScenario]);
 
   // Update URL Hash when selecting Category
   const handleSelectCategory = (cat: Category) => {
     setSelectedCategory(cat);
-    const catScenarios = allScenarios.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === 'healthcare'));
+    const catScenarios = allScenarios.filter(s => {
+      const sCatId = (s.categoryId || 'healthcare').toLowerCase().trim();
+      const curCatId = cat.id.toLowerCase().trim();
+      return sCatId === curCatId;
+    });
+
     const initialSc = catScenarios.length > 0 ? catScenarios[0] : null;
+    setCurrentScenario(initialSc);
     if (initialSc) {
-      setCurrentScenario(initialSc);
       window.location.hash = `#/category/${cat.id}/scenario/${initialSc.id}`;
     } else {
       window.location.hash = `#/category/${cat.id}`;
