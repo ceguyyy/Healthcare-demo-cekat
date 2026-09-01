@@ -516,7 +516,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                 <Palette size={15} className="text-purple-600" /> Client Custom Branding Overrides (Demo Personalization)
               </div>
               <p className="text-[10.5px] text-purple-800">
-                Kustomisasi tampilan Header WhatsApp Simulator khusus untuk Pitching Klien tertentu (misal: Bank Mandiri, BCA, Siloam, Telkomsel). Kosongkan jika ingin memakai standar Cekat AI.
+                Kustomisasi nama bot, logo avatar, status subtitle, dan warna header WhatsApp Simulator. Kosongkan jika ingin memakai standar Cekat AI.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -553,27 +553,22 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Warna Header WhatsApp Simulator</label>
+                <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Pilihan Warna Header WhatsApp Simulator</label>
                 <div className="flex items-center gap-2 flex-wrap">
                   {[
-                    { label: 'WA Green', color: '#075E54' },
-                    { label: 'Mandiri Blue', color: '#003366' },
-                    { label: 'BCA Blue', color: '#005B9A' },
-                    { label: 'Siloam Green', color: '#00805A' },
-                    { label: 'Telkomsel Red', color: '#C41230' },
-                    { label: 'Dark Slate', color: '#0F172A' }
-                  ].map((p, i) => (
+                    '#075E54', '#003366', '#005B9A', '#00805A', '#C41230', '#0F172A', '#2563EB', '#7C3AED', '#DB2777'
+                  ].map((colorHex, i) => (
                     <button
                       key={i}
                       type="button"
-                      onClick={() => setHeaderColor(p.color)}
-                      className={`px-2.5 py-1 rounded-full text-[10.5px] font-bold text-white transition flex items-center gap-1 cursor-pointer border ${
-                        headerColor === p.color ? 'ring-2 ring-purple-600 scale-105' : 'opacity-85'
+                      onClick={() => setHeaderColor(colorHex)}
+                      className={`w-7 h-7 rounded-full transition flex items-center justify-center cursor-pointer border border-white/60 shadow-xs ${
+                        headerColor === colorHex ? 'ring-2 ring-purple-600 ring-offset-2 scale-110' : 'hover:scale-105 opacity-90'
                       }`}
-                      style={{ backgroundColor: p.color }}
+                      style={{ backgroundColor: colorHex }}
+                      title={colorHex}
                     >
-                      <span className="w-2 h-2 rounded-full bg-white"></span>
-                      {p.label}
+                      {headerColor === colorHex && <span className="w-2 h-2 rounded-full bg-white"></span>}
                     </button>
                   ))}
                   <input
@@ -581,8 +576,11 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                     value={headerColor}
                     onChange={(e) => setHeaderColor(e.target.value)}
                     className="w-8 h-7 rounded border border-purple-300 cursor-pointer bg-white"
-                    title="Pilih Warna Custom"
+                    title="Pilih Warna Custom (Hex Code)"
                   />
+                  <span className="text-[11px] font-mono font-bold text-purple-900 bg-white px-2 py-0.5 rounded border border-purple-200">
+                    {headerColor}
+                  </span>
                 </div>
               </div>
             </div>
