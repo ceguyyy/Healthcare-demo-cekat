@@ -245,7 +245,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 ))}
               </div>
 
-              {/* Pagination Bar & Indexing */}
+              {/* Pagination Bar & Indexing - Always Visible */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200 text-xs text-slate-600 font-medium">
                 
                 {/* Indexing Info */}
@@ -253,42 +253,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   Showing <span className="font-bold text-slate-900">{startIndex}–{endIndex}</span> of <span className="font-bold text-slate-900">{filteredCategories.length}</span> categories
                 </div>
 
-                {/* Page Controls */}
-                {totalPages > 1 && (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1.5 rounded-xl border border-slate-200 font-bold bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition shadow-xs flex items-center gap-1"
-                    >
-                      <ChevronLeft size={14} /> Previous
-                    </button>
+                {/* Page Controls (Always Rendered) */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 font-bold bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition shadow-xs flex items-center gap-1"
+                  >
+                    <ChevronLeft size={14} /> Previous
+                  </button>
 
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                        <button
-                          key={p}
-                          onClick={() => setCurrentPage(p)}
-                          className={`w-8 h-8 rounded-xl font-extrabold text-xs transition cursor-pointer flex items-center justify-center ${
-                            currentPage === p
-                              ? 'bg-blue-600 text-white shadow-xs'
-                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1.5 rounded-xl border border-slate-200 font-bold bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition shadow-xs flex items-center gap-1"
-                    >
-                      Next <ChevronRight size={14} />
-                    </button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        className={`w-8 h-8 rounded-xl font-extrabold text-xs transition cursor-pointer flex items-center justify-center ${
+                          currentPage === p
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
                   </div>
-                )}
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 font-bold bg-white text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition shadow-xs flex items-center gap-1"
+                  >
+                    Next <ChevronRight size={14} />
+                  </button>
+                </div>
 
               </div>
             </>
