@@ -566,8 +566,8 @@ export function App() {
                     onClick={() => handleSelectScenario(wf)}
                     className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 shrink-0 cursor-pointer flex items-center gap-1.5 ${
                       isActive
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 scale-[1.02]'
-                        : 'bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/60 text-slate-600 hover:text-slate-900'
+                        ? 'bg-blue-600 text-white font-extrabold shadow-sm'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
                     }`}
                   >
                     {isActive && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
