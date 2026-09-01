@@ -554,6 +554,15 @@ export function App() {
             setCategories(prev => prev.filter(p => p.id !== deletedId));
           }}
         />
+
+        <CekatIframeModal
+          isOpen={iframeModalState.isOpen}
+          onClose={() => setIframeModalState(prev => ({ ...prev, isOpen: false }))}
+          url={iframeModalState.url}
+          title={iframeModalState.title}
+          badge={iframeModalState.badge}
+          iconType={iframeModalState.iconType}
+        />
       </>
     );
   }
