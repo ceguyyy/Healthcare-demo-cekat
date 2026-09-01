@@ -176,10 +176,11 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
       // Zod Schema Validation
       const validation = ImportJsonPayloadSchema.safeParse(parsed);
       if (!validation.success) {
-        const firstErrors = validation.error.errors.slice(0, 3).map(err => 
-          `• Path '${err.path.join('.') || 'root'}': ${err.message}`
+        const issues = validation.error?.issues || (validation.error as any)?.errors || [];
+        const firstErrors = issues.slice(0, 3).map((err: any) => 
+          `• Path '${Array.isArray(err.path) && err.path.length > 0 ? err.path.join('.') : 'root'}': ${err.message}`
         ).join('\n');
-        setParseError(`JSON Schema Validation Failed (Zod Error):\n${firstErrors}`);
+        setParseError(`JSON Schema Validation Failed (Zod Error):\n${firstErrors || validation.error?.message || 'Format JSON tidak sesuai skema.'}`);
         return;
       }
 

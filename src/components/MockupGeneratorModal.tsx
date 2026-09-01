@@ -176,8 +176,11 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
     // Zod Schema Validation
     const validation = ScenarioSchema.safeParse(newScenario);
     if (!validation.success) {
-      const errorMsg = validation.error.errors.map(err => `• ${err.path.join('.') || 'root'}: ${err.message}`).join('\n');
-      alert(`Validasi Form Gagal (Zod Schema Error):\n${errorMsg}`);
+      const issues = validation.error?.issues || (validation.error as any)?.errors || [];
+      const errorMsg = issues.slice(0, 3).map((err: any) => 
+        `• ${Array.isArray(err.path) && err.path.length > 0 ? err.path.join('.') : 'root'}: ${err.message}`
+      ).join('\n');
+      alert(`Validasi Form Gagal (Zod Schema Error):\n${errorMsg || validation.error?.message || 'Format tidak sesuai.'}`);
       return;
     }
 
