@@ -246,21 +246,21 @@ export function App() {
     }, 2000 / playbackSpeed);
   };
 
-  // Play scenario step-by-step for Video recording
-  const handlePlayScenarioForVideo = async (onStepCallback: () => Promise<void>): Promise<void> => {
+  // Real-Time Play Scenario for Video Recording
+  const handlePlayScenarioForVideo = async (): Promise<void> => {
     setIsPlaying(false);
     clearTimeout(timerRef.current);
 
     const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-    // Step 0: Initial message
+    // Step 0: Initial text
     if (currentScenario.triggerType === 'OUTBOUND_SYSTEM') {
       setChatHistory([{ id: 'init', role: 'rs-bot', text: currentScenario.initialText, time: nowStr }]);
     } else {
       setChatHistory([{ id: 'init', role: 'patient', text: currentScenario.initialText, time: nowStr }]);
     }
 
-    await onStepCallback();
+    await new Promise(r => setTimeout(r, 1200));
 
     if (currentScenario.steps && currentScenario.steps.length > 0) {
       for (let i = 0; i < currentScenario.steps.length; i++) {
@@ -271,14 +271,19 @@ export function App() {
           ...prev,
           { id: `vid_user_${i}`, role: 'patient', text: step.userReply, time: nowStr }
         ]);
-        await onStepCallback();
 
-        // 2. AI Bot Response + Card
+        // Show typing indicator
+        setIsTyping(true);
+        await new Promise(r => setTimeout(r, 1500));
+        setIsTyping(false);
+
+        // 2. AI Bot response + card
         setChatHistory(prev => [
           ...prev,
           { id: `vid_bot_${i}`, role: 'rs-bot', text: step.aiResponse, time: nowStr, card: step.card }
         ]);
-        await onStepCallback();
+
+        await new Promise(r => setTimeout(r, 2200));
       }
     }
   };
