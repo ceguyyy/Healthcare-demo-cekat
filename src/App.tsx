@@ -992,9 +992,65 @@ export function App() {
 
           </div>
         ) : (
-          <div className="bg-slate-50 border border-slate-200 rounded-3xl p-12 text-center space-y-3 w-full max-w-3xl">
-            <h3 className="font-bold text-slate-800 text-lg">Belum Ada Skenario</h3>
-            <p className="text-xs text-slate-500">Kategori ini belum memiliki skenario use case. Klik tombol "+ Create Mockup" atau "Import JSON" untuk menambahkan skenario baru!</p>
+          /* Unavailable Scenario Wireframe UI Placeholder */
+          <div className="w-full max-w-5xl bg-white border border-slate-200 rounded-3xl p-8 shadow-sm flex flex-col items-center justify-center space-y-6 my-4 animate-fade-up">
+            
+            {/* Wireframe Mockup Illustration */}
+            <div className="w-full max-w-2xl bg-slate-50 border-2 border-dashed border-slate-300 rounded-3xl p-6 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+              
+              {/* Wireframe Phone Frame */}
+              <div className="w-48 h-64 rounded-3xl border-2 border-dashed border-slate-400 bg-white p-3 flex flex-col justify-between opacity-80 shadow-xs shrink-0">
+                <div className="w-12 h-2.5 rounded-full bg-slate-300 mx-auto"></div>
+                <div className="space-y-2 my-auto">
+                  <div className="w-3/4 h-3 bg-slate-200 rounded-full animate-pulse"></div>
+                  <div className="w-1/2 h-3 bg-slate-200 rounded-full"></div>
+                  <div className="w-full h-8 bg-blue-50 border border-dashed border-blue-300 rounded-xl"></div>
+                </div>
+                <div className="w-full h-4 bg-slate-200 rounded-full"></div>
+              </div>
+
+              {/* Wireframe Inspector Skeleton */}
+              <div className="flex-1 space-y-3 w-full">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">
+                    🚫 Scenario Unavailable
+                  </span>
+                  <span className="bg-slate-200 text-slate-600 font-mono text-[10px] px-2 py-0.5 rounded-full font-bold">
+                    WIREFRAME PLACEHOLDER
+                  </span>
+                </div>
+                <h3 className="font-extrabold text-slate-900 text-xl tracking-tight">Unavailable Scenario</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Skenario use case untuk kategori <span className="font-bold text-blue-600">"{selectedCategory?.title}"</span> belum tersedia atau belum ditambahkan oleh SA Team.
+                </p>
+                <div className="space-y-1.5 pt-1">
+                  <div className="h-2.5 bg-slate-200 rounded-full w-full"></div>
+                  <div className="h-2.5 bg-slate-200 rounded-full w-4/5"></div>
+                  <div className="h-2.5 bg-slate-200 rounded-full w-2/3"></div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              <button
+                onClick={() => {
+                  setScenarioToEdit(null);
+                  setIsGeneratorOpen(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition cursor-pointer"
+              >
+                <Plus size={15} /> Buat Mockup Skenario Baru
+              </button>
+              <button
+                onClick={() => setIsImportJsonOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition cursor-pointer"
+              >
+                <FileJson size={15} /> Import Skenario via JSON
+              </button>
+            </div>
+
           </div>
         )}
 
