@@ -255,14 +255,17 @@ export function App() {
     }
   };
 
-  const restartScenario = (scenario = currentScenario) => {
-    const startIdx = scenario.startFromStepIdx || 0;
+  const restartScenario = (scenario = currentScenario, jumpIdx = startFromStepIdx) => {
+    if (!scenario) return;
+    const startIdx = typeof jumpIdx === 'number' ? jumpIdx : (scenario.startFromStepIdx || 0);
     handleJumpToStep(startIdx, hideInitialMsgState, scenario);
   };
 
   useEffect(() => {
     if (currentScenario) {
-      restartScenario(currentScenario);
+      const defaultJump = currentScenario.startFromStepIdx || 0;
+      setStartFromStepIdx(defaultJump);
+      restartScenario(currentScenario, defaultJump);
     }
   }, [currentScenario]);
 
