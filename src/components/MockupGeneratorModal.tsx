@@ -1,122 +1,105 @@
 import React, { useState, useEffect } from 'react';
-import { Scenario, Step, TriggerType, CardData, CardItem, Category, FlowData, FlowInputField, CustomBranding, generateUUID } from '../types/scenario';
+import { Scenario, Category, TriggerType, Step, FlowInputField, FlowData, generateUUID } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
-import { Lock, Plus, Trash2, CheckCircle2, ShieldCheck, Database, Layers, ArrowRight, CreditCard, Edit3, Palette, FileText } from 'lucide-react';
+import { Lock, Database, Layers, ArrowRight, Plus, Trash2, CheckCircle2, ShieldCheck, CreditCard, Palette, FileText } from 'lucide-react';
 
 interface MockupGeneratorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onScenarioCreated: (newScenario: Scenario) => void;
-  onScenarioUpdated?: (updatedScenario: Scenario) => void;
+  activeCategoryId: string;
+  categories: Category[];
   scenarioToEdit?: Scenario | null;
-  activeCategoryId?: string;
-  categories?: Category[];
+  onScenarioCreated: (newScenario: Scenario) => void;
+  onScenarioUpdated: (updatedScenario: Scenario) => void;
 }
 
 export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   isOpen,
   onClose,
-  onScenarioCreated,
-  onScenarioUpdated,
+  activeCategoryId,
+  categories,
   scenarioToEdit,
-  activeCategoryId = 'healthcare',
-  categories = []
+  onScenarioCreated,
+  onScenarioUpdated
 }) => {
   const [passwordInput, setPasswordInput] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  // Form State
-  const [targetCategoryId, setTargetCategoryId] = useState(activeCategoryId);
+  // Target Category State
+  const [targetCategoryId, setTargetCategoryId] = useState<string>(activeCategoryId);
+
+  // Scenario Basic Info State
   const [name, setName] = useState('');
   const [title, setTitle] = useState('');
-  const [tag, setTag] = useState('Core Feature');
-  const [saAuthor, setSaAuthor] = useState('SA Team Cekat');
+  const [tag, setTag] = useState('Guardrail');
   const [triggerType, setTriggerType] = useState<TriggerType>('INBOUND_USER');
-  const [outboundPill, setOutboundPill] = useState('🔔 OUTBOUND SYSTEM TRIGGER');
+  const [outboundPill, setOutboundPill] = useState('');
   const [description, setDescription] = useState('');
   const [initialText, setInitialText] = useState('');
+  const [saAuthor, setSaAuthor] = useState('Cekat AI Team');
   const [hideInitialMessage, setHideInitialMessage] = useState(false);
   const [startFromStepIdx, setStartFromStepIdx] = useState<number>(0);
-  const [cekatComponentsStr, setCekatComponentsStr] = useState('AI Agent, API Tools, WA Flows');
-  const [apiScopesStr, setApiScopesStr] = useState('GET /api/v1/status');
-  const [ruleNote, setRuleNote] = useState('Data dibaca real-time dari backend sistem.');
-  const [stepsDetailStr, setStepsDetailStr] = useState('Step 1 — Intake\nStep 2 — Processing\nStep 3 — Confirmation');
 
-  // Custom Branding State
+  // Custom Branding Overrides State
   const [botName, setBotName] = useState('');
   const [botAvatarUrl, setBotAvatarUrl] = useState('');
   const [subTitle, setSubTitle] = useState('');
   const [headerColor, setHeaderColor] = useState('#075E54');
 
-  // Step Sequence Builder State
+  // Specs Array String State
+  const [cekatComponentsStr, setCekatComponentsStr] = useState('AI Agent, API Tools, WA Flows');
+  const [apiScopesStr, setApiScopesStr] = useState('GET /api/v1/user');
+  const [ruleNote, setRuleNote] = useState('POJK 22/2023 & UU PDP 27/2022');
+  const [stepsDetailStr, setStepsDetailStr] = useState('Step 1 — Intake\nStep 2 — Process\nStep 3 — Complete');
+
+  // Interactive Conversation Steps State
   const [steps, setSteps] = useState<Step[]>([
     {
-      userReply: 'Konfirmasi Booking',
-      aiResponse: 'Terima kasih, janji/transaksi Anda telah terkonfirmasi di sistem.',
-      chips: ['📍 Lihat Detail', 'Menu Utama'],
-      enableCard: true,
-      card: {
-        title: '🎫 E-Tiket / Struk Transaksi',
-        sub: 'Cekat AI Enterprise System',
-        items: [
-          { label: 'Kode Transaksi', val: '#TRX-10029' },
-          { label: 'Status', val: 'CONFIRMED' }
-        ],
-        status: 'SYSTEM LOCKED'
-      }
+      userReply: 'Rekomendasi Menu',
+      aiResponse: 'Halo! Ada yang bisa kami bantu hari ini?',
+      chips: ['Option 1', 'Option 2']
     }
   ]);
 
+  // Load data when modal opens or scenarioToEdit changes
   useEffect(() => {
     if (scenarioToEdit) {
-      setTargetCategoryId(scenarioToEdit.categoryId || activeCategoryId);
-      setName(scenarioToEdit.name || '');
-      setTitle(scenarioToEdit.title || '');
-      setTag(scenarioToEdit.tag || 'Core Feature');
-      setSaAuthor(scenarioToEdit.saAuthor || 'SA Team Cekat');
-      setTriggerType(scenarioToEdit.triggerType || 'INBOUND_USER');
-      setOutboundPill(scenarioToEdit.outboundPill || '🔔 OUTBOUND SYSTEM TRIGGER');
-      setDescription(scenarioToEdit.description || '');
-      setInitialText(scenarioToEdit.initialText || '');
+      setTargetCategoryId(scenarioToEdit.categoryId || activeCategoryId || 'healthcare');
+      setName(scenarioToEdit.name);
+      setTitle(scenarioToEdit.title);
+      setTag(scenarioToEdit.tag);
+      setTriggerType(scenarioToEdit.triggerType);
+      setOutboundPill(scenarioToEdit.outboundPill || '');
+      setDescription(scenarioToEdit.description);
+      setInitialText(scenarioToEdit.initialText);
+      setSaAuthor(scenarioToEdit.saAuthor || 'Cekat AI Team');
       setHideInitialMessage(Boolean(scenarioToEdit.hideInitialMessage));
       setStartFromStepIdx(scenarioToEdit.startFromStepIdx || 0);
-      
-      // Branding
-      if (scenarioToEdit.customBranding) {
-        setBotName(scenarioToEdit.customBranding.botName || '');
-        setBotAvatarUrl(scenarioToEdit.customBranding.botAvatarUrl || '');
-        setSubTitle(scenarioToEdit.customBranding.subTitle || '');
-        setHeaderColor(scenarioToEdit.customBranding.headerColor || '#075E54');
-      } else {
-        setBotName('');
-        setBotAvatarUrl('');
-        setSubTitle('');
-        setHeaderColor('#075E54');
-      }
+
+      const b = scenarioToEdit.customBranding;
+      setBotName(b?.botName || '');
+      setBotAvatarUrl(b?.botAvatarUrl || '');
+      setSubTitle(b?.subTitle || '');
+      setHeaderColor(b?.headerColor || '#075E54');
 
       setCekatComponentsStr(scenarioToEdit.cekatComponents ? scenarioToEdit.cekatComponents.join(', ') : '');
       setApiScopesStr(scenarioToEdit.apiScopes ? scenarioToEdit.apiScopes.join(', ') : '');
       setRuleNote(scenarioToEdit.ruleNote || '');
       setStepsDetailStr(scenarioToEdit.stepsDetail ? scenarioToEdit.stepsDetail.join('\n') : '');
       setSteps(scenarioToEdit.steps && scenarioToEdit.steps.length > 0 ? scenarioToEdit.steps : [
-        {
-          userReply: 'Konfirmasi Booking',
-          aiResponse: 'Terima kasih, janji/transaksi Anda telah terkonfirmasi di sistem.',
-          chips: ['📍 Lihat Detail', 'Menu Utama'],
-          enableCard: false
-        }
+        { userReply: 'Subjek', aiResponse: 'Teks balasan...', chips: [] }
       ]);
     } else {
-      setTargetCategoryId(activeCategoryId);
+      setTargetCategoryId(activeCategoryId || 'healthcare');
       setName('');
       setTitle('');
-      setTag('Core Feature');
-      setSaAuthor('SA Team Cekat');
+      setTag('Guardrail');
       setTriggerType('INBOUND_USER');
-      setOutboundPill('🔔 OUTBOUND SYSTEM TRIGGER');
+      setOutboundPill('');
       setDescription('');
       setInitialText('');
+      setSaAuthor('Cekat AI Team');
       setHideInitialMessage(false);
       setStartFromStepIdx(0);
 
@@ -126,24 +109,14 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       setHeaderColor('#075E54');
 
       setCekatComponentsStr('AI Agent, API Tools, WA Flows');
-      setApiScopesStr('GET /api/v1/status');
-      setRuleNote('Data dibaca real-time dari backend sistem.');
-      setStepsDetailStr('Step 1 — Intake\nStep 2 — Processing\nStep 3 — Confirmation');
+      setApiScopesStr('GET /api/v1/user');
+      setRuleNote('POJK 22/2023 & UU PDP 27/2022');
+      setStepsDetailStr('Step 1 — Intake\nStep 2 — Process\nStep 3 — Complete');
       setSteps([
         {
-          userReply: 'Konfirmasi Booking',
-          aiResponse: 'Terima kasih, janji/transaksi Anda telah terkonfirmasi di sistem.',
-          chips: ['📍 Lihat Detail', 'Menu Utama'],
-          enableCard: true,
-          card: {
-            title: '🎫 E-Tiket / Struk Transaksi',
-            sub: 'Cekat AI Enterprise System',
-            items: [
-              { label: 'Kode Transaksi', val: '#TRX-10029' },
-              { label: 'Status', val: 'CONFIRMED' }
-            ],
-            status: 'SYSTEM LOCKED'
-          }
+          userReply: 'Lihat Layanan',
+          aiResponse: 'Halo! Silakan pilih layanan di bawah ini.',
+          chips: ['Option 1', 'Option 2']
         }
       ]);
     }
@@ -156,42 +129,94 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       setIsAuthenticated(true);
       setAuthError('');
     } else {
-      setAuthError('Password SA Team tidak valid. Coba lagi!');
+      setAuthError('Invalid authorization password. Please try again.');
     }
   };
 
+  const handleSaveScenario = async () => {
+    if (!name || !title) {
+      alert('Please fill in Scenario Short Name and Full Title!');
+      return;
+    }
+
+    const cekatComponents = cekatComponentsStr.split(',').map(s => s.trim()).filter(Boolean);
+    const apiScopes = apiScopesStr.split(',').map(s => s.trim()).filter(Boolean);
+    const stepsDetail = stepsDetailStr.split('\n').map(s => s.trim()).filter(Boolean);
+
+    const hasBranding = Boolean(botName || botAvatarUrl || subTitle || (headerColor && headerColor !== '#075E54'));
+    const customBranding = hasBranding ? {
+      botName: botName || undefined,
+      botAvatarUrl: botAvatarUrl || undefined,
+      subTitle: subTitle || undefined,
+      headerColor: headerColor || '#075E54'
+    } : undefined;
+
+    const newScenario: Scenario = {
+      id: scenarioToEdit ? scenarioToEdit.id : generateUUID(),
+      categoryId: targetCategoryId || 'healthcare',
+      name,
+      title,
+      tag,
+      triggerType,
+      outboundPill: triggerType === 'OUTBOUND_SYSTEM' ? (outboundPill || '🔔 OUTBOUND SYSTEM TRIGGER') : undefined,
+      description,
+      initialText,
+      saAuthor,
+      hideInitialMessage,
+      startFromStepIdx,
+      customBranding,
+      cekatComponents,
+      apiScopes,
+      ruleNote,
+      stepsDetail,
+      steps
+    };
+
+    await SupabaseService.saveScenario(newScenario);
+
+    if (scenarioToEdit) {
+      onScenarioUpdated(newScenario);
+    } else {
+      onScenarioCreated(newScenario);
+    }
+
+    onClose();
+  };
+
   const addStep = () => {
-    setSteps(prev => [
-      ...prev,
+    setSteps([
+      ...steps,
       {
-        userReply: 'Lanjut',
-        aiResponse: 'Informasi berhasil diproses.',
-        chips: ['Menu Utama'],
-        enableCard: false
+        userReply: 'Pilihan Lanjutan',
+        aiResponse: 'Terima kasih, data Anda telah diperbarui.',
+        chips: ['Menu Utama']
       }
     ]);
   };
 
   const removeStep = (idx: number) => {
-    setSteps(prev => prev.filter((_, i) => i !== idx));
+    if (steps.length <= 1) return;
+    setSteps(steps.filter((_, i) => i !== idx));
   };
 
   const updateStepField = (idx: number, field: keyof Step, val: any) => {
     const newSteps = [...steps];
-    newSteps[idx] = { ...newSteps[idx], [field]: val };
+    (newSteps[idx] as any)[field] = val;
     setSteps(newSteps);
   };
 
-  // Card Controls
-  const toggleStepCard = (idx: number, enabled: boolean) => {
+  const toggleStepCard = (idx: number, enable: boolean) => {
     const newSteps = [...steps];
-    newSteps[idx].enableCard = enabled;
-    if (enabled && !newSteps[idx].card) {
+    newSteps[idx].enableCard = enable;
+    if (enable && !newSteps[idx].card) {
       newSteps[idx].card = {
-        title: '💳 Saldo Rekening / Struk',
-        sub: 'Verified · Real-time',
-        items: [{ label: 'Status', val: 'SUCCESS' }],
-        status: 'TERVERIFIKASI'
+        title: '💳 Summary Card Title',
+        sub: 'Verified · System Service',
+        status: 'VERIFIED',
+        items: [
+          { label: 'Reference Code', val: 'REF-88912' },
+          { label: 'Status', val: 'Completed' }
+        ]
       };
     }
     setSteps(newSteps);
@@ -200,17 +225,8 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   const addCardItem = (stepIdx: number) => {
     const newSteps = [...steps];
     if (!newSteps[stepIdx].card) return;
-    const items = newSteps[stepIdx].card!.items || [];
-    newSteps[stepIdx].card!.items = [...items, { label: 'Label Baru', val: 'Nilai' }];
-    setSteps(newSteps);
-  };
-
-  const updateCardItem = (stepIdx: number, itemIdx: number, field: 'label' | 'val', val: string) => {
-    const newSteps = [...steps];
-    if (!newSteps[stepIdx].card || !newSteps[stepIdx].card!.items) return;
-    const items = [...newSteps[stepIdx].card!.items];
-    items[itemIdx] = { ...items[itemIdx], [field]: val };
-    newSteps[stepIdx].card!.items = items;
+    if (!newSteps[stepIdx].card!.items) newSteps[stepIdx].card!.items = [];
+    newSteps[stepIdx].card!.items.push({ label: 'Label', val: 'Value' });
     setSteps(newSteps);
   };
 
@@ -221,19 +237,26 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
     setSteps(newSteps);
   };
 
-  // WhatsApp Flow Controls
-  const toggleStepFlow = (idx: number, enabled: boolean) => {
+  const updateCardItem = (stepIdx: number, itemIdx: number, key: 'label' | 'val', val: string) => {
     const newSteps = [...steps];
-    newSteps[idx].enableFlow = enabled;
-    if (enabled && !newSteps[idx].flow) {
-      newSteps[idx].flow = {
-        title: '📋 Form Registrasi / Booking Interaktif',
-        description: 'Silakan isi data diri Anda di bawah ini.',
-        buttonText: '📋 Buka Form Registrasi',
-        submitResponseText: 'Formulir berhasil dikirimkan.',
+    if (!newSteps[stepIdx].card || !newSteps[stepIdx].card!.items) return;
+    newSteps[stepIdx].card!.items[itemIdx][key] = val;
+    setSteps(newSteps);
+  };
+
+  // WhatsApp Flow Builder Handlers
+  const toggleStepFlow = (stepIdx: number, enable: boolean) => {
+    const newSteps = [...steps];
+    newSteps[stepIdx].enableFlow = enable;
+    if (enable && !newSteps[stepIdx].flow) {
+      newSteps[stepIdx].flow = {
+        title: '📋 Interactive WA Flow Form',
+        description: 'Please complete the registration form below.',
+        buttonText: '📋 Open Form',
+        submitResponseText: 'Form Submitted Successfully',
         fields: [
-          { id: generateUUID(), label: 'Nama Lengkap Pasien/Nasabah', type: 'text', placeholder: 'Masukkan nama lengkap...' },
-          { id: generateUUID(), label: 'Poliklinik / Layanan', type: 'select', options: ['Poli Umum', 'Poli Anak', 'Poli Gigi'] }
+          { id: 'f1', label: 'Full Name', type: 'text', placeholder: 'Enter your name...' },
+          { id: 'f2', label: 'Preferred Option', type: 'select', options: ['Option A', 'Option B', 'Option C'] }
         ]
       };
     }
@@ -243,20 +266,14 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   const addFlowField = (stepIdx: number) => {
     const newSteps = [...steps];
     if (!newSteps[stepIdx].flow) return;
-    const fields = newSteps[stepIdx].flow!.fields || [];
-    newSteps[stepIdx].flow!.fields = [
-      ...fields,
-      { id: generateUUID(), label: 'Field Input Baru', type: 'text', placeholder: 'Isi data...' }
-    ];
-    setSteps(newSteps);
-  };
-
-  const updateFlowField = (stepIdx: number, fieldIdx: number, key: keyof FlowInputField, val: any) => {
-    const newSteps = [...steps];
-    if (!newSteps[stepIdx].flow || !newSteps[stepIdx].flow!.fields) return;
-    const fields = [...newSteps[stepIdx].flow!.fields];
-    fields[fieldIdx] = { ...fields[fieldIdx], [key]: val };
-    newSteps[stepIdx].flow!.fields = fields;
+    if (!newSteps[stepIdx].flow!.fields) newSteps[stepIdx].flow!.fields = [];
+    const fId = `field_${Date.now()}`;
+    newSteps[stepIdx].flow!.fields.push({
+      id: fId,
+      label: 'New Field Label',
+      type: 'text',
+      placeholder: 'Enter answer...'
+    });
     setSteps(newSteps);
   };
 
@@ -267,83 +284,30 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
     setSteps(newSteps);
   };
 
-  const handleSaveScenario = async () => {
-    if (!name || !title || (!initialText && !hideInitialMessage)) {
-      alert('Mohon lengkapi Nama, Judul, dan Pesan Awal Skenario!');
-      return;
-    }
-
-    const cleanSteps = steps.map(s => {
-      const stepObj: Step = { ...s };
-      if (!stepObj.enableCard) {
-        stepObj.card = undefined;
-      }
-      if (!stepObj.enableFlow) {
-        stepObj.flow = undefined;
-      }
-      return stepObj;
-    });
-
-    const finalCatId = targetCategoryId || activeCategoryId || 'healthcare';
-
-    const hasCustomBranding = botName || botAvatarUrl || subTitle || (headerColor && headerColor !== '#075E54');
-
-    const finalScenario: Scenario = {
-      id: scenarioToEdit ? scenarioToEdit.id : generateUUID(),
-      categoryId: finalCatId,
-      name,
-      title,
-      tag,
-      saAuthor,
-      triggerType,
-      outboundPill: triggerType === 'OUTBOUND_SYSTEM' ? outboundPill : undefined,
-      description,
-      initialText,
-      hideInitialMessage,
-      startFromStepIdx,
-      customBranding: hasCustomBranding ? {
-        botName: botName.trim() || undefined,
-        botAvatarUrl: botAvatarUrl.trim() || undefined,
-        subTitle: subTitle.trim() || undefined,
-        headerColor: headerColor || '#075E54'
-      } : undefined,
-      cekatComponents: cekatComponentsStr.split(',').map(s => s.trim()).filter(Boolean),
-      apiScopes: apiScopesStr.split(',').map(s => s.trim()).filter(Boolean),
-      ruleNote,
-      stepsDetail: stepsDetailStr.split('\n').map(s => s.trim()).filter(Boolean),
-      steps: cleanSteps
-    };
-
-    await SupabaseService.saveScenario(finalScenario);
-
-    if (scenarioToEdit && onScenarioUpdated) {
-      onScenarioUpdated(finalScenario);
-    } else {
-      onScenarioCreated(finalScenario);
-    }
-
-    onClose();
+  const updateFlowField = (stepIdx: number, fieldIdx: number, key: keyof FlowInputField, val: any) => {
+    const newSteps = [...steps];
+    if (!newSteps[stepIdx].flow || !newSteps[stepIdx].flow!.fields) return;
+    (newSteps[stepIdx].flow!.fields[fieldIdx] as any)[key] = val;
+    setSteps(newSteps);
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl h-[90vh] shadow-2xl overflow-hidden flex flex-col">
         
-        {/* Modal Header */}
-        <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800">
+        {/* Header */}
+        <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-              {scenarioToEdit ? <Edit3 size={18} /> : <Plus size={18} />}
+              AI
             </div>
             <div>
               <h3 className="font-extrabold text-base leading-tight">
-                {scenarioToEdit ? 'Edit Skenario Use Case' : 'SA Mockup Generator (Create Scenario)'}
+                {scenarioToEdit ? 'Edit Scenario' : 'Create New Scenario'}
               </h3>
-              <p className="text-[11px] text-slate-400">
-                {scenarioToEdit ? 'Ubah parameter, alur WA Flow, branding client, dan langkah skenario' : 'Buat skenario baru dan simpan ke Supabase DB'}
-              </p>
+              <p className="text-[11px] text-slate-400">Configure chat simulation, WA flows, custom branding, and jump step</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer">✕</button>
@@ -356,14 +320,14 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               <Lock size={24} />
             </div>
             <div className="text-center">
-              <h4 className="font-bold text-slate-900 text-base">Otentikasi SA Team Required</h4>
-              <p className="text-xs text-slate-500 max-w-sm mt-1">Masukkan password otorisasi SA Team untuk membuat atau mengedit skenario.</p>
+              <h4 className="font-bold text-slate-900 text-base">Authorization Required</h4>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">Enter authorization password to edit or create scenario.</p>
             </div>
 
             <div className="w-full max-w-xs space-y-2">
               <input
                 type="password"
-                placeholder="Masukkan Password (e.g. SAteamCekat@)"
+                placeholder="Enter Password"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:outline-none focus:border-blue-600 shadow-xs"
@@ -375,7 +339,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               type="submit"
               className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
-              <ShieldCheck size={16} /> Buka Form Skenario
+              <ShieldCheck size={16} /> Open Scenario Form
             </button>
           </form>
         ) : (
@@ -385,7 +349,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
             {/* Target Category Selector */}
             <div className="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 space-y-2">
               <label className="block text-[11px] font-extrabold text-blue-900">
-                📂 Target Kategori Industri Skenario Ini (Pindahkan Kategori):
+                📂 Target Industry Category (Move Category):
               </label>
               <select
                 value={targetCategoryId}
@@ -408,20 +372,20 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nama Skenario (Tab Pill)</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Scenario Short Name (Tab)</label>
                   <input
                     type="text"
-                    placeholder="e.g. 1. Gejala Ambigu"
+                    placeholder="e.g. 1. Ambiguous Symptoms"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-bold focus:outline-none focus:border-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Judul Lengkap Use Case</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Full Use Case Title</label>
                   <input
                     type="text"
-                    placeholder="e.g. 1. Penanganan Gejala Ambigu & Larangan Saran Poli"
+                    placeholder="e.g. 1. Ambiguous Symptoms Handling & Safety Gate"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-bold focus:outline-none focus:border-blue-600"
@@ -441,7 +405,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tipe Trigger</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Trigger Type</label>
                   <select
                     value={triggerType}
                     onChange={(e) => setTriggerType(e.target.value as TriggerType)}
@@ -452,10 +416,10 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Author SA Team</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Author</label>
                   <input
                     type="text"
-                    placeholder="e.g. SA Team Cekat"
+                    placeholder="e.g. Cekat AI Team"
                     value={saAuthor}
                     onChange={(e) => setSaAuthor(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white"
@@ -477,10 +441,10 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               )}
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Deskripsi & Tujuan Skenario</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Scenario Description & Objective</label>
                 <textarea
                   rows={2}
-                  placeholder="Penjelasan ringkas fungsi dan arsitektur skenario ini..."
+                  placeholder="Brief description of the business architecture and scenario goals..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
@@ -488,10 +452,10 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Pesan Awal Chat (Initial Text)</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Initial Welcome Message</label>
                 <textarea
                   rows={2}
-                  placeholder="Pesan pertama yang dikirimkan pasien/sistem..."
+                  placeholder="First message sent by user/system..."
                   value={initialText}
                   onChange={(e) => setInitialText(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-semibold focus:outline-none focus:border-blue-600"
@@ -504,7 +468,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                     className="w-4 h-4 text-blue-600 rounded"
                   />
                   <span className="text-[11px] text-slate-700 font-semibold">
-                    🚫 Sembunyikan Pesan Awal ini saat simulasi dimulai (Hide Welcome Message)
+                    🚫 Hide this initial welcome message when simulation starts
                   </span>
                 </label>
               </div>
@@ -516,12 +480,12 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                 <Palette size={15} className="text-purple-600" /> Client Custom Branding Overrides (Demo Personalization)
               </div>
               <p className="text-[10.5px] text-purple-800">
-                Kustomisasi nama bot, logo avatar, status subtitle, dan warna header WhatsApp Simulator. Kosongkan jika ingin memakai standar Cekat AI.
+                Customize bot name, avatar logo, header subtitle, and WhatsApp header color. Leave empty to use default Cekat AI branding.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Nama Bot / Akun WA</label>
+                  <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Bot / Account Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Bank Mandiri Assistant"
@@ -531,17 +495,17 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">URL / Path Logo Avatar</label>
+                  <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Avatar Logo URL / Path</label>
                   <input
                     type="text"
-                    placeholder="e.g. /cekat-logo.png atau URL Gambar"
+                    placeholder="e.g. /cekat-logo.png or Image URL"
                     value={botAvatarUrl}
                     onChange={(e) => setBotAvatarUrl(e.target.value)}
                     className="w-full px-3 py-1.5 rounded-lg border border-purple-300 text-xs bg-white font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Sub-Title Status Header</label>
+                  <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Header Status Subtitle</label>
                   <input
                     type="text"
                     placeholder="e.g. Official Business Account"
@@ -553,7 +517,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">Pilihan Warna Header WhatsApp Simulator</label>
+                <label className="block text-[10.5px] font-semibold text-purple-900 mb-1">WhatsApp Header Theme Color</label>
                 <div className="flex items-center gap-2 flex-wrap">
                   {[
                     '#075E54', '#003366', '#005B9A', '#00805A', '#C41230', '#0F172A', '#2563EB', '#7C3AED', '#DB2777'
@@ -576,7 +540,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                     value={headerColor}
                     onChange={(e) => setHeaderColor(e.target.value)}
                     className="w-8 h-7 rounded border border-purple-300 cursor-pointer bg-white"
-                    title="Pilih Warna Custom (Hex Code)"
+                    title="Choose Custom Color (Hex Code)"
                   />
                   <span className="text-[11px] font-mono font-bold text-purple-900 bg-white px-2 py-0.5 rounded border border-purple-200">
                     {headerColor}
@@ -593,7 +557,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Komponen Cekat AI (Pisahkan Koma)</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Cekat AI Components (Comma separated)</label>
                   <input
                     type="text"
                     placeholder="AI Agent, API Tools, n8n, WA Flows"
@@ -603,7 +567,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Scope API (Pisahkan Koma)</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">API Scopes (Comma separated)</label>
                   <input
                     type="text"
                     placeholder="GET /api/v1/availability, POST /api/v1/booking"
@@ -618,7 +582,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                 <label className="block text-[11px] font-semibold text-slate-700 mb-1">Rule Safeguard & Note</label>
                 <input
                   type="text"
-                  placeholder="Catatan aturan keamanan / instruksi ketat AI..."
+                  placeholder="Security rule notes and AI strict instructions..."
                   value={ruleNote}
                   onChange={(e) => setRuleNote(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white italic"
@@ -626,7 +590,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Langkah Alur / Flowchart (Satu per baris)</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Flowchart Steps (One per line)</label>
                 <textarea
                   rows={3}
                   placeholder="Step 1 — Intake&#10;Step 2 — Safety Gate&#10;Step 3 — Handoff"
@@ -641,32 +605,32 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
             <div className="space-y-4 pt-2">
               <div className="flex items-center justify-between border-b border-slate-200 pb-1">
                 <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                  <ArrowRight size={14} className="text-blue-600" /> Alur Percakapan (Interactive Steps)
+                  <ArrowRight size={14} className="text-blue-600" /> Conversation Flow (Interactive Steps)
                 </div>
                 <button
                   type="button"
                   onClick={addStep}
                   className="bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 font-bold text-[11px] px-3 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer"
                 >
-                  <Plus size={13} /> Tambah Step Percakapan
+                  <Plus size={13} /> Add Conversation Step
                 </button>
               </div>
 
               {/* Start / Jump Step Selection inside Modal */}
               <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <span className="font-extrabold text-blue-900 text-xs block">📍 Mulai Percakapan Dari Step Mana Saat Dijalankan:</span>
-                  <span className="text-[10.5px] text-slate-600 font-medium">Pilih step awal simulasi ketika skenario ini dibuka oleh presenter.</span>
+                  <span className="font-extrabold text-blue-900 text-xs block">📍 Start Conversation From Step (Jump Step):</span>
+                  <span className="text-[10.5px] text-slate-600 font-medium">Select initial step when simulation starts.</span>
                 </div>
                 <select
                   value={startFromStepIdx}
                   onChange={(e) => setStartFromStepIdx(Number(e.target.value))}
                   className="bg-white border border-blue-300 rounded-lg px-3 py-1.5 text-xs font-bold text-blue-700 focus:outline-none focus:border-blue-600 shadow-xs cursor-pointer"
                 >
-                  <option value={0}>Step 1 (Awal Percakapan)</option>
+                  <option value={0}>Step 1 (Start of Conversation)</option>
                   {steps.map((st, i) => (
                     <option key={i} value={i + 1}>
-                      Jump ke Step {i + 2}: "{st.userReply.length > 20 ? st.userReply.slice(0, 20) + '...' : st.userReply}"
+                      Jump to Step {i + 2}: "{st.userReply.length > 20 ? st.userReply.slice(0, 20) + '...' : st.userReply}"
                     </option>
                   ))}
                 </select>
@@ -682,24 +646,24 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                         onClick={() => removeStep(idx)}
                         className="text-red-600 hover:text-red-700 text-xs flex items-center gap-1 font-semibold cursor-pointer"
                       >
-                        <Trash2 size={13} /> Hapus Step
+                        <Trash2 size={13} /> Delete Step
                       </button>
                     )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Pesan Balasan User/Nasabah</label>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">User Message</label>
                       <input
                         type="text"
-                        placeholder="Teks yang dikirim user..."
+                        placeholder="Message sent by user..."
                         value={st.userReply}
                         onChange={(e) => updateStepField(idx, 'userReply', e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-medium"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Teks Opsi Chips (Pisahkan Koma)</label>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Quick Reply Chips (Comma separated)</label>
                       <input
                         type="text"
                         placeholder="Option 1, Option 2, Option 3"
@@ -711,10 +675,10 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Jawaban AI Assistant</label>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">AI Assistant Response</label>
                     <textarea
                       rows={2}
-                      placeholder="Balasan otomatis dari bot Cekat AI..."
+                      placeholder="Automatic reply from Cekat AI bot..."
                       value={st.aiResponse}
                       onChange={(e) => updateStepField(idx, 'aiResponse', e.target.value)}
                       className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
@@ -731,19 +695,19 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                         className="w-4 h-4 text-blue-600 rounded"
                       />
                       <span className="font-bold text-slate-800 text-xs flex items-center gap-1">
-                        <CreditCard size={14} className="text-blue-600" /> Sertakan Kartu / E-Tiket Struk pada Step ini
+                        <CreditCard size={14} className="text-blue-600" /> Include Summary Card / Receipt on this step
                       </span>
                     </label>
 
                     {st.enableCard && st.card && (
                       <div className="mt-3 bg-white border border-blue-200 rounded-xl p-3 space-y-3">
                         <div className="font-bold text-blue-700 text-xs border-b border-slate-100 pb-1">
-                          Konfigurasi Kartu Struk WA
+                          WA Receipt Card Configuration
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                           <div>
-                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Judul Kartu</label>
+                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Card Title</label>
                             <input
                               type="text"
                               value={st.card.title}
@@ -756,7 +720,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Sub-judul Status</label>
+                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Status Subtitle</label>
                             <input
                               type="text"
                               value={st.card.sub}
@@ -769,7 +733,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Status Banner Bawah</label>
+                            <label className="block text-[10px] font-semibold text-slate-600 mb-0.5">Bottom Banner Status</label>
                             <input
                               type="text"
                               value={st.card.status}
@@ -786,13 +750,13 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                         {/* Card Key-Value Items */}
                         <div className="space-y-2 pt-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10.5px] font-bold text-slate-700">Data Baris Kartu:</span>
+                            <span className="text-[10.5px] font-bold text-slate-700">Card Data Rows:</span>
                             <button
                               type="button"
                               onClick={() => addCardItem(idx)}
                               className="text-blue-600 hover:text-blue-800 font-bold text-[10.5px] cursor-pointer"
                             >
-                              + Tambah Baris Data
+                              + Add Data Row
                             </button>
                           </div>
 
@@ -807,7 +771,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                               />
                               <input
                                 type="text"
-                                placeholder="Nilai"
+                                placeholder="Value"
                                 value={item.val}
                                 onChange={(e) => updateCardItem(idx, itemIdx, 'val', e.target.value)}
                                 className="flex-1 px-2 py-1 rounded border border-slate-300 text-xs font-bold"
@@ -837,19 +801,19 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                         className="w-4 h-4 text-purple-600 rounded"
                       />
                       <span className="font-bold text-purple-900 text-xs flex items-center gap-1">
-                        <FileText size={14} className="text-purple-600" /> Sertakan WhatsApp Flow (Form Interaktif) pada Step ini
+                        <FileText size={14} className="text-purple-600" /> Include WhatsApp Flow Form on this step
                       </span>
                     </label>
 
                     {st.enableFlow && st.flow && (
                       <div className="mt-3 bg-purple-50/70 border border-purple-200 rounded-xl p-3 space-y-3">
                         <div className="font-extrabold text-purple-900 text-xs border-b border-purple-200 pb-1">
-                          Konfigurasi WhatsApp Flow (Form Simulator)
+                          WhatsApp Flow Form Configuration
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-[10px] font-semibold text-purple-900 mb-0.5">Judul Form Flow</label>
+                            <label className="block text-[10px] font-semibold text-purple-900 mb-0.5">Flow Form Title</label>
                             <input
                               type="text"
                               value={st.flow.title}
@@ -862,7 +826,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-semibold text-purple-900 mb-0.5">Teks Tombol Buka Form WA</label>
+                            <label className="block text-[10px] font-semibold text-purple-900 mb-0.5">Open Form Button Text</label>
                             <input
                               type="text"
                               value={st.flow.buttonText || ''}
@@ -877,7 +841,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                         </div>
 
                         <div>
-                          <label className="block text-[10px] font-semibold text-purple-900 mb-0.5">Deskripsi Singkat Form</label>
+                          <label className="block text-[10px] font-semibold text-purple-900 mb-0.5">Short Form Description</label>
                           <input
                             type="text"
                             value={st.flow.description || ''}
@@ -893,13 +857,13 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                         {/* Fields List */}
                         <div className="space-y-2 pt-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10.5px] font-extrabold text-purple-900">Input Fields Form:</span>
+                            <span className="text-[10.5px] font-extrabold text-purple-900">Form Input Fields:</span>
                             <button
                               type="button"
                               onClick={() => addFlowField(idx)}
                               className="text-purple-700 hover:text-purple-900 font-bold text-[10.5px] cursor-pointer"
                             >
-                              + Tambah Input Field
+                              + Add Input Field
                             </button>
                           </div>
 
@@ -908,7 +872,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                               <div className="flex items-center gap-2">
                                 <input
                                   type="text"
-                                  placeholder="Label Input Field"
+                                  placeholder="Input Field Label"
                                   value={f.label}
                                   onChange={(e) => updateFlowField(idx, fieldIdx, 'label', e.target.value)}
                                   className="flex-1 px-2 py-1 rounded border border-slate-300 text-xs font-semibold"
@@ -918,9 +882,9 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                                   onChange={(e) => updateFlowField(idx, fieldIdx, 'type', e.target.value)}
                                   className="px-2 py-1 rounded border border-slate-300 text-xs bg-slate-50 font-bold"
                                 >
-                                  <option value="text">Teks Field</option>
+                                  <option value="text">Text Field</option>
                                   <option value="select">Dropdown Select</option>
-                                  <option value="date">Tanggal</option>
+                                  <option value="date">Date</option>
                                   <option value="radio">Radio Buttons</option>
                                   <option value="checkbox">Checkbox</option>
                                 </select>
@@ -936,7 +900,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                               {(f.type === 'select' || f.type === 'radio' || f.type === 'checkbox') && (
                                 <input
                                   type="text"
-                                  placeholder="Opsi Pilihan (Pisahkan Koma, e.g. Opsi A, Opsi B)"
+                                  placeholder="Options (Comma separated, e.g. Option A, Option B)"
                                   value={f.options ? f.options.join(', ') : ''}
                                   onChange={(e) => updateFlowField(idx, fieldIdx, 'options', e.target.value.split(',').map(o => o.trim()).filter(Boolean))}
                                   className="w-full px-2 py-1 rounded border border-slate-300 text-xs font-mono bg-slate-50"
@@ -961,14 +925,14 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-100 transition cursor-pointer"
               >
-                Batal
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={handleSaveScenario}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
               >
-                <CheckCircle2 size={16} /> {scenarioToEdit ? 'Simpan Perubahan Skenario' : 'Simpan & Publikasikan Skenario Baru'}
+                <CheckCircle2 size={16} /> {scenarioToEdit ? 'Save Changes' : 'Save & Publish Scenario'}
               </button>
             </div>
 

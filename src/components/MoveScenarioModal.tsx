@@ -38,7 +38,7 @@ export const MoveScenarioModal: React.FC<MoveScenarioModalProps> = ({
       setIsAuthenticated(true);
       setAuthError('');
     } else {
-      setAuthError('Password SA Team tidak valid. Coba lagi!');
+      setAuthError('Invalid authorization password. Please try again.');
     }
   };
 
@@ -66,8 +66,8 @@ export const MoveScenarioModal: React.FC<MoveScenarioModalProps> = ({
               <FolderOutput size={18} />
             </div>
             <div>
-              <h3 className="font-extrabold text-base leading-tight">Pindahkan Kategori Skenario</h3>
-              <p className="text-[11px] text-slate-400">Ubah kategori domain untuk skenario ini</p>
+              <h3 className="font-extrabold text-base leading-tight">Move Scenario Category</h3>
+              <p className="text-[11px] text-slate-400">Change industry domain category for this scenario</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer">✕</button>
@@ -80,14 +80,14 @@ export const MoveScenarioModal: React.FC<MoveScenarioModalProps> = ({
               <Lock size={24} />
             </div>
             <div className="text-center">
-              <h4 className="font-bold text-slate-900 text-base">Otentikasi SA Team Required</h4>
-              <p className="text-xs text-slate-500 max-w-sm mt-1">Masukkan password SA Team untuk memindahkan skenario ke kategori lain.</p>
+              <h4 className="font-bold text-slate-900 text-base">Authorization Required</h4>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">Enter authorization password to move scenario to another category.</p>
             </div>
 
             <div className="w-full max-w-xs space-y-2">
               <input
                 type="password"
-                placeholder="Masukkan Password (e.g. SAteamCekat@)"
+                placeholder="Enter Password"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:outline-none focus:border-blue-600 shadow-xs"
@@ -99,7 +99,7 @@ export const MoveScenarioModal: React.FC<MoveScenarioModalProps> = ({
               type="submit"
               className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
-              <ShieldCheck size={16} /> Buka Pemindah Kategori
+              <ShieldCheck size={16} /> Open Category Mover
             </button>
           </form>
         ) : (
@@ -107,13 +107,13 @@ export const MoveScenarioModal: React.FC<MoveScenarioModalProps> = ({
           <div className="p-6 space-y-4">
             
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1.5 text-left">
-              <span className="font-bold text-blue-700 text-xs block">Skenario Terpilih:</span>
+              <span className="font-bold text-blue-700 text-xs block">Selected Scenario:</span>
               <h4 className="font-black text-slate-900 text-sm leading-snug">{scenario.title}</h4>
               <p className="text-[11px] text-slate-500 font-mono">ID: {scenario.id}</p>
             </div>
 
             <div className="text-left space-y-1.5">
-              <label className="block text-[11px] font-semibold text-slate-700">Pilih Kategori Industri Tujuan</label>
+              <label className="block text-[11px] font-semibold text-slate-700">Select Target Industry Category</label>
               <select
                 value={targetCatId}
                 onChange={(e) => setTargetCatId(e.target.value)}
@@ -133,14 +133,14 @@ export const MoveScenarioModal: React.FC<MoveScenarioModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-100 transition cursor-pointer"
               >
-                Batal
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={handleMoveSubmit}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer"
               >
-                <CheckCircle2 size={16} /> Pindahkan Kategori
+                <CheckCircle2 size={16} /> Move Category
               </button>
             </div>
 

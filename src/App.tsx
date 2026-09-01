@@ -580,7 +580,7 @@ export function App() {
               <button
                 onClick={() => restartScenario()}
                 className="flex items-center gap-1.5 text-slate-700 hover:text-blue-600 font-semibold transition cursor-pointer"
-                title="Reset Simulasi"
+                title="Reset Scenario"
               >
                 <RotateCcw size={13} />
                 <span>Reset</span>
@@ -595,10 +595,10 @@ export function App() {
                       setIsGeneratorOpen(true);
                     }}
                     className="flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
-                    title="Edit Skenario, WA Flow, Branding, & Jump Step"
+                    title="Edit Scenario, WA Flow, Branding, & Jump Step"
                   >
                     <Edit3 size={13} />
-                    <span>Edit Skenario</span>
+                    <span>Edit</span>
                   </button>
                   <div className="h-3 w-px bg-slate-200"></div>
                   
@@ -606,20 +606,20 @@ export function App() {
                   <button
                     onClick={handleDuplicateScenario}
                     className="flex items-center gap-1 text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
-                    title="Duplikat 1-Click Skenario Ini"
+                    title="Clone Scenario"
                   >
                     <Copy size={13} />
-                    <span>Duplikat</span>
+                    <span>Clone</span>
                   </button>
 
                   <div className="h-3 w-px bg-slate-200"></div>
                   <button
                     onClick={() => handleDeleteScenario(currentScenario.id)}
                     className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold transition cursor-pointer"
-                    title="Hapus Skenario Ini"
+                    title="Delete Scenario"
                   >
                     <Trash2 size={13} />
-                    <span>Hapus Skenario</span>
+                    <span>Delete</span>
                   </button>
                 </>
               )}
@@ -630,7 +630,7 @@ export function App() {
               <button
                 onClick={() => setIsControlsExpanded(false)}
                 className="flex items-center justify-center w-6 h-6 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-full transition cursor-pointer"
-                title="Sembunyikan Controls Bar"
+                title="Hide Controls"
               >
                 <ChevronUp size={16} />
               </button>
@@ -640,10 +640,10 @@ export function App() {
             <button
               onClick={() => setIsControlsExpanded(true)}
               className="bg-white border border-slate-200 shadow-xs hover:bg-slate-50 text-slate-700 font-bold px-4 py-1.5 rounded-full text-xs flex items-center gap-2 transition cursor-pointer animate-fade-up"
-              title="Tampilkan Controls Bar"
+              title="Show Controls"
             >
               <ChevronDown size={15} className="text-blue-600" />
-              <span>Tampilkan Controls Bar</span>
+              <span>Show Controls</span>
             </button>
           )
         )}
@@ -1027,14 +1027,14 @@ export function App() {
 
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1.5">
                 <div className="font-bold text-amber-700 flex items-center gap-2 text-xs">
-                  <Info size={15} /> Deskripsi Skenario & Tujuan
+                  <Info size={15} /> Scenario Description & Objective
                 </div>
                 <p className="text-slate-700 leading-relaxed text-[11.5px]">{currentScenario.description}</p>
               </div>
 
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
                 <div className="font-bold text-blue-700 flex items-center gap-2 text-xs mb-1">
-                  <ListOrdered size={15} /> Alur Percakapan & Flowchart
+                  <ListOrdered size={15} /> Conversation Flow & Steps
                 </div>
                 <div className="space-y-2">
                   {currentScenario.stepsDetail && currentScenario.stepsDetail.map((s, idx) => (
@@ -1052,7 +1052,7 @@ export function App() {
 
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
                 <div className="font-bold text-blue-700 flex items-center gap-2 text-xs">
-                  <Cpu size={15} /> Komponen Cekat AI
+                  <Cpu size={15} /> Cekat AI Components
                 </div>
                 <div>
                   {currentScenario.cekatComponents && currentScenario.cekatComponents.map((c, i) => (
@@ -1065,7 +1065,7 @@ export function App() {
 
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
                 <div className="font-bold text-blue-700 flex items-center gap-2 text-xs">
-                  <Network size={15} /> Scope API & Integrasi
+                  <Network size={15} /> API Scopes & Integrations
                 </div>
                 <div>
                   {currentScenario.apiScopes && currentScenario.apiScopes.map((a, i) => (

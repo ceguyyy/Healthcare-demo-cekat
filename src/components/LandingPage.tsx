@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Category } from '../types/scenario';
-import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal } from 'lucide-react';
 
 interface LandingPageProps {
   categories: Category[];
@@ -32,14 +32,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const filteredCategories = useMemo(() => {
     return categories
       .filter(cat => {
-        // Search query filter
         const q = searchQuery.toLowerCase().trim();
         const matchSearch = !q || 
           cat.title.toLowerCase().includes(q) || 
           cat.description.toLowerCase().includes(q) || 
           cat.badge.toLowerCase().includes(q);
 
-        // Tag filter
         const matchTag = selectedTag === 'ALL' || cat.badge.toLowerCase().trim() === selectedTag.toLowerCase().trim();
 
         return matchSearch && matchTag;
@@ -72,7 +70,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               onClick={onAddCategory}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
             >
-              <Plus size={15} /> Tambah Kategori
+              <Plus size={15} /> Add Category
             </button>
           </div>
         </div>
@@ -80,10 +78,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Hero Banner */}
         <div className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 space-y-4 text-center shadow-lg relative overflow-hidden">
           <h1 className="font-black text-3xl md:text-5xl tracking-tight leading-tight">
-            Pilih Kategori Showcase & Simulasi Use Case
+            Showcase & Use Case Simulation Categories
           </h1>
           <p className="text-slate-300 text-xs md:text-sm max-w-2xl mx-auto leading-relaxed">
-            Eksplorasi alur percakapan otomatisasi AI interaktif, integrasi API sistem, dan arsitektur guardrail aman sesuai kebutuhan industri Anda.
+            Explore interactive AI automation flows, system API integrations, and safe guardrail architectures tailored for your industry.
           </p>
         </div>
 
@@ -97,7 +95,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Cari kategori, kata kunci, atau tag..."
+                placeholder="Search categories, keywords, or tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-9 py-2.5 rounded-2xl border border-slate-300 text-xs bg-white font-medium focus:outline-none focus:border-blue-600 shadow-xs"
@@ -116,16 +114,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
               <div className="flex items-center gap-1.5 text-xs text-slate-600 font-bold">
                 <SlidersHorizontal size={14} className="text-blue-600" />
-                <span>Urutkan:</span>
+                <span>Sort by:</span>
               </div>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="px-3 py-2 rounded-xl border border-slate-300 text-xs bg-white font-semibold text-slate-800 focus:outline-none focus:border-blue-600 cursor-pointer shadow-xs"
               >
-                <option value="default">Default (Urutan Asli)</option>
-                <option value="name_asc">Abjad (A - Z)</option>
-                <option value="name_desc">Abjad (Z - A)</option>
+                <option value="default">Default</option>
+                <option value="name_asc">Alphabetical (A - Z)</option>
+                <option value="name_desc">Alphabetical (Z - A)</option>
               </select>
             </div>
 
@@ -145,7 +143,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
               }`}
             >
-              Semua ({categories.length})
+              All ({categories.length})
             </button>
 
             {availableTags.map((tag) => {
@@ -172,9 +170,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-extrabold text-xl text-slate-900 flex items-center gap-2">
-              <span>Daftar Kategori Use Case</span>
+              <span>Use Case Categories</span>
               <span className="text-xs bg-slate-100 text-slate-600 border border-slate-200 font-bold px-2.5 py-0.5 rounded-full">
-                {filteredCategories.length} Domain Found
+                {filteredCategories.length} Domains Available
               </span>
             </h2>
           </div>
@@ -203,7 +201,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                             onEditCategory(cat);
                           }}
                           className="text-slate-400 hover:text-blue-600 text-xs p-1 font-semibold"
-                          title="Edit Kategori"
+                          title="Edit Category"
                         >
                           <Settings size={15} />
                         </button>
@@ -221,7 +219,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
 
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-blue-600 group-hover:translate-x-1 transition">
-                    <span>Buka Simulator & Alur Canvas</span>
+                    <span>Open Simulator & Canvas Flow</span>
                     <ArrowRight size={16} />
                   </div>
                 </div>
@@ -234,9 +232,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <Search size={22} />
               </div>
               <div>
-                <h3 className="font-extrabold text-slate-900 text-base">Tidak Ada Kategori Ditemukan</h3>
+                <h3 className="font-extrabold text-slate-900 text-base">No Categories Found</h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Kategori dengan pencarian <span className="font-bold text-blue-600">"{searchQuery}"</span> atau tag <span className="font-bold text-blue-600">"{selectedTag}"</span> tidak tersedia.
+                  No categories match search query <span className="font-bold text-blue-600">"{searchQuery}"</span> or filter <span className="font-bold text-blue-600">"{selectedTag}"</span>.
                 </p>
               </div>
               <button
@@ -246,7 +244,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 }}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition cursor-pointer"
               >
-                Reset Filter Pencarian
+                Reset Search Filter
               </button>
             </div>
           )}

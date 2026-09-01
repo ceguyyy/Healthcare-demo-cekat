@@ -262,14 +262,14 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
               <Lock size={24} />
             </div>
             <div className="text-center">
-              <h4 className="font-bold text-slate-900 text-base">Otentikasi SA Team Required</h4>
-              <p className="text-xs text-slate-500 max-w-sm mt-1">Masukkan password otorisasi SA Team untuk melakukan Bulk Import JSON skenario.</p>
+              <h4 className="font-bold text-slate-900 text-base">Authorization Required</h4>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">Enter authorization password for bulk JSON import.</p>
             </div>
 
             <div className="w-full max-w-xs space-y-2">
               <input
                 type="password"
-                placeholder="Masukkan Password (e.g. SAteamCekat@)"
+                placeholder="Enter Password"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:outline-none focus:border-blue-600 shadow-xs"
@@ -281,7 +281,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
               type="submit"
               className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
-              <ShieldCheck size={16} /> Buka JSON Importer
+              <ShieldCheck size={16} /> Open JSON Importer
             </button>
           </form>
         ) : (
@@ -292,27 +292,27 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                  <Bot size={16} className="text-indigo-600" /> Panduan Prompt & Kamus Variabel AI Generator
+                  <Bot size={16} className="text-indigo-600" /> AI Generator Prompt Guide & Variable Dictionary
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleCopyAiPrompt}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition cursor-pointer shadow-xs"
-                    title="Copy Prompt Lengkap Beserta Kamus Variabel ke AI lain"
+                    title="Copy full prompt and variable dictionary for AI generators"
                   >
-                    <Bot size={14} /> {copyPromptSuccess ? 'Copied Prompt AI!' : 'Copy Prompt untuk AI'}
+                    <Bot size={14} /> {copyPromptSuccess ? 'Copied Prompt AI!' : 'Copy AI Prompt'}
                   </button>
                   <button
                     onClick={handleDownloadTemplate}
                     className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[11px] px-3 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer"
                   >
-                    <Download size={13} /> Download Panduan .txt
+                    <Download size={13} /> Download Guide (.txt)
                   </button>
                 </div>
               </div>
               
               <p className="text-[11.5px] text-slate-600 leading-relaxed">
-                Klik **`Copy Prompt untuk AI`** di atas lalu tempelkan ke **ChatGPT / Claude / Gemini / DeepSeek**. Prompt tersebut sudah berisi penjelasan lengkap setiap variabel dan instruksi pembuatan JSON Array otomatis.
+                Click **`Copy AI Prompt`** above and paste into **ChatGPT / Claude / Gemini / DeepSeek**. The prompt includes full variable definitions and JSON array generation instructions.
               </p>
 
               {/* Toggleable Variable Dictionary Table */}
@@ -323,7 +323,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
                   className="flex items-center gap-1.5 font-extrabold text-blue-700 hover:text-blue-800 text-xs cursor-pointer"
                 >
                   <BookOpen size={14} />
-                  <span>{showDictionary ? 'Sembunyikan Kamus Variabel JSON' : 'Lihat Kamus Variabel JSON Skenario (12 Field)'}</span>
+                  <span>{showDictionary ? 'Hide JSON Variable Dictionary' : 'View JSON Variable Dictionary (12 Fields)'}</span>
                   {showDictionary ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
 
@@ -332,10 +332,10 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
                     <table className="w-full text-left border-collapse border border-slate-200 text-[11px]">
                       <thead>
                         <tr className="bg-slate-200/80 text-slate-800 font-bold border-b border-slate-300">
-                          <th className="p-2 border-r border-slate-300">Variabel</th>
-                          <th className="p-2 border-r border-slate-300">Tipe</th>
+                          <th className="p-2 border-r border-slate-300">Variable</th>
+                          <th className="p-2 border-r border-slate-300">Type</th>
                           <th className="p-2 border-r border-slate-300">Status</th>
-                          <th className="p-2">Fungsi & Penjelasan</th>
+                          <th className="p-2">Description</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200 bg-white">
@@ -362,8 +362,8 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
             <div className="border-2 border-dashed border-slate-300 rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-2 bg-slate-50 hover:bg-slate-100/80 transition">
               <Upload size={24} className="text-blue-600" />
               <div>
-                <span className="font-bold text-slate-900">Upload File JSON Skenario</span>
-                <p className="text-[11px] text-slate-500">Pilih file .json single atau bulk array dari komputer Anda</p>
+                <span className="font-bold text-slate-900">Upload Scenario JSON File</span>
+                <p className="text-[11px] text-slate-500">Select single or bulk array .json file from your computer</p>
               </div>
               <input
                 type="file"
@@ -375,10 +375,10 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
 
             {/* Raw JSON Code Editor Textarea */}
             <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-slate-700">Atau Tempelkan (Paste) Kode JSON di Sini (Single Object / Bulk Array):</label>
+              <label className="block text-[11px] font-semibold text-slate-700">Or Paste JSON Code Here (Single Object / Bulk Array):</label>
               <textarea
                 rows={10}
-                placeholder="Paste JSON single object {...} atau bulk array [{...}, {...}] hasil generasi AI di sini..."
+                placeholder="Paste JSON single object {...} or bulk array [{...}, {...}] here..."
                 value={jsonText}
                 onChange={(e) => {
                   setJsonText(e.target.value);
@@ -401,14 +401,14 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-100 transition cursor-pointer"
               >
-                Batal
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={handleImportSubmit}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2 rounded-xl transition shadow-md flex items-center gap-2 cursor-pointer"
               >
-                <CheckCircle2 size={16} /> Import Skenario Ke Supabase DB
+                <CheckCircle2 size={16} /> Import Scenarios to DB
               </button>
             </div>
 

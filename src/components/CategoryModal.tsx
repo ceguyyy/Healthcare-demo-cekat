@@ -15,13 +15,11 @@ export const cleanFontAwesomeClass = (input: string): string => {
   if (!input) return 'fa-layer-group';
   let str = input.trim();
   
-  // Extract class from <i class="..."> or <i className="...">
   const match = str.match(/class(?:Name)?=["']([^"']+)["']/i);
   if (match && match[1]) {
     str = match[1].trim();
   }
   
-  // Strip html tags if any remain
   str = str.replace(/<[^>]*>/g, '').trim();
   return str || 'fa-layer-group';
 };
@@ -65,19 +63,18 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
       setIsAuthenticated(true);
       setAuthError('');
     } else {
-      setAuthError('Password SA Team tidak valid. Coba lagi!');
+      setAuthError('Invalid authorization password. Please try again.');
     }
   };
 
   const handleIconChange = (val: string) => {
-    // Auto extract FontAwesome class if user pastes full HTML tag like <i class="fa-brands fa-shopify"></i>
     const cleaned = cleanFontAwesomeClass(val);
     setIcon(cleaned);
   };
 
   const handleSaveCategory = async () => {
     if (!title) {
-      alert('Mohon isi Judul Kategori!');
+      alert('Please enter a Category Title!');
       return;
     }
 
@@ -97,7 +94,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
   const handleDeleteCategory = async () => {
     if (!categoryToEdit) return;
-    if (confirm(`Apakah Anda yakin ingin menghapus kategori "${categoryToEdit.title}"?`)) {
+    if (confirm(`Are you sure you want to delete category "${categoryToEdit.title}"?`)) {
       await SupabaseService.deleteCategory(categoryToEdit.id);
       if (onCategoryDeleted) onCategoryDeleted(categoryToEdit.id);
       onClose();
@@ -118,9 +115,9 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
             </div>
             <div>
               <h3 className="font-extrabold text-base leading-tight">
-                {categoryToEdit ? 'Edit Kategori Showcase' : 'Tambah Kategori Baru'}
+                {categoryToEdit ? 'Edit Showcase Category' : 'Add New Category'}
               </h3>
-              <p className="text-[11px] text-slate-400">CRUD Kategori Domain/Industri Cekat AI</p>
+              <p className="text-[11px] text-slate-400">Cekat AI Domain / Industry Manager</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer">✕</button>
@@ -133,14 +130,14 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               <Lock size={24} />
             </div>
             <div className="text-center">
-              <h4 className="font-bold text-slate-900 text-base">Otentikasi SA Team Required</h4>
-              <p className="text-xs text-slate-500 max-w-sm mt-1">Masukkan password SA Team untuk mengubah kategori.</p>
+              <h4 className="font-bold text-slate-900 text-base">Authorization Required</h4>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">Enter authorization password to manage categories.</p>
             </div>
 
             <div className="w-full max-w-xs space-y-2">
               <input
                 type="password"
-                placeholder="Masukkan Password (e.g. SAteamCekat@)"
+                placeholder="Enter Password"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:outline-none focus:border-blue-600 shadow-xs"
@@ -152,14 +149,14 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               type="submit"
               className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
-              <ShieldCheck size={16} /> Buka Category Editor
+              <ShieldCheck size={16} /> Open Category Editor
             </button>
           </form>
         ) : (
           /* Main Category Form */
           <div className="p-6 space-y-4 text-xs text-slate-800">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Judul Kategori / Industri</label>
+              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Category Title / Industry</label>
               <input
                 type="text"
                 placeholder="e.g. Banking & Financial AI"
@@ -170,10 +167,10 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Deskripsi Singkat Kategori</label>
+              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Short Description</label>
               <textarea
                 rows={3}
-                placeholder="Penjelasan singkat mengenai bidang industri ini..."
+                placeholder="Brief description of this industry domain..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
@@ -183,13 +180,13 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5">
-                  <span>Ikon FontAwesome</span>
+                  <span>FontAwesome Icon</span>
                   <button
                     type="button"
                     onClick={() => setShowTooltip(!showTooltip)}
                     className="text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer font-bold"
                   >
-                    <HelpCircle size={14} /> Cara Custom Icon
+                    <HelpCircle size={14} /> How to Custom Icon
                   </button>
                 </label>
                 
@@ -207,13 +204,13 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               {showTooltip && (
                 <div className="bg-blue-50/90 border border-blue-200 rounded-xl p-3 text-[11px] text-slate-700 space-y-1.5 animate-fade-up">
                   <div className="font-bold text-blue-900 flex items-center gap-1">
-                    <Info size={14} className="text-blue-600" /> Panduan Paste Kode Ikon FontAwesome:
+                    <Info size={14} className="text-blue-600" /> FontAwesome Icon Paste Guide:
                   </div>
                   <ol className="list-decimal list-inside space-y-1 text-slate-700 leading-relaxed">
-                    <li>Buka <a href="https://fontawesome.com/search?o=r&m=free" target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">FontAwesome Search (Free)</a>.</li>
-                    <li>Cari & klik ikon yang Anda inginkan (misal: Shopify, Cart, Building).</li>
-                    <li>Klik tombol **Copy HTML** di web FontAwesome (contoh: <code className="bg-white px-1 py-0.5 rounded text-blue-800 font-mono">&lt;i class="fa-brands fa-shopify"&gt;&lt;/i&gt;</code>).</li>
-                    <li>Tempelkan (Paste) langsung ke kolom input di bawah. Sistem akan otomatis mengekstrak classnya!</li>
+                    <li>Open <a href="https://fontawesome.com/search?o=r&m=free" target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">FontAwesome Search (Free)</a>.</li>
+                    <li>Find & click your desired icon (e.g., Shopify, Cart, Building).</li>
+                    <li>Click **Copy HTML** on FontAwesome (example: <code className="bg-white px-1 py-0.5 rounded text-blue-800 font-mono">&lt;i class="fa-brands fa-shopify"&gt;&lt;/i&gt;</code>).</li>
+                    <li>Paste directly into input field below. Class names will be extracted automatically!</li>
                   </ol>
                 </div>
               )}
@@ -226,7 +223,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
                 <input
                   type="text"
-                  placeholder='Tempelkan kode HTML e.g. <i class="fa-brands fa-shopify"></i> atau fa-building-columns'
+                  placeholder='Paste HTML e.g. <i class="fa-brands fa-shopify"></i> or fa-building-columns'
                   value={icon}
                   onChange={(e) => handleIconChange(e.target.value)}
                   className="flex-1 px-3 py-2.5 rounded-lg border border-slate-300 text-xs bg-white font-mono focus:outline-none focus:border-blue-600"
@@ -235,7 +232,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Teks Badge Label</label>
+              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Badge Label</label>
               <input
                 type="text"
                 placeholder="e.g. Finance & Banking"
@@ -252,7 +249,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                   onClick={handleDeleteCategory}
                   className="text-red-600 hover:text-red-700 font-bold text-xs flex items-center gap-1 cursor-pointer"
                 >
-                  <Trash2 size={14} /> Hapus Kategori
+                  <Trash2 size={14} /> Delete Category
                 </button>
               ) : <div></div>}
 
@@ -262,14 +259,14 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                   onClick={onClose}
                   className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 font-semibold hover:bg-slate-100 transition cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveCategory}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer"
                 >
-                  <CheckCircle2 size={16} /> Simpan Kategori
+                  <CheckCircle2 size={16} /> Save Category
                 </button>
               </div>
             </div>
