@@ -39,9 +39,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         {/* Hero Banner */}
         <div className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 space-y-4 text-center shadow-lg relative overflow-hidden">
-          <div className="inline-block bg-blue-600/30 border border-blue-500/40 text-blue-300 font-extrabold text-xs px-4 py-1 rounded-full uppercase tracking-wider">
-            Enterprise Conversational AI Platform
-          </div>
           <h1 className="font-black text-3xl md:text-5xl tracking-tight leading-tight">
             Pilih Kategori Showcase & Simulasi Use Case
           </h1>
