@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Scenario, Category, generateUUID } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
-import { Lock, FileJson, Upload, Download, Copy, CheckCircle2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Lock, FileJson, Upload, Download, Copy, CheckCircle2, ShieldCheck, AlertCircle, Bot } from 'lucide-react';
 
 interface ImportJsonModalProps {
   isOpen: boolean;
@@ -12,48 +12,114 @@ interface ImportJsonModalProps {
 
 const scenarioJsonTemplate = [
   {
-    name: "1. Cek Saldo & Mutasi",
-    title: "1. Pengecekan Saldo / Mutasi Rekening (Verifikasi PII Ketat)",
-    tag: "Security · PII",
-    triggerType: "INBOUND_USER",
-    outboundPill: "🔔 OUTBOUND SYSTEM TRIGGER",
-    description: "Cek saldo/mutasi dengan verifikasi OTP; AI tak pernah menampilkan angka sebelum tervalidasi backend.",
-    initialText: "Saya mau cek saldo tabungan saya.",
-    cekatComponents: ["AI Agent", "API Tools", "Automation", "WA Flows"],
-    apiScopes: ["POST /otp/send", "POST /otp/verify", "GET /account/balance"],
-    ruleNote: "POJK 22/2023 & UU PDP 27/2022 — saldo/PIN/OTP tak disimpan di Custom Fields; output wajib tersandi.",
-    stepsDetail: [
+    "_AI_GENERATOR_GUIDE": "// PETUNJUK UNTUK AI GENERATOR: Hasilkan JSON skenario sesuai skema di bawah ini. Anda bisa membuat 1 object atau Array [...] berisi banyak skenario.",
+    "name": "1. Cek Saldo & Mutasi",
+    "_note_name": "// Nama singkat yang akan tampil pada tombol tab di atas simulator",
+
+    "title": "1. Pengecekan Saldo / Mutasi Rekening (Verifikasi PII Ketat)",
+    "_note_title": "// Judul lengkap skenario use case yang tampil pada Inspector Panel kanan",
+
+    "tag": "Security · PII",
+    "_note_tag": "// Label kategori fitur (contoh: 'Guardrail', 'Compliance', 'Outbound', 'Fraud')",
+
+    "triggerType": "INBOUND_USER",
+    "_note_triggerType": "// Tipe pemicu awal: 'INBOUND_USER' (user mulai pesan) atau 'OUTBOUND_SYSTEM' (pesan otomatis sistem)",
+
+    "outboundPill": "🔔 OUTBOUND SYSTEM TRIGGER",
+    "_note_outboundPill": "// Opsional: Teks pill pemberitahuan outbound jika triggerType = OUTBOUND_SYSTEM",
+
+    "description": "Cek saldo/mutasi dengan verifikasi OTP; AI tak pernah menampilkan angka sebelum tervalidasi backend.",
+    "_note_description": "// Penjelasan lengkap tujuan skenario, alur bisnis, dan manfaat otomatisasi AI",
+
+    "initialText": "Saya mau cek saldo tabungan saya.",
+    "_note_initialText": "// Pesan pertama yang dikirimkan user atau sistem saat skenario dimulai",
+
+    "cekatComponents": ["AI Agent", "API Tools", "Automation", "WA Flows"],
+    "_note_cekatComponents": "// Daftar komponen Cekat.AI yang digunakan",
+
+    "apiScopes": ["POST /otp/send", "POST /otp/verify", "GET /account/balance"],
+    "_note_apiScopes": "// Daftar endpoint API backend yang terintegrasi",
+
+    "ruleNote": "POJK 22/2023 & UU PDP 27/2022 — saldo/PIN/OTP tak disimpan di Custom Fields; output wajib tersandi.",
+    "_note_ruleNote": "// Catatan kepatuhan regulasi & guardrail arsitektur keamanan",
+
+    "stepsDetail": [
       "Step 1 — Nasabah minta saldo/mutasi via WhatsApp",
       "Step 2 — AI tahan angka; Automation kirim OTP ke nomor terdaftar",
       "Step 3 — Backend bank memvalidasi OTP/DOB",
       "Step 4 — Tampilkan hasil tersandi (rek ****1234)"
     ],
-    steps: [
+    "_note_stepsDetail": "// Ringkasan langkah-langkah alur untuk flowchart inspector panel",
+
+    "steps": [
       {
-        userReply: "Cek saldo tabungan",
-        aiResponse: "Demi keamanan, saya kirim OTP ke nomor terdaftar •••• 8231. Masukkan 6 digit OTP untuk melanjutkan.",
-        chips: ["Masukkan OTP ••••••"],
-        enableCard: false
+        "_stepNote": "// Step 1 percakapan",
+        "userReply": "Cek saldo tabungan",
+        "aiResponse": "Demi keamanan, saya kirim OTP ke nomor terdaftar •••• 8231. Masukkan 6 digit OTP untuk melanjutkan.",
+        "chips": ["Masukkan OTP ••••••"],
+        "enableCard": false
       },
       {
-        userReply: "••••••",
-        aiResponse: "Verifikasi berhasil. Berikut ringkasan rekening Anda dalam format tersandi.",
-        chips: ["Lihat mutasi", "Menu Utama"],
-        enableCard: true,
-        card: {
-          title: "💳 Saldo Rekening",
-          sub: "Verified · Masked",
-          status: "TERVERIFIKASI",
-          items: [
-            { label: "Rekening", val: "•••• 1234" },
-            { label: "Saldo Aktif", val: "Rp 12.480.000" },
-            { label: "Pembaruan", val: "Real-time" }
+        "_stepNote": "// Step 2 percakapan (Menampilkan Kartu Struk / E-Tiket)",
+        "userReply": "••••••",
+        "aiResponse": "Verifikasi berhasil. Berikut ringkasan rekening Anda dalam format tersandi.",
+        "chips": ["Lihat mutasi", "Menu Utama"],
+        "enableCard": true,
+        "card": {
+          "title": "💳 Saldo Rekening",
+          "sub": "Verified · Masked",
+          "status": "TERVERIFIKASI",
+          "items": [
+            { "label": "Rekening", "val": "•••• 1234" },
+            { "label": "Saldo Aktif", "val": "Rp 12.480.000" },
+            { "label": "Pembaruan", "val": "Real-time" }
           ]
         }
       }
     ]
   }
 ];
+
+const aiPromptPromptGuide = `Buatkan skenario Cekat.AI dalam format JSON Array sesuai skema berikut. Pastikan output berupa JSON valid tanpa teks tambahan:
+
+[
+  {
+    "name": "Nama Singkat (untuk tab pill)",
+    "title": "Judul Lengkap Skenario Use Case",
+    "tag": "Label Tag (Security, Fraud, Outbound, dll)",
+    "triggerType": "INBOUND_USER", // Opsi: "INBOUND_USER" atau "OUTBOUND_SYSTEM"
+    "outboundPill": "🔔 OUTBOUND SYSTEM TRIGGER", // Opsional
+    "description": "Deskripsi lengkap skenario dan tujuan",
+    "initialText": "Pesan awal pembuka WhatsApp",
+    "cekatComponents": ["AI Agent", "API Tools", "Automation", "WA Flows"],
+    "apiScopes": ["POST /api/v1/endpoint"],
+    "ruleNote": "Regulasi & Guardrail (POJK, UU PDP, dll)",
+    "stepsDetail": ["Step 1 — ...", "Step 2 — ..."],
+    "steps": [
+      {
+        "userReply": "Pesan balasan user",
+        "aiResponse": "Jawaban dari Cekat AI Assistant",
+        "chips": ["Chip 1", "Chip 2"],
+        "enableCard": false
+      },
+      {
+        "userReply": "Pesan user dengan kartu",
+        "aiResponse": "Jawaban AI beserta kartu",
+        "chips": ["Lihat Detail", "Menu Utama"],
+        "enableCard": true,
+        "card": {
+          "title": "🎫 Judul Kartu E-Tiket",
+          "sub": "Sub-judul status",
+          "status": "CONFIRMED / TERVERIFIKASI / FROZEN",
+          "items": [
+            { "label": "Field 1", "val": "Nilai 1" },
+            { "label": "Field 2", "val": "Nilai 2" }
+          ]
+        }
+      }
+    ]
+  }
+]`;
 
 export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
   isOpen,
@@ -68,6 +134,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
   const [jsonText, setJsonText] = useState('');
   const [parseError, setParseError] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [copyPromptSuccess, setCopyPromptSuccess] = useState(false);
 
   if (!isOpen) return null;
 
@@ -103,6 +170,12 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
     navigator.clipboard.writeText(JSON.stringify(scenarioJsonTemplate, null, 2));
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
+  };
+
+  const handleCopyAiPrompt = () => {
+    navigator.clipboard.writeText(aiPromptPromptGuide);
+    setCopyPromptSuccess(true);
+    setTimeout(() => setCopyPromptSuccess(false), 2000);
   };
 
   const handleDownloadTemplate = () => {
@@ -225,17 +298,24 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
           <div className="p-6 overflow-y-auto custom-scrollbar space-y-5 text-xs text-slate-800">
             
             {/* Download & Copy Template Section */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                  <FileJson size={15} className="text-blue-600" /> Template JSON (Single & Bulk)
+                  <FileJson size={15} className="text-blue-600" /> Template JSON (dengan Catatan // untuk AI Generator)
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCopyAiPrompt}
+                    className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[11px] px-3 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer"
+                    title="Copy Prompt Instruksi Khusus untuk AI (ChatGPT/Claude/Gemini)"
+                  >
+                    <Bot size={13} /> {copyPromptSuccess ? 'Copied Prompt!' : 'Copy Prompt AI'}
+                  </button>
                   <button
                     onClick={handleCopyTemplate}
                     className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[11px] px-3 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer"
                   >
-                    <Copy size={13} /> {copySuccess ? 'Copied!' : 'Copy Template'}
+                    <Copy size={13} /> {copySuccess ? 'Copied JSON!' : 'Copy JSON'}
                   </button>
                   <button
                     onClick={handleDownloadTemplate}
@@ -245,8 +325,8 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
                   </button>
                 </div>
               </div>
-              <p className="text-[11.5px] text-slate-600">
-                Sistem mendukung import **Single Scenario Object** `{`...`}` maupun **Bulk Scenario Array** `[` `{`...`}`, `{`...`}` `]`.
+              <p className="text-[11.5px] text-slate-600 leading-relaxed">
+                Template ini dilengkapi field catatan deskriptif (`//_note_*`) agar **AI Generator (ChatGPT / Claude / Gemini / DeepSeek)** dapat dengan mudah memahami cara membuat JSON skenario. Anda juga bisa mengklik **`Copy Prompt AI`** untuk menyalin instruksi prompt siap pakai.
               </p>
             </div>
 
