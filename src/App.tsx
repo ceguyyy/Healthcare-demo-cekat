@@ -12,7 +12,7 @@ import {
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 export function App() {
@@ -28,6 +28,9 @@ export function App() {
   const [chatHistory, setChatHistory] = useState<Array<{ id: string; role: 'rs-bot' | 'patient'; text: string; time: string; card?: any }>>([]);
   const [userInput, setUserInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+
+  // Controls Bar Collapse / Expand State
+  const [isControlsExpanded, setIsControlsExpanded] = useState<boolean>(true);
 
   // Jump Step & Hide Welcome Message State
   const [hideInitialMsgState, setHideInitialMsgState] = useState<boolean>(false);
@@ -443,133 +446,156 @@ export function App() {
           </div>
         </div>
 
-        {/* Controls Bar */}
-        <div className="flex flex-wrap items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 text-xs text-slate-700 shadow-xs">
-          <button
-            onClick={togglePlayPause}
-            className="flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-semibold transition hover:bg-amber-100 cursor-pointer"
-          >
-            {isPlaying ? <Pause size={13} /> : <Play size={13} />}
-            <span>{isPlaying ? 'Pause' : 'Play'}</span>
-          </button>
-          
-          <div className="h-3 w-px bg-slate-200"></div>
-
-          {/* Jump to Specific Step Selector */}
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-[11px] text-slate-500">Mulai dari:</span>
-            <select
-              value={startFromStepIdx}
-              onChange={(e) => {
-                const idx = Number(e.target.value);
-                setStartFromStepIdx(idx);
-                handleJumpToStep(idx);
-              }}
-              className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-2.5 py-1 rounded-full border border-slate-300 focus:outline-none cursor-pointer"
+        {/* Collapsible Controls Bar */}
+        {isControlsExpanded ? (
+          <div className="flex flex-wrap items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 text-xs text-slate-700 shadow-xs animate-fade-up">
+            <button
+              onClick={togglePlayPause}
+              className="flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-semibold transition hover:bg-amber-100 cursor-pointer"
             >
-              <option value={0}>Awal Percakapan (Step 1)</option>
-              {currentScenario?.steps?.map((st, i) => (
-                <option key={i} value={i + 1}>
-                  Jump ke Step {i + 2}: "{st.userReply.length > 18 ? st.userReply.slice(0, 18) + '...' : st.userReply}"
-                </option>
-              ))}
-            </select>
-          </div>
+              {isPlaying ? <Pause size={13} /> : <Play size={13} />}
+              <span>{isPlaying ? 'Pause' : 'Play'}</span>
+            </button>
+            
+            <div className="h-3 w-px bg-slate-200"></div>
 
-          <div className="h-3 w-px bg-slate-200"></div>
-
-          {/* Hide/Show Welcome Message Toggle */}
-          <button
-            onClick={() => {
-              const newHide = !hideInitialMsgState;
-              setHideInitialMsgState(newHide);
-              handleJumpToStep(startFromStepIdx, newHide);
-            }}
-            className={`flex items-center gap-1 font-bold px-2.5 py-1 rounded-full transition cursor-pointer border ${
-              hideInitialMsgState
-                ? 'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200'
-                : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
-            }`}
-            title="Sembunyikan / Tampilkan Pesan Awal (Welcome Text)"
-          >
-            {hideInitialMsgState ? <EyeOff size={13} /> : <Eye size={13} />}
-            <span>{hideInitialMsgState ? 'Welcome Hidden' : 'Welcome Visible'}</span>
-          </button>
-          
-          <div className="h-3 w-px bg-slate-200"></div>
-          
-          <div className="flex items-center gap-1">
-            {[1, 1.5, 2].map(sp => (
-              <button
-                key={sp}
-                onClick={() => setPlaybackSpeed(sp)}
-                className={`px-2 py-0.5 rounded font-mono font-bold text-xs transition cursor-pointer ${
-                  playbackSpeed === sp
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-              >
-                {sp}x
-              </button>
-            ))}
-          </div>
-
-          <div className="h-3 w-px bg-slate-200"></div>
-
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="flex items-center gap-1 text-slate-600 hover:text-slate-900 transition cursor-pointer"
-          >
-            {soundEnabled ? <Volume2 size={13} className="text-blue-600" /> : <VolumeX size={13} />}
-            <span>Audio</span>
-          </button>
-
-          <div className="h-3 w-px bg-slate-200"></div>
-
-          <button
-            onClick={() => restartScenario()}
-            className="flex items-center gap-1.5 text-slate-700 hover:text-blue-600 font-semibold transition cursor-pointer"
-            title="Reset Simulasi"
-          >
-            <RotateCcw size={13} />
-            <span>Reset</span>
-          </button>
-
-          {currentScenario && (
-            <>
-              <div className="h-3 w-px bg-slate-200"></div>
-              <button
-                onClick={() => {
-                  setScenarioToEdit(currentScenario);
-                  setIsGeneratorOpen(true);
+            {/* Jump to Specific Step Selector */}
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-[11px] text-slate-500">Mulai dari:</span>
+              <select
+                value={startFromStepIdx}
+                onChange={(e) => {
+                  const idx = Number(e.target.value);
+                  setStartFromStepIdx(idx);
+                  handleJumpToStep(idx);
                 }}
-                className="flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
-                title="Edit Skenario Ini"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-2.5 py-1 rounded-full border border-slate-300 focus:outline-none cursor-pointer"
               >
-                <Edit3 size={13} />
-                <span>Edit Skenario</span>
-              </button>
-              <div className="h-3 w-px bg-slate-200"></div>
-              <button
-                onClick={() => setIsMoveModalOpen(true)}
-                className="flex items-center gap-1 text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
-                title="Pindahkan Skenario Ini ke Kategori Lain"
-              >
-                <FolderOutput size={13} />
-                <span>Pindah Kategori</span>
-              </button>
-              <div className="h-3 w-px bg-slate-200"></div>
-              <button
-                onClick={() => handleDeleteScenario(currentScenario.id)}
-                className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold transition cursor-pointer"
-                title="Hapus Skenario Ini"
-              >
-                <Trash2 size={13} />
-                <span>Hapus Skenario</span>
-              </button>
-            </>
-          )}
-        </div>
+                <option value={0}>Awal Percakapan (Step 1)</option>
+                {currentScenario?.steps?.map((st, i) => (
+                  <option key={i} value={i + 1}>
+                    Jump ke Step {i + 2}: "{st.userReply.length > 18 ? st.userReply.slice(0, 18) + '...' : st.userReply}"
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="h-3 w-px bg-slate-200"></div>
+
+            {/* Hide/Show Welcome Message Toggle */}
+            <button
+              onClick={() => {
+                const newHide = !hideInitialMsgState;
+                setHideInitialMsgState(newHide);
+                handleJumpToStep(startFromStepIdx, newHide);
+              }}
+              className={`flex items-center gap-1 font-bold px-2.5 py-1 rounded-full transition cursor-pointer border ${
+                hideInitialMsgState
+                  ? 'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200'
+                  : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
+              }`}
+              title="Sembunyikan / Tampilkan Pesan Awal (Welcome Text)"
+            >
+              {hideInitialMsgState ? <EyeOff size={13} /> : <Eye size={13} />}
+              <span>{hideInitialMsgState ? 'Welcome Hidden' : 'Welcome Visible'}</span>
+            </button>
+            
+            <div className="h-3 w-px bg-slate-200"></div>
+            
+            <div className="flex items-center gap-1">
+              {[1, 1.5, 2].map(sp => (
+                <button
+                  key={sp}
+                  onClick={() => setPlaybackSpeed(sp)}
+                  className={`px-2 py-0.5 rounded font-mono font-bold text-xs transition cursor-pointer ${
+                    playbackSpeed === sp
+                      ? 'bg-blue-600 text-white'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  {sp}x
+                </button>
+              ))}
+            </div>
+
+            <div className="h-3 w-px bg-slate-200"></div>
+
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className="flex items-center gap-1 text-slate-600 hover:text-slate-900 transition cursor-pointer"
+            >
+              {soundEnabled ? <Volume2 size={13} className="text-blue-600" /> : <VolumeX size={13} />}
+              <span>Audio</span>
+            </button>
+
+            <div className="h-3 w-px bg-slate-200"></div>
+
+            <button
+              onClick={() => restartScenario()}
+              className="flex items-center gap-1.5 text-slate-700 hover:text-blue-600 font-semibold transition cursor-pointer"
+              title="Reset Simulasi"
+            >
+              <RotateCcw size={13} />
+              <span>Reset</span>
+            </button>
+
+            {currentScenario && (
+              <>
+                <div className="h-3 w-px bg-slate-200"></div>
+                <button
+                  onClick={() => {
+                    setScenarioToEdit(currentScenario);
+                    setIsGeneratorOpen(true);
+                  }}
+                  className="flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
+                  title="Edit Skenario Ini"
+                >
+                  <Edit3 size={13} />
+                  <span>Edit Skenario</span>
+                </button>
+                <div className="h-3 w-px bg-slate-200"></div>
+                <button
+                  onClick={() => setIsMoveModalOpen(true)}
+                  className="flex items-center gap-1 text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
+                  title="Pindahkan Skenario Ini ke Kategori Lain"
+                >
+                  <FolderOutput size={13} />
+                  <span>Pindah Kategori</span>
+                </button>
+                <div className="h-3 w-px bg-slate-200"></div>
+                <button
+                  onClick={() => handleDeleteScenario(currentScenario.id)}
+                  className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold transition cursor-pointer"
+                  title="Hapus Skenario Ini"
+                >
+                  <Trash2 size={13} />
+                  <span>Hapus Skenario</span>
+                </button>
+              </>
+            )}
+
+            <div className="h-3 w-px bg-slate-200"></div>
+
+            {/* Collapse Arrow Button */}
+            <button
+              onClick={() => setIsControlsExpanded(false)}
+              className="flex items-center justify-center w-6 h-6 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-full transition cursor-pointer"
+              title="Sembunyikan Controls Bar"
+            >
+              <ChevronUp size={16} />
+            </button>
+          </div>
+        ) : (
+          /* Compact Collapsed Button */
+          <button
+            onClick={() => setIsControlsExpanded(true)}
+            className="bg-white border border-slate-200 shadow-xs hover:bg-slate-50 text-slate-700 font-bold px-4 py-1.5 rounded-full text-xs flex items-center gap-2 transition cursor-pointer animate-fade-up"
+            title="Tampilkan Controls Bar"
+          >
+            <ChevronDown size={15} className="text-blue-600" />
+            <span>Tampilkan Controls Bar</span>
+          </button>
+        )}
 
         {/* Main Workspace (iPhone Canvas + Inspector Panel) */}
         {currentScenario ? (
