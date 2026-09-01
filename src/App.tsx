@@ -540,73 +540,74 @@ export function App() {
           )}
         </div>
 
-        {/* Top Tabs Carousel Bar with Left/Right Scroll Arrows & Search Input */}
-        <div className="w-full max-w-6xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-slate-50/90 p-2 rounded-2xl border border-slate-200/90 backdrop-blur-xs shadow-xs">
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            {/* Left Carousel Arrow Button */}
+        {/* Top Header Carousel Bar with Floating Controls */}
+        <div className="w-full max-w-6xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-slate-200/80 shadow-xs">
+          {/* Carousel Track Wrapper with Floating Arrows */}
+          <div className="relative flex-1 min-w-0 flex items-center group">
+            {/* Floating Left Arrow */}
             <button
               onClick={() => scrollTabs('left')}
-              className="p-1.5 rounded-xl bg-white border border-slate-200/90 text-slate-600 hover:text-blue-600 hover:bg-blue-50/80 shadow-2xs transition cursor-pointer shrink-0"
-              title="Scroll Left"
+              className="absolute left-0 z-10 p-2 rounded-full bg-white/95 border border-slate-200 text-slate-700 hover:text-blue-600 hover:bg-white shadow-md transition transform -translate-x-2 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
+              title="Previous Scenarios"
             >
               <ChevronLeft size={16} />
             </button>
 
-            {/* Scrollable Tabs Carousel Track */}
+            {/* Scrollable Track */}
             <div
               ref={tabsContainerRef}
-              className="flex gap-2 overflow-x-auto py-1.5 px-1 flex-1 scroll-smooth cursor-grab active:cursor-grabbing text-xs border-b border-transparent focus:outline-none custom-scrollbar"
-              style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#cbd5e1 #f1f5f9'
-              }}
+              className="flex items-center gap-2 overflow-x-auto py-1 px-8 flex-1 scroll-smooth no-scrollbar select-none"
             >
-              {filteredCategoryScenarios.map(wf => (
-                <button
-                  key={wf.id}
-                  onClick={() => handleSelectScenario(wf)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition border shrink-0 cursor-pointer ${
-                    currentScenario && wf.id === currentScenario.id
-                      ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
-                      : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
-                >
-                  {wf.name}
-                </button>
-              ))}
+              {filteredCategoryScenarios.map(wf => {
+                const isActive = currentScenario && wf.id === currentScenario.id;
+                return (
+                  <button
+                    key={wf.id}
+                    onClick={() => handleSelectScenario(wf)}
+                    className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 scale-[1.02]'
+                        : 'bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200/60 text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {isActive && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>}
+                    <span>{wf.name}</span>
+                  </button>
+                );
+              })}
 
               {activeCategoryScenarios.length === 0 && (
                 <p className="text-xs text-slate-500 italic py-1">No scenario available for this category. Click "+ Create Mockup" or "Import JSON" to add a new scenario.</p>
               )}
             </div>
 
-            {/* Right Carousel Arrow Button */}
+            {/* Floating Right Arrow */}
             <button
               onClick={() => scrollTabs('right')}
-              className="p-1.5 rounded-xl bg-white border border-slate-200/90 text-slate-600 hover:text-blue-600 hover:bg-blue-50/80 shadow-2xs transition cursor-pointer shrink-0"
-              title="Scroll Right"
+              className="absolute right-0 z-10 p-2 rounded-full bg-white/95 border border-slate-200 text-slate-700 hover:text-blue-600 hover:bg-white shadow-md transition transform translate-x-2 hover:scale-105 active:scale-95 cursor-pointer flex items-center justify-center"
+              title="Next Scenarios"
             >
               <ChevronRight size={16} />
             </button>
           </div>
 
-          {/* Quick Scenario Search Bar inside Simulator */}
+          {/* Quick Scenario Search Bar */}
           {activeCategoryScenarios.length > 0 && (
-            <div className="relative shrink-0">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <div className="relative shrink-0 md:w-56">
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search scenarios..."
                 value={scenarioSearchQuery}
                 onChange={(e) => setScenarioSearchQuery(e.target.value)}
-                className="pl-8 pr-7 py-1.5 rounded-full border border-slate-200 text-xs bg-white font-medium focus:outline-none focus:border-blue-600 shadow-xs w-full sm:w-48"
+                className="w-full pl-9 pr-8 py-2 rounded-full border border-slate-200/80 text-xs bg-slate-50/80 font-medium focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 transition shadow-2xs"
               />
               {scenarioSearchQuery && (
                 <button
                   onClick={() => setScenarioSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
                 >
-                  <X size={12} />
+                  <X size={13} />
                 </button>
               )}
             </div>
