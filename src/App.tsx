@@ -421,6 +421,12 @@ export function App() {
   const botSubTitle = branding?.subTitle || 'Online';
   const headerBgColor = branding?.headerColor || '#075E54';
 
+  // Check if current scenario strictly matches selected category
+  const isCurrentScenarioMatchingCategory = currentScenario && selectedCategory &&
+    (currentScenario.categoryId || 'healthcare').toLowerCase().trim() === selectedCategory.id.toLowerCase().trim();
+
+  const hasValidScenario = activeCategoryScenarios.length > 0 && Boolean(isCurrentScenarioMatchingCategory);
+
   // Render Landing Page if no Category selected
   if (!selectedCategory) {
     return (
@@ -527,119 +533,121 @@ export function App() {
           </div>
         </div>
 
-        {/* Collapsible Controls Bar */}
-        {isControlsExpanded ? (
-          <div className="flex flex-wrap items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 text-xs text-slate-700 shadow-xs animate-fade-up">
-            <button
-              onClick={togglePlayPause}
-              className="flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-semibold transition hover:bg-amber-100 cursor-pointer"
-            >
-              {isPlaying ? <Pause size={13} /> : <Play size={13} />}
-              <span>{isPlaying ? 'Pause' : 'Play'}</span>
-            </button>
-            
-            <div className="h-3 w-px bg-slate-200"></div>
-            
-            <div className="flex items-center gap-1">
-              {[1, 1.5, 2].map(sp => (
-                <button
-                  key={sp}
-                  onClick={() => setPlaybackSpeed(sp)}
-                  className={`px-2 py-0.5 rounded font-mono font-bold text-xs transition cursor-pointer ${
-                    playbackSpeed === sp
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
-                >
-                  {sp}x
-                </button>
-              ))}
+        {/* Collapsible Controls Bar - Render only when valid scenario exists */}
+        {hasValidScenario && (
+          isControlsExpanded ? (
+            <div className="flex flex-wrap items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 text-xs text-slate-700 shadow-xs animate-fade-up">
+              <button
+                onClick={togglePlayPause}
+                className="flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-semibold transition hover:bg-amber-100 cursor-pointer"
+              >
+                {isPlaying ? <Pause size={13} /> : <Play size={13} />}
+                <span>{isPlaying ? 'Pause' : 'Play'}</span>
+              </button>
+              
+              <div className="h-3 w-px bg-slate-200"></div>
+              
+              <div className="flex items-center gap-1">
+                {[1, 1.5, 2].map(sp => (
+                  <button
+                    key={sp}
+                    onClick={() => setPlaybackSpeed(sp)}
+                    className={`px-2 py-0.5 rounded font-mono font-bold text-xs transition cursor-pointer ${
+                      playbackSpeed === sp
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    {sp}x
+                  </button>
+                ))}
+              </div>
+
+              <div className="h-3 w-px bg-slate-200"></div>
+
+              <button
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className="flex items-center gap-1 text-slate-600 hover:text-slate-900 transition cursor-pointer"
+              >
+                {soundEnabled ? <Volume2 size={13} className="text-blue-600" /> : <VolumeX size={13} />}
+                <span>Audio</span>
+              </button>
+
+              <div className="h-3 w-px bg-slate-200"></div>
+
+              <button
+                onClick={() => restartScenario()}
+                className="flex items-center gap-1.5 text-slate-700 hover:text-blue-600 font-semibold transition cursor-pointer"
+                title="Reset Simulasi"
+              >
+                <RotateCcw size={13} />
+                <span>Reset</span>
+              </button>
+
+              {currentScenario && (
+                <>
+                  <div className="h-3 w-px bg-slate-200"></div>
+                  <button
+                    onClick={() => {
+                      setScenarioToEdit(currentScenario);
+                      setIsGeneratorOpen(true);
+                    }}
+                    className="flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
+                    title="Edit Skenario, WA Flow, Branding, & Jump Step"
+                  >
+                    <Edit3 size={13} />
+                    <span>Edit Skenario</span>
+                  </button>
+                  <div className="h-3 w-px bg-slate-200"></div>
+                  
+                  {/* 1-Click Duplicate Button */}
+                  <button
+                    onClick={handleDuplicateScenario}
+                    className="flex items-center gap-1 text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
+                    title="Duplikat 1-Click Skenario Ini"
+                  >
+                    <Copy size={13} />
+                    <span>Duplikat</span>
+                  </button>
+
+                  <div className="h-3 w-px bg-slate-200"></div>
+                  <button
+                    onClick={() => handleDeleteScenario(currentScenario.id)}
+                    className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold transition cursor-pointer"
+                    title="Hapus Skenario Ini"
+                  >
+                    <Trash2 size={13} />
+                    <span>Hapus Skenario</span>
+                  </button>
+                </>
+              )}
+
+              <div className="h-3 w-px bg-slate-200"></div>
+
+              {/* Collapse Arrow Button */}
+              <button
+                onClick={() => setIsControlsExpanded(false)}
+                className="flex items-center justify-center w-6 h-6 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-full transition cursor-pointer"
+                title="Sembunyikan Controls Bar"
+              >
+                <ChevronUp size={16} />
+              </button>
             </div>
-
-            <div className="h-3 w-px bg-slate-200"></div>
-
+          ) : (
+            /* Compact Collapsed Button */
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className="flex items-center gap-1 text-slate-600 hover:text-slate-900 transition cursor-pointer"
+              onClick={() => setIsControlsExpanded(true)}
+              className="bg-white border border-slate-200 shadow-xs hover:bg-slate-50 text-slate-700 font-bold px-4 py-1.5 rounded-full text-xs flex items-center gap-2 transition cursor-pointer animate-fade-up"
+              title="Tampilkan Controls Bar"
             >
-              {soundEnabled ? <Volume2 size={13} className="text-blue-600" /> : <VolumeX size={13} />}
-              <span>Audio</span>
+              <ChevronDown size={15} className="text-blue-600" />
+              <span>Tampilkan Controls Bar</span>
             </button>
-
-            <div className="h-3 w-px bg-slate-200"></div>
-
-            <button
-              onClick={() => restartScenario()}
-              className="flex items-center gap-1.5 text-slate-700 hover:text-blue-600 font-semibold transition cursor-pointer"
-              title="Reset Simulasi"
-            >
-              <RotateCcw size={13} />
-              <span>Reset</span>
-            </button>
-
-            {currentScenario && (
-              <>
-                <div className="h-3 w-px bg-slate-200"></div>
-                <button
-                  onClick={() => {
-                    setScenarioToEdit(currentScenario);
-                    setIsGeneratorOpen(true);
-                  }}
-                  className="flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
-                  title="Edit Skenario, WA Flow, Branding, & Jump Step"
-                >
-                  <Edit3 size={13} />
-                  <span>Edit Skenario</span>
-                </button>
-                <div className="h-3 w-px bg-slate-200"></div>
-                
-                {/* 1-Click Duplicate Button */}
-                <button
-                  onClick={handleDuplicateScenario}
-                  className="flex items-center gap-1 text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
-                  title="Duplikat 1-Click Skenario Ini"
-                >
-                  <Copy size={13} />
-                  <span>Duplikat</span>
-                </button>
-
-                <div className="h-3 w-px bg-slate-200"></div>
-                <button
-                  onClick={() => handleDeleteScenario(currentScenario.id)}
-                  className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold transition cursor-pointer"
-                  title="Hapus Skenario Ini"
-                >
-                  <Trash2 size={13} />
-                  <span>Hapus Skenario</span>
-                </button>
-              </>
-            )}
-
-            <div className="h-3 w-px bg-slate-200"></div>
-
-            {/* Collapse Arrow Button */}
-            <button
-              onClick={() => setIsControlsExpanded(false)}
-              className="flex items-center justify-center w-6 h-6 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-full transition cursor-pointer"
-              title="Sembunyikan Controls Bar"
-            >
-              <ChevronUp size={16} />
-            </button>
-          </div>
-        ) : (
-          /* Compact Collapsed Button */
-          <button
-            onClick={() => setIsControlsExpanded(true)}
-            className="bg-white border border-slate-200 shadow-xs hover:bg-slate-50 text-slate-700 font-bold px-4 py-1.5 rounded-full text-xs flex items-center gap-2 transition cursor-pointer animate-fade-up"
-            title="Tampilkan Controls Bar"
-          >
-            <ChevronDown size={15} className="text-blue-600" />
-            <span>Tampilkan Controls Bar</span>
-          </button>
+          )
         )}
 
         {/* Main Workspace (iPhone Canvas + Inspector Panel) */}
-        {currentScenario ? (
+        {hasValidScenario && currentScenario ? (
           <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 mt-1">
             
             {/* iPhone Frame Canvas */}
