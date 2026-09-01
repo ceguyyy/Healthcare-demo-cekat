@@ -43,34 +43,69 @@ export function App() {
   const timerRef = useRef<any>(null);
   const callTimerRef = useRef<any>(null);
 
+  // Parse URL Hash Route (e.g., #/category/healthcare/scenario/diag1_ambiguous)
+  const syncFromUrlHash = (catList = categories, scList = allScenarios) => {
+    const hash = window.location.hash;
+    if (!hash || hash === '#/' || hash === '#') {
+      setSelectedCategory(null);
+      return;
+    }
+
+    const categoryMatch = hash.match(/#\/category\/([^/]+)/);
+    if (categoryMatch) {
+      const catId = categoryMatch[1];
+      const targetCat = catList.find(c => c.id === catId);
+      if (targetCat) {
+        setSelectedCategory(targetCat);
+
+        const scenarioMatch = hash.match(/scenario\/([^/]+)/);
+        if (scenarioMatch) {
+          const scId = scenarioMatch[1];
+          const targetSc = scList.find(s => s.id === scId);
+          if (targetSc) {
+            setCurrentScenario(targetSc);
+          }
+        }
+      }
+    }
+  };
+
   // Load Categories & Scenarios from Supabase / localStorage
   useEffect(() => {
     async function loadRemoteData() {
+      let finalCats = defaultCategories;
       const remoteCats = await SupabaseService.fetchCategories();
       if (remoteCats && remoteCats.length > 0) {
-        setCategories(prev => {
-          const customOnly = remoteCats.filter(rc => !prev.some(p => p.id === rc.id));
-          return [...prev, ...customOnly];
-        });
+        const customOnly = remoteCats.filter(rc => !defaultCategories.some(p => p.id === rc.id));
+        finalCats = [...defaultCategories, ...customOnly];
+        setCategories(finalCats);
       }
 
+      let finalScenarios = initialWorkflows;
       const remoteScenarios = await SupabaseService.fetchScenarios();
       if (remoteScenarios && remoteScenarios.length > 0) {
-        setAllScenarios(prev => {
-          const merged = [...prev];
-          remoteScenarios.forEach(rs => {
-            const idx = merged.findIndex(m => m.id === rs.id);
-            if (idx >= 0) {
-              merged[idx] = rs;
-            } else {
-              merged.push(rs);
-            }
-          });
-          return merged;
+        const merged = [...initialWorkflows];
+        remoteScenarios.forEach(rs => {
+          const idx = merged.findIndex(m => m.id === rs.id);
+          if (idx >= 0) {
+            merged[idx] = rs;
+          } else {
+            merged.push(rs);
+          }
         });
+        finalScenarios = merged;
+        setAllScenarios(finalScenarios);
       }
+
+      syncFromUrlHash(finalCats, finalScenarios);
     }
     loadRemoteData();
+
+    const handleHashChange = () => {
+      syncFromUrlHash();
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   // Filter scenarios by active category
@@ -78,11 +113,32 @@ export function App() {
     ? allScenarios.filter(s => s.categoryId === selectedCategory.id || (!s.categoryId && selectedCategory.id === 'healthcare'))
     : [];
 
-  useEffect(() => {
-    if (selectedCategory && activeCategoryScenarios.length > 0) {
-      setCurrentScenario(activeCategoryScenarios[0]);
+  // Update URL Hash when selecting Category
+  const handleSelectCategory = (cat: Category) => {
+    setSelectedCategory(cat);
+    const catScenarios = allScenarios.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === 'healthcare'));
+    const initialSc = catScenarios.length > 0 ? catScenarios[0] : null;
+    if (initialSc) {
+      setCurrentScenario(initialSc);
+      window.location.hash = `#/category/${cat.id}/scenario/${initialSc.id}`;
+    } else {
+      window.location.hash = `#/category/${cat.id}`;
     }
-  }, [selectedCategory]);
+  };
+
+  // Update URL Hash when selecting Scenario
+  const handleSelectScenario = (sc: Scenario) => {
+    setCurrentScenario(sc);
+    if (selectedCategory) {
+      window.location.hash = `#/category/${selectedCategory.id}/scenario/${sc.id}`;
+    }
+  };
+
+  // Back to Landing Page
+  const handleBackToLanding = () => {
+    setSelectedCategory(null);
+    window.location.hash = '#/';
+  };
 
   // Scroll canvas to bottom
   useEffect(() => {
@@ -131,20 +187,13 @@ export function App() {
     }
   }, [currentScenario]);
 
-  const selectScenario = (id: string) => {
-    const sc = allScenarios.find(s => s.id === id);
-    if (sc) {
-      setCurrentScenario(sc);
-    }
-  };
-
   const handleDeleteScenario = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus skenario ini?')) {
       await SupabaseService.deleteScenario(id);
       setAllScenarios(prev => prev.filter(s => s.id !== id));
       const remaining = activeCategoryScenarios.filter(s => s.id !== id);
       if (remaining.length > 0) {
-        setCurrentScenario(remaining[0]);
+        handleSelectScenario(remaining[0]);
       }
     }
   };
@@ -244,7 +293,7 @@ export function App() {
       <>
         <LandingPage
           categories={categories}
-          onSelectCategory={(cat) => setSelectedCategory(cat)}
+          onSelectCategory={handleSelectCategory}
           onAddCategory={() => {
             setCategoryToEdit(null);
             setIsCategoryModalOpen(true);
@@ -287,7 +336,7 @@ export function App() {
         <div className="w-full max-w-6xl bg-white text-slate-900 rounded-2xl px-6 py-3.5 shadow-sm flex items-center justify-between border border-slate-200">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setSelectedCategory(null)}
+              onClick={handleBackToLanding}
               className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center border border-slate-300 transition cursor-pointer"
               title="Kembali ke Landing Page"
             >
@@ -320,7 +369,7 @@ export function App() {
             {activeCategoryScenarios.map(wf => (
               <button
                 key={wf.id}
-                onClick={() => selectScenario(wf.id)}
+                onClick={() => handleSelectScenario(wf)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition border cursor-pointer ${
                   currentScenario && wf.id === currentScenario.id
                     ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
@@ -673,7 +722,7 @@ export function App() {
             categoryId: selectedCategory ? selectedCategory.id : 'healthcare'
           };
           setAllScenarios(prev => [...prev, scWithCategory]);
-          setCurrentScenario(scWithCategory);
+          handleSelectScenario(scWithCategory);
         }}
       />
 
@@ -695,7 +744,7 @@ export function App() {
         onCategoryDeleted={(deletedId) => {
           setCategories(prev => prev.filter(p => p.id !== deletedId));
           if (selectedCategory && selectedCategory.id === deletedId) {
-            setSelectedCategory(null);
+            handleBackToLanding();
           }
         }}
       />
