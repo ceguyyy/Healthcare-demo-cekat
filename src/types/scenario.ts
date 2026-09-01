@@ -22,6 +22,7 @@ export interface Step {
 
 export interface Scenario {
   id: string;
+  categoryId: string; // Belongs to a Category (e.g., 'healthcare', 'banking', etc.)
   name: string;
   title: string;
   tag: string;
@@ -35,4 +36,14 @@ export interface Scenario {
   stepsDetail: string[];
   initialText: string;
   steps: Step[];
+}
+
+export interface Category {
+  id: string;
+  title: string;
+  description: string;
+  icon: string; // FontAwesome icon class or Lucide name (e.g. 'fa-hospital', 'fa-building-columns')
+  badge: string;
+  scenarioCount?: number;
+  isCustom?: boolean;
 }

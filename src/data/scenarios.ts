@@ -3,6 +3,7 @@ import { Scenario } from '../types/scenario';
 export const initialWorkflows: Scenario[] = [
   {
     id: "diag1_ambiguous",
+    categoryId: "healthcare",
     name: "1. Gejala Ambigu",
     title: "1. Penanganan Gejala Ambigu & Larangan Saran Poli",
     tag: "Guardrail",
@@ -29,6 +30,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag2_prescription",
+    categoryId: "healthcare",
     name: "2. Larangan Resep Obat",
     title: "2. Larangan Permintaan Resep Obat Mandiri",
     tag: "Compliance",
@@ -65,6 +67,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag3_ocr",
+    categoryId: "healthcare",
     name: "3. Surat Rujukan + EMR",
     title: "3. Baca Surat Rujukan & Integrasi Rekam Medis (EMR)",
     tag: "OCR + EMR",
@@ -101,6 +104,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag4_reminder",
+    categoryId: "healthcare",
     name: "4. Pengingat Kontrol",
     title: "4. Pengingat Jadwal Kontrol (Pre-Admission) via Broadcast",
     tag: "Broadcast",
@@ -137,6 +141,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag5_teleconsultation",
+    categoryId: "healthcare",
     name: "5. Telekonsultasi WA Call",
     title: "5. Telekonsultasi via WhatsApp Call (Tanpa Voicebot)",
     tag: "Live Call",
@@ -163,6 +168,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag6_lab_pii",
+    categoryId: "healthcare",
     name: "6. Hasil Lab Aman",
     title: "6. Pengiriman Hasil Lab secara Aman (PII Masking)",
     tag: "PII Masking",
@@ -199,6 +205,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag7_emergency",
+    categoryId: "healthcare",
     name: "7. Gawat Darurat",
     title: "7. Eskalasi Kondisi Gawat Darurat (Emergency Guardrail)",
     tag: "Guardrail",
@@ -234,6 +241,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag8_queue",
+    categoryId: "healthcare",
     name: "8. Cek Antrian",
     title: "8. Cek Antrian Real-time & Estimasi Waktu Tunggu",
     tag: "Queue API",
@@ -271,6 +279,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag9_billing",
+    categoryId: "healthcare",
     name: "9. Estimasi Biaya & BPJS",
     title: "9. Estimasi Biaya Tindakan & Konfirmasi Cakupan BPJS",
     tag: "Billing",
@@ -306,6 +315,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag10_reschedule",
+    categoryId: "healthcare",
     name: "10. Reschedule & Batal",
     title: "10. Reschedule & Pembatalan Janji Temu Dokter",
     tag: "HIS Action",
@@ -342,6 +352,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag11_verification",
+    categoryId: "healthcare",
     name: "11. Verifikasi Identitas",
     title: "11. Verifikasi Identitas Sebelum Membuka Data Medis",
     tag: "Security",
@@ -377,6 +388,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag12_preparation",
+    categoryId: "healthcare",
     name: "12. Persiapan Tindakan",
     title: "12. Instruksi Persiapan Tindakan (Puasa / Pra-Prosedur)",
     tag: "Compliance",
@@ -413,6 +425,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag13_complaint",
+    categoryId: "healthcare",
     name: "13. Komplain & Sentimen",
     title: "13. Penanganan Komplain & Sentimen Negatif Layanan",
     tag: "Humas",
@@ -449,6 +462,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag14_booking",
+    categoryId: "healthcare",
     name: "14. Booking Appointment",
     title: "14. Booking Appointment - Temu Janji Dokter",
     tag: "Core HIS",
@@ -502,6 +516,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag15_csat",
+    categoryId: "healthcare",
     name: "15. Survey CSAT",
     title: "15. Survey CSAT - Pasca Rawat Inap / Jalan / Konsultasi",
     tag: "SIMRS Event",
@@ -538,6 +553,7 @@ export const initialWorkflows: Scenario[] = [
   },
   {
     id: "diag16_nearby",
+    categoryId: "healthcare",
     name: "16. Cari Klinik Terdekat",
     title: "16. Cari Klinik Terdekat (Share Location WhatsApp)",
     tag: "Location WA",

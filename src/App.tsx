@@ -1,16 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Scenario } from './types/scenario';
+import { Scenario, Category } from './types/scenario';
 import { initialWorkflows } from './data/scenarios';
+import { defaultCategories } from './data/categories';
 import { SupabaseService } from './services/supabase';
+import { LandingPage } from './components/LandingPage';
 import { MockupGeneratorModal } from './components/MockupGeneratorModal';
+import { CategoryModal } from './components/CategoryModal';
 import { 
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2
 } from 'lucide-react';
 
 export function App() {
+  const [categories, setCategories] = useState<Category[]>(defaultCategories);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  
   const [allScenarios, setAllScenarios] = useState<Scenario[]>(initialWorkflows);
   const [currentScenario, setCurrentScenario] = useState<Scenario>(initialWorkflows[0]);
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
@@ -23,6 +29,8 @@ export function App() {
 
   // Modals State
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
 
   // Call Modal State
   const [isCallActive, setIsCallActive] = useState(false);
@@ -35,16 +43,46 @@ export function App() {
   const timerRef = useRef<any>(null);
   const callTimerRef = useRef<any>(null);
 
-  // Load custom scenarios from Supabase REST API / localStorage
+  // Load Categories & Scenarios from Supabase / localStorage
   useEffect(() => {
-    async function loadRemoteScenarios() {
-      const custom = await SupabaseService.fetchScenarios();
-      if (custom && custom.length > 0) {
-        setAllScenarios([...initialWorkflows, ...custom]);
+    async function loadRemoteData() {
+      const remoteCats = await SupabaseService.fetchCategories();
+      if (remoteCats && remoteCats.length > 0) {
+        setCategories(prev => {
+          const customOnly = remoteCats.filter(rc => !prev.some(p => p.id === rc.id));
+          return [...prev, ...customOnly];
+        });
+      }
+
+      const remoteScenarios = await SupabaseService.fetchScenarios();
+      if (remoteScenarios && remoteScenarios.length > 0) {
+        setAllScenarios(prev => {
+          const merged = [...prev];
+          remoteScenarios.forEach(rs => {
+            const idx = merged.findIndex(m => m.id === rs.id);
+            if (idx >= 0) {
+              merged[idx] = rs;
+            } else {
+              merged.push(rs);
+            }
+          });
+          return merged;
+        });
       }
     }
-    loadRemoteScenarios();
+    loadRemoteData();
   }, []);
+
+  // Filter scenarios by active category
+  const activeCategoryScenarios = selectedCategory
+    ? allScenarios.filter(s => s.categoryId === selectedCategory.id || (!s.categoryId && selectedCategory.id === 'healthcare'))
+    : [];
+
+  useEffect(() => {
+    if (selectedCategory && activeCategoryScenarios.length > 0) {
+      setCurrentScenario(activeCategoryScenarios[0]);
+    }
+  }, [selectedCategory]);
 
   // Scroll canvas to bottom
   useEffect(() => {
@@ -60,6 +98,8 @@ export function App() {
     setChatHistory([]);
     setIsTyping(false);
 
+    if (!scenario) return;
+
     const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
     if (scenario.triggerType === 'OUTBOUND_SYSTEM') {
@@ -67,7 +107,7 @@ export function App() {
         { id: '1', role: 'rs-bot', text: scenario.initialText, time: nowStr }
       ]);
 
-      if (isPlaying && scenario.steps.length > 0) {
+      if (isPlaying && scenario.steps && scenario.steps.length > 0) {
         timerRef.current = setTimeout(() => {
           runStep(0, scenario.steps[0].userReply, scenario);
         }, 2200 / playbackSpeed);
@@ -77,7 +117,7 @@ export function App() {
         { id: '1', role: 'patient', text: scenario.initialText, time: nowStr }
       ]);
 
-      if (isPlaying && scenario.steps.length > 0) {
+      if (isPlaying && scenario.steps && scenario.steps.length > 0) {
         timerRef.current = setTimeout(() => {
           runStep(0, scenario.steps[0].userReply, scenario);
         }, 1600 / playbackSpeed);
@@ -86,13 +126,26 @@ export function App() {
   };
 
   useEffect(() => {
-    restartScenario(currentScenario);
+    if (currentScenario) {
+      restartScenario(currentScenario);
+    }
   }, [currentScenario]);
 
   const selectScenario = (id: string) => {
     const sc = allScenarios.find(s => s.id === id);
     if (sc) {
       setCurrentScenario(sc);
+    }
+  };
+
+  const handleDeleteScenario = async (id: string) => {
+    if (confirm('Apakah Anda yakin ingin menghapus skenario ini?')) {
+      await SupabaseService.deleteScenario(id);
+      setAllScenarios(prev => prev.filter(s => s.id !== id));
+      const remaining = activeCategoryScenarios.filter(s => s.id !== id);
+      if (remaining.length > 0) {
+        setCurrentScenario(remaining[0]);
+      }
     }
   };
 
@@ -108,7 +161,7 @@ export function App() {
 
     timerRef.current = setTimeout(() => {
       setIsTyping(false);
-      const step = scenario.steps[stepIdx];
+      const step = scenario.steps ? scenario.steps[stepIdx] : null;
       const botResponse = step ? step.aiResponse : 'Terima kasih! Ada hal lain yang bisa Cekat AI bantu?';
 
       setChatHistory(prev => [
@@ -119,7 +172,7 @@ export function App() {
       const nextIdx = stepIdx + 1;
       setCurrentStepIdx(nextIdx);
 
-      if (isPlaying && nextIdx < scenario.steps.length) {
+      if (isPlaying && scenario.steps && nextIdx < scenario.steps.length) {
         timerRef.current = setTimeout(() => {
           runStep(nextIdx, scenario.steps[nextIdx].userReply, scenario);
         }, 3000 / playbackSpeed);
@@ -135,7 +188,7 @@ export function App() {
       startCall(contact, 'WhatsApp Voice Call');
       return;
     }
-    if (currentStepIdx < currentScenario.steps.length) {
+    if (currentScenario.steps && currentStepIdx < currentScenario.steps.length) {
       runStep(currentStepIdx, txt);
     }
   };
@@ -185,6 +238,46 @@ export function App() {
     }
   };
 
+  // Render Landing Page if no Category selected
+  if (!selectedCategory) {
+    return (
+      <>
+        <LandingPage
+          categories={categories}
+          onSelectCategory={(cat) => setSelectedCategory(cat)}
+          onAddCategory={() => {
+            setCategoryToEdit(null);
+            setIsCategoryModalOpen(true);
+          }}
+          onEditCategory={(cat) => {
+            setCategoryToEdit(cat);
+            setIsCategoryModalOpen(true);
+          }}
+        />
+
+        <CategoryModal
+          isOpen={isCategoryModalOpen}
+          onClose={() => setIsCategoryModalOpen(false)}
+          categoryToEdit={categoryToEdit}
+          onCategorySaved={(savedCat) => {
+            setCategories(prev => {
+              const idx = prev.findIndex(p => p.id === savedCat.id);
+              if (idx >= 0) {
+                const updated = [...prev];
+                updated[idx] = savedCat;
+                return updated;
+              }
+              return [...prev, savedCat];
+            });
+          }}
+          onCategoryDeleted={(deletedId) => {
+            setCategories(prev => prev.filter(p => p.id !== deletedId));
+          }}
+        />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col items-center justify-start p-4 md:p-6 font-sans">
       
@@ -193,10 +286,22 @@ export function App() {
         {/* Clean Solid White Navbar */}
         <div className="w-full max-w-6xl bg-white text-slate-900 rounded-2xl px-6 py-3.5 shadow-sm flex items-center justify-between border border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white text-base font-black shadow-xs">
-              C
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center border border-slate-300 transition cursor-pointer"
+              title="Kembali ke Landing Page"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white text-base font-black shadow-xs">
+                C
+              </div>
+              <div>
+                <span className="font-extrabold text-lg tracking-tight text-slate-900 leading-none block">Cekat.AI</span>
+                <span className="text-[10.5px] font-bold text-blue-600 block">{selectedCategory.title}</span>
+              </div>
             </div>
-            <span className="font-extrabold text-xl tracking-tight text-slate-900">Cekat.AI</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -212,12 +317,12 @@ export function App() {
         {/* Top Tabs Carousel */}
         <div className="w-full max-w-6xl flex items-center justify-between gap-2">
           <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 flex-1">
-            {allScenarios.map(wf => (
+            {activeCategoryScenarios.map(wf => (
               <button
                 key={wf.id}
                 onClick={() => selectScenario(wf.id)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition border cursor-pointer ${
-                  wf.id === currentScenario.id
+                  currentScenario && wf.id === currentScenario.id
                     ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
                     : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
@@ -225,6 +330,10 @@ export function App() {
                 {wf.name}
               </button>
             ))}
+
+            {activeCategoryScenarios.length === 0 && (
+              <p className="text-xs text-slate-500 italic py-1">Belum ada skenario untuk kategori ini. Klik "+ Create Mockup" untuk membuat skenario!</p>
+            )}
           </div>
         </div>
 
@@ -276,260 +385,281 @@ export function App() {
             <RotateCcw size={13} />
             <span>Reset</span>
           </button>
+
+          {currentScenario && currentScenario.id.startsWith('custom_') && (
+            <>
+              <div className="h-3 w-px bg-slate-200"></div>
+              <button
+                onClick={() => handleDeleteScenario(currentScenario.id)}
+                className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold transition cursor-pointer"
+                title="Hapus Skenario Ini"
+              >
+                <Trash2 size={13} />
+                <span>Hapus Skenario</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Main Workspace (iPhone Canvas + Inspector Panel) */}
-        <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 mt-1">
-          
-          {/* iPhone Frame Canvas */}
-          <div className="iphone-case">
-            <div className="iphone-screen">
-              
-              {/* Dynamic Island Notch */}
-              <div className="dynamic-island">
-                <div className="camera-lens"></div>
-              </div>
-
-              {/* Status Bar */}
-              <div className="bg-[#075E54] pt-11 pb-1 px-5 flex items-center justify-between text-white text-[11px] font-bold shrink-0">
-                <span>09:41</span>
-                <div className="flex items-center gap-1.5 text-xs">
-                  <Wifi size={12} />
-                  <Battery size={12} />
-                </div>
-              </div>
-
-              {/* WhatsApp Chat Header */}
-              <div className="bg-[#075E54] px-4 py-2.5 flex items-center gap-3 text-white shrink-0">
-                <ChevronLeft size={16} className="opacity-80 cursor-pointer" />
-                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0 border border-emerald-400 font-extrabold text-xs text-[#075E54]">
-                  RS
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-xs leading-tight truncate">RS Sehat Utama Bot</div>
-                  <div className="text-[10px] text-emerald-300 font-semibold flex items-center gap-1 leading-tight">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm opacity-90">
-                  <Phone onClick={() => startCall('Dr. Budi, Sp.A', 'WhatsApp Voice Call')} size={15} className="cursor-pointer hover:text-emerald-200 transition" />
-                  <MoreVertical size={15} className="cursor-pointer" />
-                </div>
-              </div>
-
-              {/* Chat Canvas Area */}
-              <div ref={canvasRef} className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
-                <div className="flex items-center gap-2 my-2 animate-fade-up">
-                  <div className="h-px bg-slate-300 flex-1"></div>
-                  <span className="text-[10px] text-slate-500 font-semibold bg-[#ECE5DD] px-2">HARI INI</span>
-                  <div className="h-px bg-slate-300 flex-1"></div>
-                </div>
-
-                {currentScenario.triggerType === 'OUTBOUND_SYSTEM' && currentScenario.outboundPill && (
-                  <div className="flex justify-center my-1 animate-fade-up">
-                    <span className="bg-white text-blue-700 border border-blue-200 text-[10px] font-bold px-3 py-0.5 rounded-full shadow-xs">
-                      {currentScenario.outboundPill}
-                    </span>
-                  </div>
-                )}
-
-                {chatHistory.map(msg => (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col ${msg.role === 'rs-bot' ? 'items-start' : 'items-end'} mb-2 animate-fade-up`}
-                  >
-                    <div
-                      className={`px-3 py-2 text-xs leading-relaxed max-w-[85%] whitespace-pre-line rounded-2xl ${
-                        msg.role === 'rs-bot'
-                          ? 'bg-white text-slate-900 rounded-tl-none border border-slate-100 shadow-xs'
-                          : 'bg-[#d9fdd3] text-slate-900 rounded-tr-none border border-[#c7f3be] shadow-xs'
-                      }`}
-                    >
-                      {msg.text}
-                    </div>
-
-                    {msg.card && (
-                      <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200 w-full max-w-[90%] text-xs mt-1.5">
-                        <div className="p-3">
-                          <div className="font-extrabold text-[#075E54] text-xs flex items-center gap-1.5 mb-0.5">
-                            <CheckCircle2 size={14} /> {msg.card.title}
-                          </div>
-                          <div className="text-[10px] text-slate-400 mb-2 font-medium">{msg.card.sub}</div>
-                          {msg.card.items.map((item: any, i: number) => (
-                            <div key={i} className="flex justify-between items-center py-1 border-t border-slate-100 text-[11px] gap-4">
-                              <span className="text-slate-500 font-medium">{item.label}</span>
-                              <span className="text-slate-900 font-bold text-right">{item.val}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="bg-[#075E54] text-white text-[10px] font-bold py-1.5 px-3 text-center tracking-wide uppercase">
-                          {msg.card.status}
-                        </div>
-                      </div>
-                    )}
-
-                    <span className="text-[9.5px] text-slate-400 mt-0.5 font-medium px-1 flex items-center gap-1">
-                      {msg.time} {msg.role === 'patient' && <CheckCheck size={12} className="text-sky-500" />}
-                    </span>
-                  </div>
-                ))}
-
-                {isTyping && (
-                  <div className="flex flex-col items-start mb-2 animate-fade-up">
-                    <div className="bg-white rounded-2xl rounded-tl-none px-3.5 py-2 shadow-xs border border-slate-100 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#075E54] dot-1"></span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#075E54] dot-2"></span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#075E54] dot-3"></span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Fixed Chat Input Bar */}
-              <div className="bg-[#f0ece8] border-t border-slate-300 px-3 py-2 flex items-center gap-2 shrink-0">
-                <Smile size={18} className="text-[#075E54] cursor-pointer" />
-                <input
-                  type="text"
-                  placeholder="Ketik pesan..."
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleManualSend()}
-                  className="flex-1 bg-white rounded-full px-3.5 py-1.5 text-xs text-slate-800 focus:outline-none border border-slate-200 shadow-inner"
-                />
-                <Paperclip size={18} className="text-[#075E54] cursor-pointer" />
-                <button
-                  onClick={handleManualSend}
-                  className="w-8 h-8 rounded-full bg-[#075E54] hover:bg-[#064e46] text-white flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition cursor-pointer"
-                >
-                  <Send size={12} />
-                </button>
-              </div>
-
-              {/* Dummy WA Call Overlay Modal */}
-              {isCallActive && (
-                <div className="absolute inset-0 bg-[#0f172a] z-50 flex flex-col justify-between p-6 text-white animate-fade-up">
-                  <div className="flex flex-col items-center pt-8 space-y-2 text-center">
-                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
-                      <Lock size={11} /> End-to-end encrypted
-                    </div>
-                    <h3 className="font-extrabold text-xl tracking-tight text-white">{callContactName}</h3>
-                    <p className="text-xs text-slate-400 font-medium">{callTypeLabel}</p>
-                    <p className="font-mono text-sm font-bold text-emerald-400">
-                      {String(Math.floor(callSeconds / 60)).padStart(2, '0')}:{String(callSeconds % 60).padStart(2, '0')}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-center relative my-auto">
-                    <div className="w-28 h-28 rounded-full bg-blue-600/30 border border-blue-500/40 absolute call-ripple"></div>
-                    <div className="w-24 h-24 rounded-full bg-slate-800 border-2 border-emerald-400 flex items-center justify-center text-white font-extrabold text-2xl shadow-2xl relative z-10">
-                      {callContactName.startsWith('Hotline') ? '119' : 'RS'}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-around pb-6 pt-4 px-2">
-                    <button
-                      onClick={() => setIsCallMuted(!isCallMuted)}
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md cursor-pointer ${
-                        isCallMuted ? 'bg-red-600/20 text-red-500 border border-red-500/40' : 'bg-slate-800 text-slate-200'
-                      }`}
-                    >
-                      <PhoneOff size={18} />
-                    </button>
-                    
-                    <button
-                      onClick={endCall}
-                      className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-xl active:scale-95 transition cursor-pointer"
-                      title="End Call"
-                    >
-                      <PhoneOff size={22} />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </div>
-
-          {/* Right Side Inspector Panel */}
-          <div className="w-full lg:flex-1 bg-white border border-slate-200 rounded-3xl p-5 shadow-sm h-[690px] overflow-y-auto custom-scrollbar space-y-4 text-xs text-slate-800">
+        {currentScenario ? (
+          <div className="w-full max-w-6xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 mt-1">
             
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
-              <div className="font-extrabold text-sm text-blue-700 flex items-center gap-2">
-                <Workflow size={16} /> {currentScenario.title}
-              </div>
-              <div className="flex items-center gap-2 pt-1">
-                <span className={`font-bold px-2.5 py-0.5 rounded-full text-[10px] ${
-                  currentScenario.triggerType === 'OUTBOUND_SYSTEM' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-blue-100 text-blue-800 border border-blue-300'
-                }`}>
-                  {currentScenario.triggerType === 'OUTBOUND_SYSTEM' ? 'SYSTEM OUTBOUND TRIGGER' : 'USER INBOUND CHAT'}
-                </span>
-                <span className="bg-slate-200 text-slate-700 font-mono font-bold px-2.5 py-0.5 rounded-full text-[10px] border border-slate-300">
-                  {currentScenario.tag}
-                </span>
-              </div>
-            </div>
+            {/* iPhone Frame Canvas */}
+            <div className="iphone-case">
+              <div className="iphone-screen">
+                
+                {/* Dynamic Island Notch */}
+                <div className="dynamic-island">
+                  <div className="camera-lens"></div>
+                </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1.5">
-              <div className="font-bold text-amber-700 flex items-center gap-2 text-xs">
-                <Info size={15} /> Deskripsi Skenario & Tujuan
-              </div>
-              <p className="text-slate-700 leading-relaxed text-[11.5px]">{currentScenario.description}</p>
-            </div>
+                {/* Status Bar */}
+                <div className="bg-[#075E54] pt-11 pb-1 px-5 flex items-center justify-between text-white text-[11px] font-bold shrink-0">
+                  <span>09:41</span>
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <Wifi size={12} />
+                    <Battery size={12} />
+                  </div>
+                </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
-              <div className="font-bold text-blue-700 flex items-center gap-2 text-xs mb-1">
-                <ListOrdered size={15} /> Alur Percakapan & Flowchart
-              </div>
-              <div className="space-y-2">
-                {currentScenario.stepsDetail.map((s, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-2.5 bg-white border border-slate-200 rounded-xl shadow-xs">
-                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 text-[11px]">
-                      {idx + 1}
-                    </div>
-                    <div className="leading-relaxed text-[11.5px] text-slate-700 font-medium">
-                      {s}
+                {/* WhatsApp Chat Header */}
+                <div className="bg-[#075E54] px-4 py-2.5 flex items-center gap-3 text-white shrink-0">
+                  <ChevronLeft size={16} className="opacity-80 cursor-pointer" />
+                  <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0 border border-emerald-400 font-extrabold text-xs text-[#075E54]">
+                    AI
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-xs leading-tight truncate">Cekat AI Assistant</div>
+                    <div className="text-[10px] text-emerald-300 font-semibold flex items-center gap-1 leading-tight">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online
                     </div>
                   </div>
-                ))}
+                  <div className="flex items-center gap-3 text-sm opacity-90">
+                    <Phone onClick={() => startCall('Dr. Budi, Sp.A', 'WhatsApp Voice Call')} size={15} className="cursor-pointer hover:text-emerald-200 transition" />
+                    <MoreVertical size={15} className="cursor-pointer" />
+                  </div>
+                </div>
+
+                {/* Chat Canvas Area */}
+                <div ref={canvasRef} className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+                  <div className="flex items-center gap-2 my-2 animate-fade-up">
+                    <div className="h-px bg-slate-300 flex-1"></div>
+                    <span className="text-[10px] text-slate-500 font-semibold bg-[#ECE5DD] px-2">HARI INI</span>
+                    <div className="h-px bg-slate-300 flex-1"></div>
+                  </div>
+
+                  {currentScenario.triggerType === 'OUTBOUND_SYSTEM' && currentScenario.outboundPill && (
+                    <div className="flex justify-center my-1 animate-fade-up">
+                      <span className="bg-white text-blue-700 border border-blue-200 text-[10px] font-bold px-3 py-0.5 rounded-full shadow-xs">
+                        {currentScenario.outboundPill}
+                      </span>
+                    </div>
+                  )}
+
+                  {chatHistory.map(msg => (
+                    <div
+                      key={msg.id}
+                      className={`flex flex-col ${msg.role === 'rs-bot' ? 'items-start' : 'items-end'} mb-2 animate-fade-up`}
+                    >
+                      <div
+                        className={`px-3 py-2 text-xs leading-relaxed max-w-[85%] whitespace-pre-line rounded-2xl ${
+                          msg.role === 'rs-bot'
+                            ? 'bg-white text-slate-900 rounded-tl-none border border-slate-100 shadow-xs'
+                            : 'bg-[#d9fdd3] text-slate-900 rounded-tr-none border border-[#c7f3be] shadow-xs'
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+
+                      {msg.card && (
+                        <div className="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200 w-full max-w-[90%] text-xs mt-1.5">
+                          <div className="p-3">
+                            <div className="font-extrabold text-[#075E54] text-xs flex items-center gap-1.5 mb-0.5">
+                              <CheckCircle2 size={14} /> {msg.card.title}
+                            </div>
+                            <div className="text-[10px] text-slate-400 mb-2 font-medium">{msg.card.sub}</div>
+                            {msg.card.items && msg.card.items.map((item: any, i: number) => (
+                              <div key={i} className="flex justify-between items-center py-1 border-t border-slate-100 text-[11px] gap-4">
+                                <span className="text-slate-500 font-medium">{item.label}</span>
+                                <span className="text-slate-900 font-bold text-right">{item.val}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="bg-[#075E54] text-white text-[10px] font-bold py-1.5 px-3 text-center tracking-wide uppercase">
+                            {msg.card.status}
+                          </div>
+                        </div>
+                      )}
+
+                      <span className="text-[9.5px] text-slate-400 mt-0.5 font-medium px-1 flex items-center gap-1">
+                        {msg.time} {msg.role === 'patient' && <CheckCheck size={12} className="text-sky-500" />}
+                      </span>
+                    </div>
+                  ))}
+
+                  {isTyping && (
+                    <div className="flex flex-col items-start mb-2 animate-fade-up">
+                      <div className="bg-white rounded-2xl rounded-tl-none px-3.5 py-2 shadow-xs border border-slate-100 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#075E54] dot-1"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#075E54] dot-2"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#075E54] dot-3"></span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Fixed Chat Input Bar */}
+                <div className="bg-[#f0ece8] border-t border-slate-300 px-3 py-2 flex items-center gap-2 shrink-0">
+                  <Smile size={18} className="text-[#075E54] cursor-pointer" />
+                  <input
+                    type="text"
+                    placeholder="Ketik pesan..."
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleManualSend()}
+                    className="flex-1 bg-white rounded-full px-3.5 py-1.5 text-xs text-slate-800 focus:outline-none border border-slate-200 shadow-inner"
+                  />
+                  <Paperclip size={18} className="text-[#075E54] cursor-pointer" />
+                  <button
+                    onClick={handleManualSend}
+                    className="w-8 h-8 rounded-full bg-[#075E54] hover:bg-[#064e46] text-white flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition cursor-pointer"
+                  >
+                    <Send size={12} />
+                  </button>
+                </div>
+
+                {/* Dummy WA Call Overlay Modal */}
+                {isCallActive && (
+                  <div className="absolute inset-0 bg-[#0f172a] z-50 flex flex-col justify-between p-6 text-white animate-fade-up">
+                    <div className="flex flex-col items-center pt-8 space-y-2 text-center">
+                      <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
+                        <Lock size={11} /> End-to-end encrypted
+                      </div>
+                      <h3 className="font-extrabold text-xl tracking-tight text-white">{callContactName}</h3>
+                      <p className="text-xs text-slate-400 font-medium">{callTypeLabel}</p>
+                      <p className="font-mono text-sm font-bold text-emerald-400">
+                        {String(Math.floor(callSeconds / 60)).padStart(2, '0')}:{String(callSeconds % 60).padStart(2, '0')}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-center relative my-auto">
+                      <div className="w-28 h-28 rounded-full bg-blue-600/30 border border-blue-500/40 absolute call-ripple"></div>
+                      <div className="w-24 h-24 rounded-full bg-slate-800 border-2 border-emerald-400 flex items-center justify-center text-white font-extrabold text-2xl shadow-2xl relative z-10">
+                        {callContactName.startsWith('Hotline') ? '119' : 'AI'}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-around pb-6 pt-4 px-2">
+                      <button
+                        onClick={() => setIsCallMuted(!isCallMuted)}
+                        className={`w-12 h-12 rounded-full flex items-center justify-center transition shadow-md cursor-pointer ${
+                          isCallMuted ? 'bg-red-600/20 text-red-500 border border-red-500/40' : 'bg-slate-800 text-slate-200'
+                        }`}
+                      >
+                        <PhoneOff size={18} />
+                      </button>
+                      
+                      <button
+                        onClick={endCall}
+                        className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-xl active:scale-95 transition cursor-pointer"
+                        title="End Call"
+                      >
+                        <PhoneOff size={22} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
-              <div className="font-bold text-blue-700 flex items-center gap-2 text-xs">
-                <Cpu size={15} /> Komponen Cekat AI
-              </div>
-              <div>
-                {currentScenario.cekatComponents.map((c, i) => (
-                  <span key={i} className="bg-amber-50 border border-amber-200 text-amber-800 font-mono text-[11px] px-2.5 py-1 rounded-md inline-block mr-1 mb-1 font-semibold">
-                    {c}
+            {/* Right Side Inspector Panel */}
+            <div className="w-full lg:flex-1 bg-white border border-slate-200 rounded-3xl p-5 shadow-sm h-[690px] overflow-y-auto custom-scrollbar space-y-4 text-xs text-slate-800">
+              
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+                <div className="font-extrabold text-sm text-blue-700 flex items-center gap-2">
+                  <Workflow size={16} /> {currentScenario.title}
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <span className={`font-bold px-2.5 py-0.5 rounded-full text-[10px] ${
+                    currentScenario.triggerType === 'OUTBOUND_SYSTEM' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-blue-100 text-blue-800 border border-blue-300'
+                  }`}>
+                    {currentScenario.triggerType === 'OUTBOUND_SYSTEM' ? 'SYSTEM OUTBOUND TRIGGER' : 'USER INBOUND CHAT'}
                   </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
-              <div className="font-bold text-blue-700 flex items-center gap-2 text-xs">
-                <Network size={15} /> Scope API & Integrasi
-              </div>
-              <div>
-                {currentScenario.apiScopes.map((a, i) => (
-                  <span key={i} className="bg-blue-50 border border-blue-200 text-blue-800 font-mono text-[11px] px-2.5 py-1 rounded-md inline-block mr-1 mb-1 font-semibold">
-                    {a}
+                  <span className="bg-slate-200 text-slate-700 font-mono font-bold px-2.5 py-0.5 rounded-full text-[10px] border border-slate-300">
+                    {currentScenario.tag}
                   </span>
-                ))}
+                </div>
               </div>
-            </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1">
-              <div className="font-bold text-blue-700 flex items-center gap-2 text-xs">
-                <ShieldCheck size={15} /> Key Architecture Safeguard & Rule
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1.5">
+                <div className="font-bold text-amber-700 flex items-center gap-2 text-xs">
+                  <Info size={15} /> Deskripsi Skenario & Tujuan
+                </div>
+                <p className="text-slate-700 leading-relaxed text-[11.5px]">{currentScenario.description}</p>
               </div>
-              <p className="text-slate-700 italic text-[11.5px] leading-relaxed">{currentScenario.ruleNote}</p>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+                <div className="font-bold text-blue-700 flex items-center gap-2 text-xs mb-1">
+                  <ListOrdered size={15} /> Alur Percakapan & Flowchart
+                </div>
+                <div className="space-y-2">
+                  {currentScenario.stepsDetail && currentScenario.stepsDetail.map((s, idx) => (
+                    <div key={idx} className="flex items-start gap-3 p-2.5 bg-white border border-slate-200 rounded-xl shadow-xs">
+                      <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 text-[11px]">
+                        {idx + 1}
+                      </div>
+                      <div className="leading-relaxed text-[11.5px] text-slate-700 font-medium">
+                        {s}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+                <div className="font-bold text-blue-700 flex items-center gap-2 text-xs">
+                  <Cpu size={15} /> Komponen Cekat AI
+                </div>
+                <div>
+                  {currentScenario.cekatComponents && currentScenario.cekatComponents.map((c, i) => (
+                    <span key={i} className="bg-amber-50 border border-amber-200 text-amber-800 font-mono text-[11px] px-2.5 py-1 rounded-md inline-block mr-1 mb-1 font-semibold">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+                <div className="font-bold text-blue-700 flex items-center gap-2 text-xs">
+                  <Network size={15} /> Scope API & Integrasi
+                </div>
+                <div>
+                  {currentScenario.apiScopes && currentScenario.apiScopes.map((a, i) => (
+                    <span key={i} className="bg-blue-50 border border-blue-200 text-blue-800 font-mono text-[11px] px-2.5 py-1 rounded-md inline-block mr-1 mb-1 font-semibold">
+                      {a}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-1">
+                <div className="font-bold text-blue-700 flex items-center gap-2 text-xs">
+                  <ShieldCheck size={15} /> Key Architecture Safeguard & Rule
+                </div>
+                <p className="text-slate-700 italic text-[11.5px] leading-relaxed">{currentScenario.ruleNote}</p>
+              </div>
+
             </div>
 
           </div>
-
-        </div>
+        ) : (
+          <div className="bg-slate-50 border border-slate-200 rounded-3xl p-12 text-center space-y-3 w-full max-w-3xl">
+            <h3 className="font-bold text-slate-800 text-lg">Belum Ada Skenario</h3>
+            <p className="text-xs text-slate-500">Kategori ini belum memiliki skenario use case. Klik tombol "+ Create Mockup" di atas untuk menambahkan skenario baru!</p>
+          </div>
+        )}
 
       </div>
 
@@ -537,7 +667,37 @@ export function App() {
       <MockupGeneratorModal
         isOpen={isGeneratorOpen}
         onClose={() => setIsGeneratorOpen(false)}
-        onScenarioCreated={(newSc) => setAllScenarios(prev => [...prev, newSc])}
+        onScenarioCreated={(newSc) => {
+          const scWithCategory = {
+            ...newSc,
+            categoryId: selectedCategory ? selectedCategory.id : 'healthcare'
+          };
+          setAllScenarios(prev => [...prev, scWithCategory]);
+          setCurrentScenario(scWithCategory);
+        }}
+      />
+
+      <CategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        categoryToEdit={categoryToEdit}
+        onCategorySaved={(savedCat) => {
+          setCategories(prev => {
+            const idx = prev.findIndex(p => p.id === savedCat.id);
+            if (idx >= 0) {
+              const updated = [...prev];
+              updated[idx] = savedCat;
+              return updated;
+            }
+            return [...prev, savedCat];
+          });
+        }}
+        onCategoryDeleted={(deletedId) => {
+          setCategories(prev => prev.filter(p => p.id !== deletedId));
+          if (selectedCategory && selectedCategory.id === deletedId) {
+            setSelectedCategory(null);
+          }
+        }}
       />
 
     </div>
