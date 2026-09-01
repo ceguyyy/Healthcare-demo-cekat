@@ -1,31 +1,31 @@
 import { z } from 'zod';
 
 export const CardItemSchema = z.object({
-  label: z.string().default(''),
-  val: z.string().default('')
+  label: z.string().optional().default(''),
+  val: z.string().optional().default('')
 });
 
 export const CardDataSchema = z.object({
-  title: z.string().default('Detail Info'),
-  sub: z.string().default(''),
-  items: z.array(CardItemSchema).default([]),
-  status: z.string().default('PROCESSED')
+  title: z.string().optional().default('Detail Info'),
+  sub: z.string().optional().default(''),
+  items: z.array(CardItemSchema).optional().default([]),
+  status: z.string().optional().default('PROCESSED')
 });
 
 export const FlowInputFieldSchema = z.object({
-  id: z.string().default(''),
+  id: z.string().optional().default(''),
   label: z.string().min(1, 'Label field wajib diisi'),
-  type: z.enum(['text', 'select', 'date', 'radio', 'checkbox']).default('text'),
+  type: z.enum(['text', 'select', 'date', 'radio', 'checkbox']).optional().default('text'),
   placeholder: z.string().optional(),
   options: z.array(z.string()).optional(),
   defaultValue: z.string().optional()
 });
 
 export const FlowDataSchema = z.object({
-  title: z.string().default('Form Dynamic'),
+  title: z.string().optional().default('Form Dynamic'),
   description: z.string().optional(),
-  buttonText: z.string().default('Kirim Form'),
-  fields: z.array(FlowInputFieldSchema).default([]),
+  buttonText: z.string().optional().default('Kirim Form'),
+  fields: z.array(FlowInputFieldSchema).optional().default([]),
   submitResponseText: z.string().optional()
 });
 
@@ -48,27 +48,28 @@ export const CustomBrandingSchema = z.object({
 
 export const ScenarioSchema = z.object({
   id: z.string().optional(),
-  categoryId: z.string().min(1, 'Category ID wajib diisi'),
+  categoryId: z.string().optional(),
   name: z.string().min(1, 'Nama singkat skenario wajib diisi'),
   title: z.string().min(1, 'Judul lengkap skenario wajib diisi'),
-  tag: z.string().default('Use Case Demo'),
+  tag: z.string().optional().default('Use Case Demo'),
   saAuthor: z.string().optional(),
-  triggerType: z.enum(['INBOUND_USER', 'OUTBOUND_SYSTEM']).default('INBOUND_USER'),
+  triggerType: z.enum(['INBOUND_USER', 'OUTBOUND_SYSTEM']).optional().default('INBOUND_USER'),
   outboundPill: z.string().optional(),
-  description: z.string().default(''),
-  cekatComponents: z.array(z.string()).default([]),
-  apiScopes: z.array(z.string()).default([]),
-  ruleNote: z.string().default(''),
-  stepsDetail: z.array(z.string()).default([]),
-  initialText: z.string().default(''),
+  description: z.string().optional().default(''),
+  cekatComponents: z.array(z.string()).optional().default([]),
+  apiScopes: z.array(z.string()).optional().default([]),
+  ruleNote: z.string().optional().default(''),
+  stepsDetail: z.array(z.string()).optional().default([]),
+  initialText: z.string().optional().default(''),
   hideInitialMessage: z.boolean().optional(),
   startFromStepIdx: z.number().optional(),
   customBranding: CustomBrandingSchema.optional(),
   steps: z.array(StepSchema).min(1, 'Skenario harus memiliki minimal 1 step percakapan')
 });
 
-// Single object or array of scenarios for JSON Import
-export const ImportJsonPayloadSchema = z.union([
-  ScenarioSchema,
-  z.array(ScenarioSchema).min(1, 'Array JSON tidak boleh kosong')
-]);
+// Single object or array of scenarios for JSON Import (uses z.preprocess for clean array error messages)
+export const ImportJsonPayloadSchema = z.preprocess((val) => {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'object' && val !== null) return [val];
+  return val;
+}, z.array(ScenarioSchema).min(1, 'Payload JSON tidak boleh kosong'));
