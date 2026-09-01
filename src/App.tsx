@@ -10,7 +10,7 @@ import { ImportJsonModal } from './components/ImportJsonModal';
 import { MoveScenarioModal } from './components/MoveScenarioModal';
 import { 
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
-  Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
+  Wifi, Battery, ChevronLeft, ChevronRight, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
   Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp, Copy, FileText, X, Search
 } from 'lucide-react';
@@ -35,6 +35,15 @@ export function App() {
   // Jump Step & Hide Welcome Message State
   const [hideInitialMsgState, setHideInitialMsgState] = useState<boolean>(false);
   const [startFromStepIdx, setStartFromStepIdx] = useState<number>(0);
+
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (tabsContainerRef.current) {
+      const scrollAmount = direction === 'left' ? -250 : 250;
+      tabsContainerRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   // WhatsApp Flow Form Overlay State
   const [activeFlowStep, setActiveFlowStep] = useState<{ stepIdx: number; flow: FlowData } | null>(null);
@@ -531,26 +540,54 @@ export function App() {
           )}
         </div>
 
-        {/* Top Tabs Carousel with Scenario Search Input */}
-        <div className="w-full max-w-6xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 flex-1">
-            {filteredCategoryScenarios.map(wf => (
-              <button
-                key={wf.id}
-                onClick={() => handleSelectScenario(wf)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition border cursor-pointer ${
-                  currentScenario && wf.id === currentScenario.id
-                    ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
-                    : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                {wf.name}
-              </button>
-            ))}
+        {/* Top Tabs Carousel Bar with Left/Right Scroll Arrows & Search Input */}
+        <div className="w-full max-w-6xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-slate-50/90 p-2 rounded-2xl border border-slate-200/90 backdrop-blur-xs shadow-xs">
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            {/* Left Carousel Arrow Button */}
+            <button
+              onClick={() => scrollTabs('left')}
+              className="p-1.5 rounded-xl bg-white border border-slate-200/90 text-slate-600 hover:text-blue-600 hover:bg-blue-50/80 shadow-2xs transition cursor-pointer shrink-0"
+              title="Scroll Left"
+            >
+              <ChevronLeft size={16} />
+            </button>
 
-            {activeCategoryScenarios.length === 0 && (
-              <p className="text-xs text-slate-500 italic py-1">No scenario available for this category. Click "+ Create Mockup" or "Import JSON" to add a new scenario.</p>
-            )}
+            {/* Scrollable Tabs Carousel Track */}
+            <div
+              ref={tabsContainerRef}
+              className="flex gap-2 overflow-x-auto py-1.5 px-1 flex-1 scroll-smooth cursor-grab active:cursor-grabbing text-xs border-b border-transparent focus:outline-none custom-scrollbar"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#cbd5e1 #f1f5f9'
+              }}
+            >
+              {filteredCategoryScenarios.map(wf => (
+                <button
+                  key={wf.id}
+                  onClick={() => handleSelectScenario(wf)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition border shrink-0 cursor-pointer ${
+                    currentScenario && wf.id === currentScenario.id
+                      ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                      : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  {wf.name}
+                </button>
+              ))}
+
+              {activeCategoryScenarios.length === 0 && (
+                <p className="text-xs text-slate-500 italic py-1">No scenario available for this category. Click "+ Create Mockup" or "Import JSON" to add a new scenario.</p>
+              )}
+            </div>
+
+            {/* Right Carousel Arrow Button */}
+            <button
+              onClick={() => scrollTabs('right')}
+              className="p-1.5 rounded-xl bg-white border border-slate-200/90 text-slate-600 hover:text-blue-600 hover:bg-blue-50/80 shadow-2xs transition cursor-pointer shrink-0"
+              title="Scroll Right"
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
 
           {/* Quick Scenario Search Bar inside Simulator */}
