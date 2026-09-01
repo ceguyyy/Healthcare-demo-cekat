@@ -3,9 +3,8 @@ import { Scenario } from './types/scenario';
 import { initialWorkflows } from './data/scenarios';
 import { SupabaseService } from './services/supabase';
 import { MockupGeneratorModal } from './components/MockupGeneratorModal';
-import { LoadBalancerModal } from './components/LoadBalancerModal';
 import { 
-  Play, Pause, RotateCcw, VolumeX, Volume2, Plus, Server, 
+  Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
   Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2
@@ -24,7 +23,6 @@ export function App() {
 
   // Modals State
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
-  const [isLoadBalancerOpen, setIsLoadBalancerOpen] = useState(false);
 
   // Call Modal State
   const [isCallActive, setIsCallActive] = useState(false);
@@ -202,12 +200,6 @@ export function App() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsLoadBalancerOpen(true)}
-              className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-300 flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <Server size={14} className="text-blue-600" /> Load Balancer Monitor
-            </button>
             <button
               onClick={() => setIsGeneratorOpen(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
@@ -546,11 +538,6 @@ export function App() {
         isOpen={isGeneratorOpen}
         onClose={() => setIsGeneratorOpen(false)}
         onScenarioCreated={(newSc) => setAllScenarios(prev => [...prev, newSc])}
-      />
-
-      <LoadBalancerModal
-        isOpen={isLoadBalancerOpen}
-        onClose={() => setIsLoadBalancerOpen(false)}
       />
 
     </div>
