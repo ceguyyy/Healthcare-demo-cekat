@@ -101,6 +101,47 @@ export class SupabaseService {
     }
   }
 
+  static async saveScenariosBulk(scenarios: Scenario[]): Promise<boolean> {
+    const key = this.getApiKey();
+    if (!key || scenarios.length === 0) return false;
+
+    const payloads = scenarios.map(scenario => {
+      const p: Record<string, any> = {
+        id: scenario.id,
+        categoryId: scenario.categoryId || 'healthcare',
+        name: scenario.name,
+        title: scenario.title,
+        tag: scenario.tag || 'Core Feature',
+        triggerType: scenario.triggerType || 'INBOUND_USER',
+        outboundPill: scenario.outboundPill || null,
+        description: scenario.description || '',
+        initialText: scenario.initialText || '',
+        cekatComponents: scenario.cekatComponents || [],
+        apiScopes: scenario.apiScopes || [],
+        ruleNote: scenario.ruleNote || '',
+        stepsDetail: scenario.stepsDetail || [],
+        steps: scenario.steps || []
+      };
+      if (scenario.saAuthor) p.saAuthor = scenario.saAuthor;
+      return p;
+    });
+
+    try {
+      const response = await fetch(`${SUPABASE_REST_URL}/scenarios`, {
+        method: 'POST',
+        headers: {
+          ...this.getHeaders(),
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify(payloads)
+      });
+      return response.ok;
+    } catch (err) {
+      console.error('Supabase saveScenariosBulk error:', err);
+      return false;
+    }
+  }
+
   static async deleteScenario(id: string): Promise<boolean> {
     const key = this.getApiKey();
     if (!key) return false;

@@ -226,10 +226,10 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
           })) : []
         };
 
-        await SupabaseService.saveScenario(scenario);
         importedScenarios.push(scenario);
       }
 
+      await SupabaseService.saveScenariosBulk(importedScenarios);
       onScenarioImported(importedScenarios);
       onClose();
     } catch (err: any) {
