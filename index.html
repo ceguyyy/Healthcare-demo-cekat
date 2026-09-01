@@ -191,11 +191,6 @@
             <!-- Messages inserted dynamically -->
           </div>
 
-          <!-- Quick Reply Chips Carousel -->
-          <div class="shrink-0 px-2 py-1">
-            <div id="quick-chips" class="flex gap-1.5 overflow-x-auto no-scrollbar"></div>
-          </div>
-
           <!-- Fixed Chat Input Bar -->
           <div class="bg-[#f0ece8] border-t border-slate-300 px-3 py-2 flex items-center gap-2 shrink-0">
             <i class="fa-regular fa-face-smile text-[#075E54] text-base cursor-pointer"></i>
@@ -1142,6 +1137,7 @@
 
     function renderChips(chipsList) {
       const row = document.getElementById('quick-chips');
+      if (!row) return;
       row.innerHTML = '';
       if (!chipsList) return;
 
