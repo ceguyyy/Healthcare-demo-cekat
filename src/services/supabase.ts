@@ -8,8 +8,15 @@ export class SupabaseService {
   private static API_KEY_STORAGE = 'cekat_supabase_anon_key';
 
   static getApiKey(): string {
+    // 1. Check Service Role Key first (Master Admin Access)
+    const serviceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+    if (serviceKey && serviceKey.trim()) return serviceKey.trim();
+
+    // 2. Check Anon Key
     const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
     if (envKey && envKey.trim()) return envKey.trim();
+
+    // 3. Fallback to localStorage user entered key
     return localStorage.getItem(this.API_KEY_STORAGE) || '';
   }
 
