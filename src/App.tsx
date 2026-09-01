@@ -600,13 +600,15 @@ export function App() {
               >
                 <BookOpen size={14} className="text-blue-600" /> Docs
               </button>
-              <button
-                onClick={openChatIframe}
+              <a
+                href="https://chat.cekat.ai/chat"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
-                title="Open Live Cekat Web Chat (chat.cekat.ai)"
+                title="Open Live Cekat Web Chat in new tab (chat.cekat.ai)"
               >
                 <Globe size={14} className="text-emerald-600" /> Live Chat
-              </button>
+              </a>
               <button
                 onClick={() => setIsImportJsonOpen(true)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"

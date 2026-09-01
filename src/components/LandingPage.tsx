@@ -96,14 +96,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <BookOpen size={14} className="text-blue-600" /> Docs
               </button>
             )}
-            {onOpenLiveChat && (
-              <button
-                onClick={onOpenLiveChat}
-                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
-              >
-                <Globe size={14} className="text-emerald-600" /> Live Chat
-              </button>
-            )}
+            <a
+              href="https://chat.cekat.ai/chat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Globe size={14} className="text-emerald-600" /> Live Chat
+            </a>
             <button
               onClick={onAddCategory}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
