@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cekat.AI × RS Sehat Utama — Complete 16 Healthcare SA Study Cases</title>
+  <meta name="description" content="Simulasi Interactive Healthcare Chatbot & Technical SA Workarounds powered by Cekat AI." />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            cekat: {
+              50: '#f0f7ff', 500: '#0095ff', 600: '#0074db', 700: '#005cb5'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0b1329; color: #f8fafc; }
+    
+    /* Scrollbars */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 99px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.6); }
+
+    /* iPhone Frame */
+    .iphone-case {
+      width: 365px;
+      height: 690px;
+      background: #1c1c1e;
+      border-radius: 46px;
+      padding: 12px;
+      position: relative;
+      box-shadow: 0 0 0 1.5px #3a3a3c, 0 30px 60px rgba(0,0,0,0.6);
+      flex-shrink: 0;
+    }
+    .iphone-case::before {
+      content: ''; position: absolute; left: -3px; top: 100px; width: 3px; height: 32px; background: #3a3a3c; border-radius: 2px 0 0 2px;
+      box-shadow: 0 44px 0 #3a3a3c, 0 88px 0 #3a3a3c;
+    }
+    .iphone-case::after {
+      content: ''; position: absolute; right: -3px; top: 140px; width: 3px; height: 58px; background: #3a3a3c; border-radius: 0 2px 2px 0;
+    }
+
+    .iphone-screen {
+      background: #ECE5DD;
+      border-radius: 34px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+    }
+
+    .dynamic-island {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      width: 92px; height: 26px; background: #1c1c1e; border-radius: 20px; z-index: 30;
+      display: flex; align-items: center; justify-content: flex-end; padding-right: 10px;
+    }
+    .camera-lens { width: 10px; height: 10px; border-radius: 50%; background: #0c0c0e; border: 1px solid #2c2c2e; }
+
+    /* Keyframe Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-up { animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    .dot-1 { animation: pulseDot 1.4s infinite 0s; }
+    .dot-2 { animation: pulseDot 1.4s infinite 0.2s; }
+    .dot-3 { animation: pulseDot 1.4s infinite 0.4s; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-4 md:p-6 antialiased">
+
+  <div class="w-full max-w-7xl flex flex-col items-center gap-4">
+    
+    <!-- Top Header Banner -->
+    <div class="w-full max-w-6xl bg-white text-slate-900 rounded-2xl px-5 py-3 shadow-xl flex flex-wrap items-center justify-between gap-3 border border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 font-extrabold text-lg text-blue-600 tracking-tight">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-sm font-black shadow-md">
+            C
+          </div>
+          <span>Cekat.AI</span>
+        </div>
+        <span class="text-slate-300 font-light text-xl">×</span>
+        <div class="flex items-center gap-2 font-bold text-sm text-slate-800">
+          <div class="w-8 h-8 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-extrabold text-xs">
+            RS
+          </div>
+          <span>RS Sehat Utama</span>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <span class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">
+          16 Technical SA Workarounds (Q4 2026 Spec)
+        </span>
+      </div>
+    </div>
+
+    <!-- Top Tabs Carousel (16 Healthcare Use Cases) -->
+    <div class="w-full max-w-6xl flex items-center justify-between gap-2">
+      <div id="tabs-container" class="flex gap-2 overflow-x-auto no-scrollbar py-1 flex-1">
+        <!-- Tabs injected dynamically -->
+      </div>
+      <button onclick="restartCurrentScenario()" class="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center justify-center shrink-0 transition" title="Reset Simulation">
+        <i class="fa-solid fa-rotate-right text-xs"></i>
+      </button>
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="flex items-center gap-2 bg-slate-900/80 border border-slate-800 rounded-full px-4 py-1.5 text-xs text-slate-300 backdrop-blur-md">
+      <button id="btn-play-toggle" onclick="togglePlayPause()" class="flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full font-semibold transition">
+        <i id="icon-play" class="fa-solid fa-pause text-xs"></i> <span id="text-play">Pause</span>
+      </button>
+      <div class="h-3 w-px bg-slate-800"></div>
+      <div class="flex items-center gap-1">
+        <button onclick="setSpeed(1)" class="speed-btn px-2 py-0.5 rounded font-mono font-bold text-xs bg-blue-600 text-white">1x</button>
+        <button onclick="setSpeed(1.5)" class="speed-btn px-2 py-0.5 rounded font-mono font-bold text-xs text-slate-400 hover:text-slate-200">1.5x</button>
+        <button onclick="setSpeed(2)" class="speed-btn px-2 py-0.5 rounded font-mono font-bold text-xs text-slate-400 hover:text-slate-200">2x</button>
+      </div>
+      <div class="h-3 w-px bg-slate-800"></div>
+      <button id="btn-sound-toggle" onclick="toggleSound()" class="flex items-center gap-1 text-slate-400 hover:text-white transition">
+        <i id="icon-sound" class="fa-solid fa-volume-xmark text-xs"></i> <span>Audio</span>
+      </button>
+    </div>
+
+    <!-- Main Workspace (iPhone + Architecture Inspector) -->
+    <div class="w-full max-w-6xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-6 mt-1">
+      
+      <!-- iPhone Frame Canvas -->
+      <div class="iphone-case">
+        <div class="iphone-screen">
+          
+          <!-- Dynamic Island Notch -->
+          <div class="dynamic-island">
+            <div class="camera-lens"></div>
+          </div>
+
+          <!-- Status Bar -->
+          <div class="bg-[#075E54] pt-11 pb-1 px-5 flex items-center justify-between text-white text-[11px] font-bold shrink-0">
+            <span id="status-clock">09:41</span>
+            <div class="flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-wifi"></i>
+              <i class="fa-solid fa-battery-full"></i>
+            </div>
+          </div>
+
+          <!-- WhatsApp Chat Header -->
+          <div class="bg-[#075E54] px-4 py-2.5 flex items-center gap-3 text-white shrink-0">
+            <i class="fa-solid fa-chevron-left text-sm opacity-80 cursor-pointer"></i>
+            <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0 border border-emerald-400 font-extrabold text-xs text-[#075E54]">
+              RS
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-bold text-xs leading-tight truncate">RS Sehat Utama Bot</div>
+              <div class="text-[10px] text-emerald-300 font-semibold flex items-center gap-1 leading-tight">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online
+              </div>
+            </div>
+            <div class="flex items-center gap-3 text-sm opacity-80 cursor-pointer">
+              <i class="fa-solid fa-video"></i>
+              <i class="fa-solid fa-phone"></i>
+              <i class="fa-solid fa-ellipsis-vertical"></i>
+            </div>
+          </div>
+
+          <!-- Chat Canvas Area -->
+          <div id="chat-canvas" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+            <!-- Messages inserted dynamically -->
+          </div>
+
+          <!-- Quick Reply Chips Carousel -->
+          <div class="shrink-0 px-2 py-1">
+            <div id="quick-chips" class="flex gap-1.5 overflow-x-auto no-scrollbar"></div>
+          </div>
+
+          <!-- Input Bar -->
+          <div class="bg-[#f0ece8] border-t border-slate-300 px-3 py-2 flex items-center gap-2 shrink-0">
+            <i class="fa-regular fa-face-smile text-[#075E54] text-base cursor-pointer"></i>
+            <input type="text" id="user-input-field" placeholder="Ketik pesan..." onkeydown="if(event.key==='Enter') handleManualSend()" className="flex-1 bg-white rounded-full px-3.5 py-1.5 text-xs text-slate-800 focus:outline-none">
+            <i class="fa-solid fa-paperclip text-[#075E54] text-base cursor-pointer"></i>
+            <button onclick="handleManualSend()" class="w-7 h-7 rounded-full bg-[#075E54] text-white flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition">
+              <i class="fa-solid fa-paper-plane text-[10px]"></i>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Architecture & Workflow Spec Panel -->
+      <div id="architecture-panel" class="w-full lg:flex-1 bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-2xl backdrop-blur-md h-[690px] overflow-y-auto custom-scrollbar space-y-4 text-xs">
+        <!-- Specs injected dynamically -->
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // 16 Full Healthcare Use Cases & Technical SA Workarounds (Official Cekat Spec)
+    const workflows = [
+      {
+        id: "case14_booking",
+        name: "1. Booking Appointment",
+        title: "1. Booking Appointment — Temu Janji Dokter (Della Cekat)",
+        tag: "Core HIS",
+        saAuthor: "Della Cekat",
+        triggerType: "INBOUND_USER",
+        constraint: "Slot ketersediaan dokter dikelola oleh sistem HIS eksternal (bukan Cekat) & dapat berubah sewaktu-waktu.",
+        cekatComponents: ["AI Agent / WA Flow Dynamic", "API Tools (GET availability)", "n8n (Booking HIT SIMRS)", "Follow-up Reminder H-1"],
+        apiScopes: ["GET /api/v2/doctors/availability", "GET /api/v2/patients/verify-rm", "POST /api/v2/appointments/create"],
+        ruleNote: "Hemat biaya service message dengan WA Flow. Jika slot penuh di detik terakhir, tawarkan slot alternatif dari API.",
+        stepsDetail: [
+          "Step 1 — Inquiry: Pasien minta dokter kandungan. AI panggil API HIS untuk cek ketersediaan real-time.",
+          "Step 2 — Status Pasien: Tanyakan Pasien Lama (cukup input RM, ditarik otomatis) atau Pasien Baru (isi registrasi dasar).",
+          "Step 3 — Penjaminan: Pasien memilih penjamin (BPJS VClaim / Asuransi / Umum).",
+          "Step 4 — Booking Submission: Submit ke API HIS untuk mengunci slot & terbitkan Kode Booking #BK-99201.",
+          "Step 5 — Follow-up H-1: Otomatis kirim reminder H-1 dengan tombol Confirm/Cancel untuk update status di HIS."
+        ],
+        initialText: "Saya mau booking dokter kandungan untuk minggu depan.",
+        steps: [
+          {
+            userReply: "Dr. Anita, Sp.OG (Kamis 14:00)",
+            aiResponse: "Pilihan tepat! Anda memilih *Dr. Anita, Sp.OG (Kamis, 14:00 WIB)* di Poli Kandungan.\n\nApakah Anda Pasien Lama (memiliki Nomor Rekam Medis / No. RM) atau Pasien Baru?",
+            chips: ["Pasien Lama (RM-882910)", "Pasien Baru (Daftar)"]
+          },
+          {
+            userReply: "Pasien Lama (RM-882910)",
+            aiResponse: "Terima kasih Ibu *Siti Rahma (RM-882910)*.\n\nMohon pilih metode pembayaran / penjaminan kesehatan Anda:",
+            chips: ["BPJS Kesehatan (VClaim)", "Asuransi Swasta", "Umum / Mandiri"]
+          },
+          {
+            userReply: "BPJS Kesehatan (VClaim)",
+            aiResponse: "📄 *Validasi VClaim BPJS Successful*\n\n• **No. Kartu:** 000199288102\n• **Rujukan:** 12345/BPJS/2026 (Puskesmas Menteng)\n• **Poli Tujuan:** Spesialis Kandungan\n• **Status:** ✅ Valid & Aktif",
+            chips: ["Lanjutkan Konfirmasi", "Ubah Data"]
+          },
+          {
+            userReply: "Lanjutkan Konfirmasi",
+            aiResponse: "✅ *RESERVASI BERHASIL DIPROSES DI SIMRS!*\n\n• **Kode Booking:** #BK-99201\n• **Pasien:** Siti Rahma (RM-882910)\n• **Dokter:** Dr. Anita, Sp.OG\n• **Poli:** Poli Kandungan & Kebidanan\n• **Waktu:** Kamis, 14:00 WIB\n• **Penjamin:** BPJS Kesehatan (VClaim Verified)\n\nPengingat otomatis H-1 telah dijadwalkan.",
+            chips: ["📍 Petunjuk Lokasi Poli", "📥 Unduh Tiket PDF", "Menu Utama"],
+            card: {
+              title: "🎫 E-Tiket Janji Dokter SIMRS",
+              sub: "Poli Kandungan - RS Sehat Utama",
+              items: [
+                { label: "Kode Booking", val: "#BK-99201" },
+                { label: "Pasien", val: "Siti Rahma (RM-882910)" },
+                { label: "Dokter", val: "Dr. Anita, Sp.OG" },
+                { label: "Penjamin", val: "BPJS VClaim Verified" },
+                { label: "Waktu", val: "Kamis, 14:00 WIB" }
+              ],
+              status: "SIMRS CONFIRMED & LOCKED"
+            }
+          }
+        ]
+      },
+      {
+        id: "case1_ambiguous",
+        name: "2. Gejala Ambigu",
+        title: "2. Gejala Ambigu & Larangan Saran Poli (Bagus Cekat)",
+        tag: "Guardrail",
+        saAuthor: "Bagus Cekat",
+        triggerType: "INBOUND_USER",
+        constraint: "AI dilarang keras melakukan triase medis, menyimpulkan penyakit, atau menyarankan poli spesialis jika gejala ambigu.",
+        cekatComponents: ["AI Behaviour (Strict Admin Prompt)", "Flow Decision Tree / WA Flow", "Agent Transfer Condition (Human Nurse)"],
+        apiScopes: ["GET /api/v2/polyclinics/list", "POST /api/v2/triage/escalate"],
+        ruleNote: "AI bersikap sebagai admin. Arahkan ke Dokter Umum terlebih dahulu atau beri navigasi menu pilihan poli mandiri.",
+        stepsDetail: [
+          "Step 1 — Ambiguous Symptom: Pasien mengeluh mual, pusing, & perut sakit.",
+          "Step 2 — Strict Non-Diagnostic Guardrail: AI Behaviour menolak diagnosa & tidak langsung sebut spesialis.",
+          "Step 3 — GP Recommendation: AI rekomendasikan Dokter Umum atau tampilkan menu navigasi pilihan poli mandiri.",
+          "Step 4 — Danger Keyword Filter: Jika sebut 'sesak' / 'pendarahan', otomatis assign ke Perawat Jaga (Urgent SLA)."
+        ],
+        initialText: "Perut saya sakit, mual, dan pusing. Sebaiknya saya ke dokter apa ya?",
+        steps: [
+          {
+            userReply: "Rekomendasi Poli",
+            aiResponse: "Halo! Untuk keluhan medis, kami sarankan Anda berkonsultasi dengan *Dokter Umum* kami terlebih dahulu, atau silakan pilih Poli Spesialis pada menu berikut:",
+            chips: ["Dokter Umum (Poli Umum)", "Poli Penyakit Dalam", "Poli Saraf"]
+          }
+        ]
+      },
+      {
+        id: "case2_prescription",
+        name: "3. Larangan Resep Obat",
+        title: "3. Larangan Permintaan Resep Obat Mandiri (Bagus Cekat)",
+        tag: "Compliance",
+        saAuthor: "Bagus Cekat",
+        triggerType: "INBOUND_USER",
+        constraint: "AI generatif tidak memiliki kewenangan SIP untuk merilis/menyetujui resep obat keras.",
+        cekatComponents: ["Comment Filters (Blocked Keywords)", "Automation Webhook", "Ticket Board 'Farmasi & Resep Ulang'", "Orders Module (Xendit)"],
+        apiScopes: ["POST /api/v2/pharmacy/ticket-create", "POST /api/v2/orders/invoice"],
+        ruleNote: "AI buatkan Ticket di Board Farmasi. Dokter/Apoteker (Human Agent) mengecek EMR manual & otorisasi resep.",
+        stepsDetail: [
+          "Step 1 — Prescription Request: Pasien minta resep Amoxicillin.",
+          "Step 2 — Blocked Keyword Trigger: Comment Filters / Prompt menolak pembuatan resep mandiri oleh AI.",
+          "Step 3 — Ticket Creation: Automation membuat Ticket di Board 'Farmasi & Resep Ulang'.",
+          "Step 4 — Human Doctor Approval: Dokter/Apoteker verifikasi EMR & kirimkan konfirmasi tagihan resep."
+        ],
+        initialText: "Tolong buatkan resep obat Amoxicillin dan paracetamol seperti bulan lalu.",
+        steps: [
+          {
+            userReply: "Proses Pengajuan Resep",
+            aiResponse: "Permintaan resep obat memerlukan otorisasi Dokter/Apoteker. Tiket pengajuan *#FARM-9921* telah diteruskan ke Tim Farmasi RS.",
+            chips: ["Cek Status Tiket Farmasi", "Menu Utama"],
+            card: {
+              title: "💊 Ticket Pengajuan Resep Obat",
+              sub: "Board Farmasi & Otorigasi Dokter",
+              items: [
+                { label: "Tiket ID", val: "#FARM-9921" },
+                { label: "Obat Diminta", val: "Amoxicillin + Paracetamol" },
+                { label: "Status Otorisasi", val: "MENUNGGU VERIFIKASI DOKTER" }
+              ],
+              status: "OFFICIAL MEDICAL REVIEW"
+            }
+          }
+        ]
+      },
+      {
+        id: "case3_ocr",
+        name: "4. OCR Surat Rujukan",
+        title: "4. OCR Surat Rujukan & EMR BPJS Integration (Bagus Cekat)",
+        tag: "OCR + EMR",
+        saAuthor: "Bagus Cekat",
+        triggerType: "INBOUND_USER",
+        constraint: "AI native hanya membaca PDF teks, sementara rujukan berupa scan/foto. Data medis adalah PII sangat sensitif.",
+        cekatComponents: ["n8n Middleware", "Medical Vision OCR API", "EMR Validation Node", "Advanced LLM Model"],
+        apiScopes: ["POST /api/v2/ocr/scan-referral", "GET /api/v2/emr/validate-nik"],
+        ruleNote: "OCR mengekstrak No. Rujukan, NIK, & Poli Tujuan. n8n validasi ke EMR sebelum AI merespons.",
+        stepsDetail: [
+          "Step 1 — Image Upload: Pasien mengunggah foto surat rujukan BPJS Faskes 1.",
+          "Step 2 — n8n OCR Extraction: Middle-ware n8n menembakkan foto ke Medical OCR API.",
+          "Step 3 — EMR Validation: n8n melakukan GET ke EMR RS memakai NIK pasien.",
+          "Step 4 — Safe Response: AI merespons aman dengan jadwal dokter spesialis rujukan tanpa diagnosa ulang."
+        ],
+        initialText: "Saya mau daftar BPJS pakai foto surat rujukan ini [Unggah Foto].",
+        steps: [
+          {
+            userReply: "Proses OCR Rujukan",
+            aiResponse: "📄 *n8n OCR Engine Validated*\n\nBerdasarkan Surat Rujukan **No. 12345/BPJS/2026** (Puskesmas Menteng), Anda dirujuk ke **Poli Saraf**.\n\nBerikut jadwal Dokter Spesialis Saraf yang tersedia minggu ini:",
+            chips: ["Pilih Dr. Farhan, Sp.N", "Pilih Dr. Rina, Sp.N"],
+            card: {
+              title: "📄 Data Rujukan BPJS VClaim",
+              sub: "n8n OCR Medical Vision Result",
+              items: [
+                { label: "No. Rujukan", val: "12345/BPJS/2026" },
+                { label: "Faskes Asal", val: "Puskesmas Menteng" },
+                { label: "Poli Tujuan", val: "Spesialis Saraf" }
+              ],
+              status: "EMR STATUS: VALID & ACTIVE"
+            }
+          }
+        ]
+      },
+      {
+        id: "case4_reminder",
+        name: "5. Pre-Admission Reminder",
+        title: "5. Pengingat Jadwal Kontrol via Broadcast (Bagus Cekat)",
+        tag: "Broadcast",
+        saAuthor: "Bagus Cekat",
+        triggerType: "OUTBOUND_SYSTEM",
+        outboundPill: "🔔 OUTBOUND SYSTEM TRIGGER (H-1 KONTROL)",
+        constraint: "Followups native Cekat dihitung dari pesan terakhir, bukan tanggal kalender spesifik di masa depan.",
+        cekatComponents: ["n8n Integration", "HIS Calendar Trigger", "Template Message (Utility Category)", "API Auto-Update"],
+        apiScopes: ["Webhook /api/v2/his/pre-admission-event", "POST /api/v2/his/confirm-presence"],
+        ruleNote: "Pada H-1, HIS men-trigger webhook Cekat untuk mengirim Utility Template dengan tombol konfirmasi.",
+        stepsDetail: [
+          "Step 1 — HIS Event: Pasien pasca-operasi dijadwalkan kontrol H+7 di HIS.",
+          "Step 2 — H-1 Trigger: HIS men-trigger webhook n8n Cekat pada H-1 jam 08:00 pagi.",
+          "Step 3 — Utility Broadcast: Template pengingat dikirim dengan button '✅ Hadir' / '🔄 Reschedule'.",
+          "Step 4 — System Sync: Pasien membalas 'Hadir', status di SIMRS otomatis ter-update."
+        ],
+        initialText: "Halo Bpk. Ahmad, mengingatkan jadwal kontrol Anda esok hari *Kamis pkl 10:00 WIB* di *Poli Bedah*.\n\nMohon tekan tombol di bawah untuk konfirmasi kehadiran.",
+        steps: [
+          {
+            userReply: "✅ Konfirmasi Hadir",
+            aiResponse: "🙌 *Terima Kasih atas Konfirmasinya!*\n\nStatus kehadiran Anda telah dicatat di Sistem Poli Bedah. Berkas rekam medis & resep awal telah disiapkan.",
+            chips: ["📍 Petunjuk Lokasi Poli", "🅿️ Reservasi Parkir"],
+            card: {
+              title: "📋 Confirmation Pre-Admission",
+              sub: "Automatic Outbound Reminder",
+              items: [
+                { label: "Status EMR", val: "Berkas Medis Siap" },
+                { label: "Poli", val: "Poli Bedah VIP" }
+              ],
+              status: "STATUS HADIR TERCATAT"
+            }
+          }
+        ]
+      },
+      {
+        id: "case5_teleconsultation",
+        name: "6. Telekonsultasi WA Call",
+        title: "6. Telekonsultasi via WhatsApp Call (Bagus Cekat)",
+        tag: "Live Call",
+        saAuthor: "Bagus Cekat",
+        triggerType: "INBOUND_USER",
+        constraint: "Modul Call Cekat murni dioperasikan Human Agent (tanpa voicebot AI). Call outbound wajib ada izin pesan.",
+        cekatComponents: ["Orders Module (Xendit)", "Human Agent (Dokter)", "Call Template Message", "Start Call UI & Session Notes"],
+        apiScopes: ["POST /api/v2/telemedicine/book", "POST /api/v2/call/initiate"],
+        ruleNote: "Di jam praktik, Dokter masuk room chat tab Assigned, kirim Call Template, lalu tekan Start Call.",
+        stepsDetail: [
+          "Step 1 — Telemed Booking: Pasien booking & bayar telekonsultasi via Xendit.",
+          "Step 2 — Doctor Session Assignment: Di jam jadwal, Dokter masuk room chat pasien tab Assigned.",
+          "Step 3 — Call Template: Dokter kirim template 'Sesi telekonsultasi akan dimulai, klik tombol untuk menerima panggilan'.",
+          "Step 4 — Start Call: Setelah user merespons, Dokter tekan Start Call UI & catat diagnosa di Notes tab info."
+        ],
+        initialText: "Saya mau telekonsultasi dokter spesialis anak hari ini.",
+        steps: [
+          {
+            userReply: "Konfirmasi Jadwal Telekonsultasi",
+            aiResponse: "Sesi telekonsultasi Anda bersama **Dr. Budi, Sp.A** dijadwalkan pukul 15:00 WIB. Dokter akan menelepon via WhatsApp Call.",
+            chips: ["Mulai Panggilan Dokter", "Menu Utama"],
+            card: {
+              title: "📞 Telekonsultasi WA Call Ready",
+              sub: "RS Sehat Utama Telemedicine",
+              items: [
+                { label: "Dokter", val: "Dr. Budi, Sp.A" },
+                { label: "Status Pembayaran", val: "PAID (Xendit Verified)" },
+                { label: "Panggilan Outbound", val: "READY FOR DOKTER CALL" }
+              ],
+              status: "DOKTER STANDBY IN ROOM"
+            }
+          }
+        ]
+      },
+      {
+        id: "case6_lab_pii",
+        name: "7. Hasil Lab Secure (PII)",
+        title: "7. Pengiriman Hasil Lab Aman PII Masking (Bagus Cekat)",
+        tag: "PII Masking",
+        saAuthor: "Bagus Cekat",
+        triggerType: "OUTBOUND_SYSTEM",
+        outboundPill: "🔒 OUTBOUND LIS TRIGGER (HASIL LAB SIAP)",
+        constraint: "Hasil lab bersifat sangat rahasia. Dilarang mengirim file PDF mentah (unencrypted) ke chat WA.",
+        cekatComponents: ["LIS Webhook Trigger", "Broadcast Utility Template", "Secure Portal Embedded Link", "DOB Auth Gateway"],
+        apiScopes: ["Webhook /api/v2/lis/lab-ready", "GET /api/v2/sec/token-auth"],
+        ruleNote: "Broadcast link portal terenkripsi. Pasien wajib input Tanggal Lahir (DDMMYYYY) di web RS untuk unduh PDF.",
+        stepsDetail: [
+          "Step 1 — LIS Trigger: Sistem LIS RS men-trigger webhook Cekat saat hasil tes lab selesai.",
+          "Step 2 — Encrypted Broadcast: Kirim Utility Template berisi secure URL token terenkripsi.",
+          "Step 3 — Patient Auth: Pasien klik link & verifikasi Tanggal Lahir (DDMMYYYY) di portal secure RS.",
+          "Step 4 — No Permanent Storage: File PDF tidak disimpan permanen di Custom Fields / Contact Cekat."
+        ],
+        initialText: "Halo, hasil pemeriksaan laboratorium Anda No. *LAB-88102* sudah selesai. Silakan klik link berikut & masukkan Tanggal Lahir Anda (DDMMYYYY) untuk mengunduh PDF resmi:\n\n🔗 https://sec.rs-sehat.co.id/lab/view?token=88102a",
+        steps: [
+          {
+            userReply: "Buka Portal Lab",
+            aiResponse: "🔒 *Portal E-Lab Validated*\n\nAkses hasil lab No. **LAB-88102** dibuka. Silakan masukkan Tanggal Lahir Anda pada form secure.",
+            chips: ["🔑 Masukkan Tgl Lahir", "Menu Utama"],
+            card: {
+              title: "🔐 Secure Patient Lab Portal",
+              sub: "LIS One-Time Token Auth",
+              items: [
+                { label: "No. Lab", val: "LAB-88102" },
+                { label: "Token Access", val: "88102a (Expires 60m)" }
+              ],
+              status: "PII PROTECTED PORTAL"
+            }
+          }
+        ]
+      },
+      {
+        id: "case7_emergency",
+        name: "8. Emergency Guardrail 119",
+        title: "8. Eskalasi Kondisi Gawat Darurat Red Code (Christian Gunawan)",
+        tag: "Guardrail",
+        saAuthor: "Christian Gunawan",
+        triggerType: "INBOUND_USER",
+        constraint: "WA bersifat asinkron. AI dilarang keras mencoba menangani/menenangkan medis pada kondisi darurat (life-threatening).",
+        cekatComponents: ["Emergency Keyword Dictionary", "Hotline 119 Template", "Agent Transfer Condition (Command Center IGD)", "Internal Alert Automation"],
+        apiScopes: ["POST /api/v2/triage/red-code-alert", "POST /api/v2/notifications/duty-nurse"],
+        ruleNote: "Begitu terpicu, AI hentikan seluruh percakapan, instruksikan MENELEPON 119, & assign ke Perawat IGD (Urgent SLA).",
+        stepsDetail: [
+          "Step 1 — Emergency Keyword Detection: AI deteksi kata 'tidak sadar', 'kejang', 'sesak berat', 'pendarahan'.",
+          "Step 2 — Immediate Override: AI hentikan alur & kirim pesan nomor Hotline IGD / Ambulans 119.",
+          "Step 3 — Human Nurse Transfer: Agent Transfer Condition ke Teams Command Center IGD (SLA Urgent).",
+          "Step 4 — Parallel Alert: Automation kirim notifikasi internal (email/WA grup) ke perawat jaga."
+        ],
+        initialText: "Tolong, ibu saya tiba-tiba tidak sadarkan diri dan napasnya tersengal-sengal!",
+        steps: [
+          {
+            userReply: "[EMERGENCY RED CODE DETECTED]",
+            aiResponse: "🚨 *DETEKSI GAWAT DARURAT (TRIAGE RED)* 🚨\n\nMohon *SEGERA TELEPON HOTLINE IGD* di *119* atau *(021) 555-9119*.",
+            chips: ["📞 Telepon Hotline 119", "🚑 Panggil Ambulans"],
+            card: {
+              title: "🚨 RED CODE EMERGENCY",
+              sub: "Immediate Triage Override",
+              items: [
+                { label: "Hotline IGD", val: "119 / (021) 555-9119" },
+                { label: "Action", val: "Telepon Langsung (Bukan Chat)" }
+              ],
+              status: "ESKALASI PERAWAT IGD"
+            }
+          }
+        ]
+      },
+      {
+        id: "case8_queue",
+        name: "9. Cek Antrian Real-Time",
+        title: "9. Cek Antrian Real-Time & Estimasi Waktu (Christian Gunawan)",
+        tag: "Queue API",
+        saAuthor: "Christian Gunawan",
+        triggerType: "INBOUND_USER",
+        constraint: "Data antrian bersifat real-time di HIS RS, tidak ada di database native Cekat.",
+        cekatComponents: ["WA Flows (Nomor RM / Booking)", "n8n GET API Queue", "Dynamic Response AI", "Transient Custom Field Storage"],
+        apiScopes: ["GET /api/v2/his/queue-status", "GET /api/v2/his/active-ticket"],
+        ruleNote: "Automation n8n GET ke API antrian HIS, kembalikan nomor aktif, sisa antrian, & estimasi waktu tunggu.",
+        stepsDetail: [
+          "Step 1 — Queue Inquiry: Pasien menanyakan status antrian Poli Anak.",
+          "Step 2 — WA Flows / Intake: Tangkap Nomor RM atau Nomor Booking pasien secara terstruktur.",
+          "Step 3 — HIS GET API: n8n panggil API antrian HIS: nomor dipanggil, sisa antrian, & estimasi menit.",
+          "Step 4 — Dynamic AI Response: AI tampilkan 'Antrian Anda A-045. Saat ini dipanggil A-039, sisa 6 antrian, est ±20 menit'."
+        ],
+        initialText: "Antrian saya berapa ya untuk Poli Anak jam 9 ini?",
+        steps: [
+          {
+            userReply: "Cek Status Antrian RM-882910",
+            aiResponse: "Status Antrian Real-time Poli Anak saat ini:",
+            chips: ["🔄 Refresh Antrian", "📍 Denah Poli"],
+            card: {
+              title: "📊 Kartu Antrian Poli Anak",
+              sub: "Live Queue Counter SIMRS",
+              items: [
+                { label: "Nomor Anda", val: "A-045" },
+                { label: "Dipanggil", val: "A-039" },
+                { label: "Sisa Antrian", val: "6 Pasien" },
+                { label: "Estimasi", val: "±20 Menit" }
+              ],
+              status: "ESTIMASI TUNGGU: 20 MIN"
+            }
+          }
+        ]
+      },
+      {
+        id: "case9_billing",
+        name: "10. Biaya & BPJS ERACS",
+        title: "10. Estimasi Biaya & Disclaimer BPJS (Christian Gunawan)",
+        tag: "Billing",
+        saAuthor: "Christian Gunawan",
+        triggerType: "INBOUND_USER",
+        constraint: "AI dilarang memberikan kutipan harga mengikat atau jaminan cakupan asuransi tanpa disclaimer.",
+        cekatComponents: ["Knowledge Source (Biaya Paket)", "Hardcoded Mandatory Disclaimer", "BPJS Requirement Explainer", "Ticket Board 'Verifikasi Biaya'"],
+        apiScopes: ["GET /api/v2/billing/package-rates", "POST /api/v2/tickets/billing-verify"],
+        ruleNote: "AI hanya berikan estimasi awal non-komplikasi + disclaimer. Jika butuh kepastian, buatkan Ticket untuk Tim Admisi.",
+        stepsDetail: [
+          "Step 1 — Pricing Query: Pasien tanya biaya Operasi Caesar ERACS & cover BPJS.",
+          "Step 2 — Knowledge Search: AI ambil kisaran harga paket dari Knowledge Source terverifikasi.",
+          "Step 3 — Mandatory Disclaimer: AI sampaikan estimasi awal + disclaimer tegas 'bukan harga final'.",
+          "Step 4 — Human Escalation: Jika pasien butuh kepastian resmi, Automation buat Ticket di Board Admisi."
+        ],
+        initialText: "Operasi Caesar ERACS di sini berapa ya? Ditanggung BPJS penuh tidak?",
+        steps: [
+          {
+            userReply: "Rincian Estimasi Biaya",
+            aiResponse: "💰 *Estimasi Paket Operasi ERACS:*\n• Kelas 1: Rp 16.5M - Rp 19.5M\n• VIP: Rp 22M - Rp 26M\n\n⚠️ *Disclaimer:* Estimasi awal non-komplikasi. BPJS Kesehatan meng-cover penuh jika sesuai rujukan berjenjang Faskes 1.",
+            chips: ["Syarat BPJS", "Hubungi Billing"],
+            card: {
+              title: "💰 Estimasi Biaya ERACS",
+              sub: "SIMRS Tariff Rate Master",
+              items: [
+                { label: "Kelas 1", val: "Rp 16.500.000+" },
+                { label: "Kelas VIP", val: "Rp 22.000.000+" }
+              ],
+              status: "BPJS COVERED (SYARAT BPKH)"
+            }
+          }
+        ]
+      },
+      {
+        id: "case10_reschedule",
+        name: "11. Reschedule & Batal",
+        title: "11. Reschedule & Pembatalan Janji Temu (Christian Gunawan)",
+        tag: "HIS Action",
+        saAuthor: "Christian Gunawan",
+        triggerType: "INBOUND_USER",
+        constraint: "Slot dokter dikelola HIS eksternal. Reschedule/batal tidak bisa hanya balasan teks tanpa integrasi API.",
+        cekatComponents: ["Flow Intent Detector", "HIS API Slot Check", "Slot Update / Cancellation API", "Send Utility Template"],
+        apiScopes: ["PATCH /api/v2/his/appointment-update", "POST /api/v2/his/slot-release"],
+        ruleNote: "Automation panggil API HIS: cek slot baru -> update/cancel -> bebaskan slot lama agar dapat dipesan pasien lain.",
+        stepsDetail: [
+          "Step 1 — Reschedule Intent: Pasien minta ganti jadwal dari Selasa ke Kamis.",
+          "Step 2 — HIS Slot Check: Automation panggil API HIS cek ketersediaan slot Kamis.",
+          "Step 3 — Lock & Release: Update booking ke jadwal baru & bebaskan slot lama di SIMRS.",
+          "Step 4 — Confirmation: Kirim konfirmasi via Utility Template."
+        ],
+        initialText: "Saya mau ganti jadwal kontrol dari Selasa ke Kamis untuk RM-882910.",
+        steps: [
+          {
+            userReply: "Pindahkan ke Kamis 10:00",
+            aiResponse: "Slot Kamis pukul 10:00 WIB bersama *Dr. Budi, Sp.B* (Poli Bedah) tersedia. Mengonfirmasi pemindahan jadwal...",
+            chips: ["Cek Struk Reschedule", "Menu Utama"],
+            card: {
+              title: "🔄 Perubahan Jadwal Kontrol",
+              sub: "SIMRS Booking Update",
+              items: [
+                { label: "Jadwal Lama", val: "Selasa 09:00 (Canceled)" },
+                { label: "Jadwal Baru", val: "Kamis 10:00 WIB" },
+                { label: "Status Slot", val: "Released & Locked" }
+              ],
+              status: "RESCHEDULE SUCCESS"
+            }
+          }
+        ]
+      },
+      {
+        id: "case11_verification",
+        name: "12. Verifikasi Data Medis",
+        title: "12. Verifikasi Identitas Sebelum Membuka EMR (Christian Gunawan)",
+        tag: "Security",
+        saAuthor: "Christian Gunawan",
+        triggerType: "INBOUND_USER",
+        constraint: "Seluruh data medis adalah PII sangat sensitif. Dilarang membagikan data sebelum identitas terverifikasi.",
+        cekatComponents: ["WA Flows Verification Form", "n8n EMR Validator", "Agent Transfer Condition (3x Failed)", "Transient Session Storage"],
+        apiScopes: ["POST /api/v2/sec/auth-challenge", "GET /api/v2/emr/patient-identity-check"],
+        ruleNote: "WA Flows minta No. RM + Tanggal Lahir / OTP. n8n validasi ke EMR. Jawaban verifikasi tidak disimpan di log permanen.",
+        stepsDetail: [
+          "Step 1 — Sensitive EMR Request: Seseorang meminta riwayat medis atas nama orang lain.",
+          "Step 2 — WA Flows Challenge: Tampilkan form verifikasi No. RM + Tanggal Lahir / OTP.",
+          "Step 3 — EMR Validation: n8n validasi input ke EMR. Sesi hanya berlanjut jika cocok.",
+          "Step 4 — Block & Transfer: Jika 3x gagal, alur diblokir & di-transfer ke tim terkait."
+        ],
+        initialText: "Minta riwayat rekam medis atas nama Ibu Sukaesih dong.",
+        steps: [
+          {
+            userReply: "Isi Form Verifikasi ID",
+            aiResponse: "🛡️ *Verifikasi Privasi & Keamanan Data EMR*\n\nDemi keamanan data medis pasien, silakan verifikasi identitas (No. RM & Tanggal Lahir) melalui form terenkripsi berikut:",
+            chips: ["📝 Buka Form Verifikasi ID", "❓ Lupa No. RM"],
+            card: {
+              title: "🛡️ Identity Verification Challenge",
+              sub: "Patient Data Privacy Protection",
+              items: [
+                { label: "Requirement", val: "No. RM + Tgl Lahir" },
+                { label: "Protection", val: "HIPAA & Permenkes" }
+              ],
+              status: "CHALLENGE PENDING"
+            }
+          }
+        ]
+      },
+      {
+        id: "case12_preparation",
+        name: "13. Persiapan Tindakan",
+        title: "13. Instruksi Persiapan Puasa & Pra-Tindakan (Christian Gunawan)",
+        tag: "Compliance",
+        saAuthor: "Christian Gunawan",
+        triggerType: "INBOUND_USER",
+        constraint: "Instruksi persiapan (durasi puasa, obat yang dihentikan) harus akurat & disetujui klinis. AI dilarang improvisasi.",
+        cekatComponents: ["Approved Medical Knowledge Source", "Strict Verbatim AI Prompt", "Human Escalation Fallback", "Broadcast H-1 Checklist"],
+        apiScopes: ["GET /api/v2/medical-guidelines/procedure-prep"],
+        ruleNote: "AI hanya boleh sampaikan instruksi verbatim dari knowledge resmi yang disetujui dokter/lab.",
+        stepsDetail: [
+          "Step 1 — Procedure Prep Query: Pasien tanya persiapan puasa endoskopi & tes gula darah.",
+          "Step 2 — Verbatim Knowledge Retrieval: AI mengambil instruksi resmi dari Knowledge Source approved.",
+          "Step 3 — Strict Delivery: AI sampaikan instruksi puasa 8 jam & penghentian obat tanpa menambah saran medis.",
+          "Step 4 — Fallback Escalation: Jika prosedur tidak ada di knowledge -> eskalasi ke Human Agent."
+        ],
+        initialText: "Besok saya endoskopi dan cek gula darah puasa, ada persiapan khusus yang harus saya lakukan?",
+        steps: [
+          {
+            userReply: "Instruksi Puasa Medis",
+            aiResponse: "📋 *Instruksi Persiapan Endoskopi & Cek Gula Darah Puasa (Resmi LAB RS):*\n\n1. **Puasa Makan & Minum:** Wajib puasa 8-10 jam sebelum tindakan (hanya boleh minum air putih sedikit).\n2. **Penghentian Obat:** Hentikan obat pengencer darah sesuai instruksi dokter pengampu.\n3. **Waktu Kedatangan:** Hadir 30 menit sebelum jadwal di Poli Laboratorium.",
+            chips: ["Konfirmasi Paham", "Tanya Perawat Jaga"],
+            card: {
+              title: "📋 Official Procedure Checklist",
+              sub: "Approved Lab Guidelines",
+              items: [
+                { label: "Tindakan", val: "Endoskopi & GDS Puasa" },
+                { label: "Durasi Puasa", val: "8 - 10 Jam" },
+                { label: "Waktu Tiba", val: "H-30 Menit" }
+              ],
+              status: "CLINICALLY APPROVED"
+            }
+          }
+        ]
+      },
+      {
+        id: "case13_complaint",
+        name: "14. Penanganan Komplain",
+        title: "14. Penanganan Komplain & Sentimen Negatif (Christian Gunawan)",
+        tag: "Humas",
+        saAuthor: "Christian Gunawan",
+        triggerType: "INBOUND_USER",
+        constraint: "Komplain bersifat sensitif. AI dilarang bersikap defensif, membantah, atau menjanjikan kompensasi tertulis.",
+        cekatComponents: ["Negative Sentiment Detection", "Empathy Prompt (No Promises)", "Agent Transfer Condition (Humas)", "Ticket Board 'Komplain'"],
+        apiScopes: ["POST /api/v2/tickets/complaint-create", "POST /api/v2/crm/sentiment-log"],
+        ruleNote: "AI jawab singkat empati tanpa janji. Transfer ke Teams Customer Relations / Humas & buat Ticket Komplain.",
+        stepsDetail: [
+          "Step 1 — Complaint Detection: Pasien mengeluh 'pelayanan lama, perawat jutek, benar-benar kecewa'.",
+          "Step 2 — Empathetic Response: AI jawab singkat dengan empati tanpa defensif / menjanjikan ganti rugi.",
+          "Step 3 — Humas Transfer: Agent Transfer Condition ke Teams Humas / Customer Relations.",
+          "Step 4 — Ticket Creation: Automation buat Ticket di Board 'Komplain' (kategori: pelayanan/fasilitas)."
+        ],
+        initialText: "Pelayanan lama sekali, perawatnya jutek, saya benar-benar kecewa dengan RS ini!",
+        steps: [
+          {
+            userReply: "Eskalasi ke Customer Relations",
+            aiResponse: "Kami memohon maaf atas ketidaknyamanan yang Anda alami. Masukan Anda sangat penting bagi kami. Percakapan ini langsung kami sambungkan ke Tim Customer Relations / Humas kami.",
+            chips: ["Bicara dengan Tim Humas", "Menu Utama"],
+            card: {
+              title: "📢 Ticket Komplain & Quality Control",
+              sub: "Customer Relations Escalation",
+              items: [
+                { label: "Kategori", val: "Pelayanan Perawat & Waktu Tunggu" },
+                { label: "Sentimen", val: "NEGATIF (HIGH PRIORITY)" },
+                { label: "Assigned To", val: "Teams Humas / Customer Relations" }
+              ],
+              status: "HUMAS ESCALATED"
+            }
+          }
+        ]
+      },
+      {
+        id: "case15_csat",
+        name: "15. Survey CSAT Pasca Service",
+        title: "15. Survey CSAT Pasca Discharge / Rawat Jalan (Della Cekat)",
+        tag: "SIMRS Event",
+        saAuthor: "Della Cekat",
+        triggerType: "OUTBOUND_SYSTEM",
+        outboundPill: "⭐ OUTBOUND DISCHARGE TRIGGER (SURVEY CSAT)",
+        constraint: "Trigger pengiriman survey diinisiasi oleh SIMRS saat status pasien berubah menjadi selesai dilayani (Discharge).",
+        cekatComponents: ["SIMRS API Trigger", "WA Form Survey (Rating & Feedback)", "Database Sync / CRM Cekat", "Rating Low Escalation Node"],
+        apiScopes: ["Webhook /api/v2/simrs/discharge-event", "POST /api/v2/surveys/submit-feedback"],
+        ruleNote: "Survey berbentuk WA Form agar terstruktur (pertanyaan beda untuk rawat inap vs rawat jalan).",
+        stepsDetail: [
+          "Step 1 — SIMRS Trigger: Pasien selesai rawat jalan/inap, SIMRS panggil Send Template Message API Cekat.",
+          "Step 2 — Structured WA Form: Survey dikirim bentuk WA Form rating & pertanyaan spesifik poli/kamar.",
+          "Step 3 — Data Sync: Hasil survey disimpan kembali ke SIMRS / CRM Cekat.",
+          "Step 4 — Low Rating Escalation: Rating rendah otomatis ter-trigger ke Tim Guest Relations."
+        ],
+        initialText: "⭐ *Survey Kepuasan Pelayanan RS Sehat Utama*\n\nTerima kasih telah berobat di RS Sehat Utama hari ini. Mohon berikan penilaian 1 menit untuk meningkatkan mutu pelayanan kami:",
+        steps: [
+          {
+            userReply: "⭐⭐⭐⭐⭐ Sangat Puas",
+            aiResponse: "🙌 *Terima kasih atas apresiasi & ulasan bintang 5 Anda!*\n\nMasukan Anda sangat berharga bagi peningkatan pelayanan medis kami.",
+            chips: ["📝 Tulis Ulasan Google Maps", "Menu Utama"],
+            card: {
+              title: "⭐ CSAT Patient Experience",
+              sub: "Discharge Feedback Survey",
+              items: [
+                { label: "Rating", val: "5 / 5 Star (Sangat Puas)" },
+                { label: "Poli", val: "Poli Bedah VIP" }
+              ],
+              status: "FEEDBACK RECORDED"
+            }
+          }
+        ]
+      },
+      {
+        id: "case16_nearby",
+        name: "16. Cari Klinik Terdekat",
+        title: "16. Cari Klinik Terdekat via Share Location WA (Della Cekat)",
+        tag: "Location WA",
+        saAuthor: "Della Cekat",
+        triggerType: "INBOUND_USER",
+        constraint: "WA Share Location memberikan titik koordinat Lat/Lng presisi untuk menghitung jarak klinik terdekat.",
+        cekatComponents: ["WhatsApp Share Location Payload", "Latitude/Longitude Extractor", "Geo-Distance Math Tool / API", "Radius Filter (20 KM)"],
+        apiScopes: ["POST /api/v2/location/nearby-clinics"],
+        ruleNote: "AI Agent minta Share Location WA, ekstrak Lat/Lng, lalu hit API SIMRS / hitung radius titik klinik.",
+        stepsDetail: [
+          "Step 1 — Nearby Inquiry: Pasien tanya klinik terdekat dari lokasi rumah.",
+          "Step 2 — Share Location Request: AI minta pasien gunakan fitur Share Location WhatsApp (bukan live location).",
+          "Step 3 — Geo Distance API: Automation ekstrak Lat/Lng & panggil API SIMRS / hitung radius 20 KM.",
+          "Step 4 — Fallback Channel: Untuk channel non-WA, AI minta sebutkan nama kota/area secara manual."
+        ],
+        initialText: "Klinik Sehat Utama mana yang paling dekat dari lokasi saya?",
+        steps: [
+          {
+            userReply: "📍 Share Live Location",
+            aiResponse: "📍 Lokasi Klinik Terdekat (Radius 5 KM):\n1. *Klinik Menteng* (2.1 km)\n2. *Klinik Cikini* (4.3 km)",
+            chips: ["🗺️ Maps Menteng", "📞 Telp Menteng"],
+            card: {
+              title: "📍 Klinik Menteng (2.1 KM)",
+              sub: "Jl. Cikini Raya No. 45",
+              items: [
+                { label: "Distance", val: "2.1 KM" },
+                { label: "Hours", val: "s/d 21:00 WIB" }
+              ],
+              status: "KLINIK BUKA"
+            }
+          }
+        ]
+      }
+    ];
+
+    let currentScenario = workflows[0];
+    let currentStepIdx = 0;
+    let isPlaying = true;
+    let playbackSpeed = 1;
+    let soundEnabled = false;
+    let timer = null;
+
+    // Sound Synthesizer
+    function playAudio(type) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        const now = ctx.currentTime;
+        if (type === 'send') {
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.start(now); osc.stop(now + 0.08);
+        } else {
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+          osc.start(now); osc.stop(now + 0.1);
+        }
+      } catch(e) {}
+    }
+
+    // Render Tabs
+    function renderTabs() {
+      const container = document.getElementById('tabs-container');
+      container.innerHTML = '';
+      workflows.forEach(wf => {
+        const btn = document.createElement('button');
+        btn.className = `px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition border ${
+          wf.id === currentScenario.id 
+            ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20' 
+            : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+        }`;
+        btn.innerHTML = `${wf.name}`;
+        btn.onclick = () => selectScenario(wf.id);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectScenario(id) {
+      currentScenario = workflows.find(w => w.id === id);
+      renderTabs();
+      renderSpecPanel();
+      restartCurrentScenario();
+    }
+
+    function renderSpecPanel() {
+      const panel = document.getElementById('architecture-panel');
+      let compHtml = currentScenario.cekatComponents.map(c => `<span class="bg-slate-950 border border-slate-700 text-amber-400 font-mono text-[11px] px-2.5 py-1 rounded-md inline-block mr-1 mb-1">${c}</span>`).join('');
+      let apiHtml = currentScenario.apiScopes.map(a => `<span class="bg-slate-950 border border-slate-700 text-sky-400 font-mono text-[11px] px-2.5 py-1 rounded-md inline-block mr-1 mb-1">${a}</span>`).join('');
+      let stepsHtml = currentScenario.stepsDetail.map(s => `<li class="mb-1.5 leading-relaxed">${s}</li>`).join('');
+
+      let triggerBadgeHtml = currentScenario.triggerType === 'OUTBOUND_SYSTEM'
+        ? `<span class="bg-emerald-950 text-emerald-300 border border-emerald-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]">SYSTEM OUTBOUND TRIGGER</span>`
+        : `<span class="bg-blue-950 text-blue-300 border border-blue-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]">USER INBOUND CHAT</span>`;
+
+      panel.innerHTML = `
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+          <div class="font-extrabold text-sm text-sky-400 flex items-center gap-2">
+            <i class="fa-solid fa-sitemap"></i> ${currentScenario.title}
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            ${triggerBadgeHtml}
+            <span class="bg-indigo-950 text-indigo-300 border border-indigo-800 font-bold px-2.5 py-0.5 rounded-full text-[10px]">SA: ${currentScenario.saAuthor}</span>
+            <span class="bg-slate-800 text-slate-300 font-mono font-bold px-2.5 py-0.5 rounded-full text-[10px] border border-slate-700">${currentScenario.tag}</span>
+          </div>
+        </div>
+
+        <div class="bg-red-950/40 border border-red-900/60 rounded-2xl p-4 space-y-1">
+          <div class="font-bold text-red-400 flex items-center gap-2 text-xs">
+            <i class="fa-solid fa-triangle-exclamation"></i> Batasan Medis / Legal / Limitasi Native (Constraint)
+          </div>
+          <p class="text-red-200 text-[11.5px] leading-relaxed font-medium">${currentScenario.constraint}</p>
+        </div>
+
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+          <div class="font-bold text-sky-400 flex items-center gap-2 text-xs">
+            <i class="fa-solid fa-microchip"></i> Workaround SA & Komponen Cekat AI
+          </div>
+          <div>${compHtml}</div>
+        </div>
+
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+          <div class="font-bold text-sky-400 flex items-center gap-2 text-xs">
+            <i class="fa-solid fa-network-wired"></i> Scope API SIMRS yang Dibutuhkan
+          </div>
+          <div>${apiHtml}</div>
+        </div>
+
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-1">
+          <div class="font-bold text-sky-400 flex items-center gap-2 text-xs">
+            <i class="fa-solid fa-shield-halved"></i> Key Architecture Rule
+          </div>
+          <p class="text-slate-300 italic text-[11.5px] leading-relaxed">${currentScenario.ruleNote}</p>
+        </div>
+
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
+          <div class="font-bold text-sky-400 flex items-center gap-2 text-xs">
+            <i class="fa-solid fa-list-check"></i> Step-by-Step Workflow
+          </div>
+          <ol class="list-decimal list-inside text-slate-300 text-[11.5px] space-y-1 pl-1">
+            ${stepsHtml}
+          </ol>
+        </div>
+      `;
+    }
+
+    function restartCurrentScenario() {
+      clearTimeout(timer);
+      currentStepIdx = 0;
+      const canvas = document.getElementById('chat-canvas');
+      canvas.innerHTML = '';
+
+      // Time Divider
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-2 my-2 animate-fade-up';
+      div.innerHTML = `<div class="h-px bg-slate-300 flex-1"></div><span class="text-[10px] text-slate-500 font-semibold bg-[#ECE5DD] px-2">HARI INI</span><div class="h-px bg-slate-300 flex-1"></div>`;
+      canvas.appendChild(div);
+
+      // If OUTBOUND_SYSTEM: Render System Pill & RS Bot Message First (on LEFT)!
+      if (currentScenario.triggerType === 'OUTBOUND_SYSTEM') {
+        if (currentScenario.outboundPill) {
+          const pill = document.createElement('div');
+          pill.className = 'flex justify-center my-1 animate-fade-up';
+          pill.innerHTML = `<span class="bg-slate-900 text-sky-400 border border-sky-500/30 text-[10px] font-bold px-3 py-0.5 rounded-full">${currentScenario.outboundPill}</span>`;
+          canvas.appendChild(pill);
+        }
+        
+        // Outbound Msg from RS Bot -> KIRI ('rs-bot')
+        appendMsg('rs-bot', currentScenario.initialText);
+        renderChips(currentScenario.steps[0]?.chips || []);
+
+        if (isPlaying && currentScenario.steps.length > 0) {
+          timer = setTimeout(() => {
+            runStep(0, currentScenario.steps[0].userReply);
+          }, 2200 / playbackSpeed);
+        }
+      } else {
+        // INBOUND_USER: Initial Msg from Patient -> KANAN ('patient')
+        appendMsg('patient', currentScenario.initialText);
+        renderChips(currentScenario.steps[0]?.chips || []);
+
+        if (isPlaying && currentScenario.steps.length > 0) {
+          timer = setTimeout(() => {
+            runStep(0, currentScenario.steps[0].userReply);
+          }, 1600 / playbackSpeed);
+        }
+      }
+    }
+
+    /* Standard WhatsApp Alignment Rules:
+       - rs-bot (RS Sehat Utama / Bot) -> KIRI (flex-start, White Bubble #ffffff)
+       - patient (Pasien / User) -> KANAN (flex-end, Light Green #d9fdd3)
+    */
+    function appendMsg(senderRole, text) {
+      const canvas = document.getElementById('chat-canvas');
+      const isBot = senderRole === 'rs-bot';
+
+      const wrap = document.createElement('div');
+      wrap.className = `flex flex-col ${isBot ? 'items-start' : 'items-end'} mb-2 animate-fade-up`;
+
+      const bubble = document.createElement('div');
+      bubble.className = `${
+        isBot 
+          ? 'bg-white text-slate-900 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm' 
+          : 'bg-[#d9fdd3] text-slate-900 rounded-2xl rounded-tr-none border border-[#c7f3be] shadow-sm'
+      } px-3 py-2 text-xs leading-relaxed max-w-[85%] whitespace-pre-line`;
+      
+      bubble.innerHTML = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
+
+      const ts = document.createElement('span');
+      ts.className = 'text-[9.5px] text-slate-400 mt-0.5 font-medium px-1 flex items-center gap-1';
+      ts.innerHTML = `${new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})} ${!isBot ? '<i class="fa-solid fa-check-double text-sky-500"></i>' : ''}`;
+
+      wrap.appendChild(bubble);
+      wrap.appendChild(ts);
+      canvas.appendChild(wrap);
+      canvas.scrollTop = canvas.scrollHeight;
+
+      playAudio(!isBot ? 'send' : 'receive');
+    }
+
+    function appendCard(cardObj) {
+      if (!cardObj) return;
+      const canvas = document.getElementById('chat-canvas');
+      const wrap = document.createElement('div');
+      wrap.className = 'flex flex-col items-start mb-2 animate-fade-up max-w-[90%]';
+
+      let itemsHtml = cardObj.items.map(item => `
+        <div class="flex justify-between items-center py-1 border-t border-slate-100 text-[11px] gap-4">
+          <span class="text-slate-500 font-medium">${item.label}</span>
+          <span class="text-slate-900 font-bold text-right">${item.val}</span>
+        </div>
+      `).join('');
+
+      wrap.innerHTML = `
+        <div class="bg-white rounded-2xl overflow-hidden shadow-md border border-slate-200 w-full text-xs">
+          <div class="p-3">
+            <div class="font-extrabold text-[#075E54] text-xs flex items-center gap-1.5 mb-0.5">
+              <i class="fa-solid fa-circle-check"></i> ${cardObj.title}
+            </div>
+            <div class="text-[10px] text-slate-400 mb-2 font-medium">${cardObj.sub}</div>
+            ${itemsHtml}
+          </div>
+          <div class="bg-[#075E54] text-white text-[10px] font-bold py-1.5 px-3 text-center tracking-wide uppercase">
+            ${cardObj.status}
+          </div>
+        </div>
+      `;
+
+      canvas.appendChild(wrap);
+      canvas.scrollTop = canvas.scrollHeight;
+    }
+
+    function renderChips(chipsList) {
+      const row = document.getElementById('quick-chips');
+      row.innerHTML = '';
+      if (!chipsList) return;
+
+      chipsList.forEach(txt => {
+        const chip = document.createElement('button');
+        chip.className = 'bg-white hover:bg-slate-50 text-[#075E54] border border-[#075E54] text-[11px] font-semibold px-3 py-1 rounded-full whitespace-nowrap shadow-xs cursor-pointer active:scale-95 transition shrink-0';
+        chip.innerText = txt;
+        chip.onclick = () => onChipClick(txt);
+        row.appendChild(chip);
+      });
+    }
+
+    function onChipClick(txt) {
+      clearTimeout(timer);
+      if (currentStepIdx < currentScenario.steps.length) {
+        runStep(currentStepIdx, txt);
+      }
+    }
+
+    function handleManualSend() {
+      const input = document.getElementById('user-input-field');
+      const val = input.value.trim();
+      if (val) {
+        onChipClick(val);
+        input.value = '';
+      }
+    }
+
+    function runStep(stepIdx, userText) {
+      // Pasien Balas -> KANAN ('patient')
+      appendMsg('patient', userText);
+
+      // Typing Dots -> KIRI ('rs-bot')
+      const canvas = document.getElementById('chat-canvas');
+      const typing = document.createElement('div');
+      typing.className = 'flex flex-col items-start mb-2 animate-fade-up';
+      typing.id = 'typing-dots';
+      typing.innerHTML = `
+        <div class="bg-white rounded-2xl rounded-tl-none px-3.5 py-2 shadow-sm border border-slate-100 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#075E54] dot-1"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-[#075E54] dot-2"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-[#075E54] dot-3"></span>
+        </div>
+      `;
+      canvas.appendChild(typing);
+      canvas.scrollTop = canvas.scrollHeight;
+
+      timer = setTimeout(() => {
+        const t = document.getElementById('typing-dots');
+        if (t) t.remove();
+
+        const step = currentScenario.steps[stepIdx];
+        const botResponse = step ? step.aiResponse : "Terima kasih! Ada hal lain yang bisa Cekat AI bantu?";
+        // Bot RS Balas -> KIRI ('rs-bot')
+        appendMsg('rs-bot', botResponse);
+
+        if (step && step.card) {
+          appendCard(step.card);
+        }
+
+        if (step && step.chips) {
+          renderChips(step.chips);
+        }
+
+        currentStepIdx = stepIdx + 1;
+
+        if (isPlaying && currentStepIdx < currentScenario.steps.length) {
+          timer = setTimeout(() => {
+            const nextStep = currentScenario.steps[currentStepIdx];
+            runStep(currentStepIdx, nextStep.userReply);
+          }, 3000 / playbackSpeed);
+        }
+      }, 2000 / playbackSpeed);
+    }
+
+    function togglePlayPause() {
+      isPlaying = !isPlaying;
+      const btn = document.getElementById('btn-play-toggle');
+      const icon = document.getElementById('icon-play');
+      const text = document.getElementById('text-play');
+
+      if (isPlaying) {
+        btn.className = "flex items-center gap-1.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full font-semibold transition";
+        icon.className = "fa-solid fa-pause text-xs";
+        text.innerText = "Pause";
+        restartCurrentScenario();
+      } else {
+        btn.className = "flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full font-semibold transition";
+        icon.className = "fa-solid fa-play text-xs";
+        text.innerText = "Play";
+        clearTimeout(timer);
+      }
+    }
+
+    function setSpeed(sp) {
+      playbackSpeed = sp;
+      document.querySelectorAll('.speed-btn').forEach(btn => {
+        btn.className = btn.innerText === `${sp}x` 
+          ? 'speed-btn px-2 py-0.5 rounded font-mono font-bold text-xs bg-blue-600 text-white'
+          : 'speed-btn px-2 py-0.5 rounded font-mono font-bold text-xs text-slate-400 hover:text-slate-200';
+      });
+      if (isPlaying) restartCurrentScenario();
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('icon-sound');
+      const btn = document.getElementById('btn-sound-toggle');
+
+      if (soundEnabled) {
+        icon.className = "fa-solid fa-volume-high text-xs text-blue-400";
+        btn.className = "flex items-center gap-1 text-blue-400 font-semibold transition";
+      } else {
+        icon.className = "fa-solid fa-volume-xmark text-xs text-slate-400";
+        btn.className = "flex items-center gap-1 text-slate-400 hover:text-white transition";
+      }
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('status-clock').innerText = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+    }
+
+    window.onload = () => {
+      renderTabs();
+      renderSpecPanel();
+      restartCurrentScenario();
+      setInterval(updateClock, 1000);
+      updateClock();
+    };
+  </script>
+</body>
+</html>
