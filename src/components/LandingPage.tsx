@@ -75,43 +75,79 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
 
-        {/* Hero Banner */}
-        <div className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 space-y-4 text-center shadow-lg relative overflow-hidden">
-          <h1 className="font-black text-3xl md:text-5xl tracking-tight leading-tight">
-            Showcase & Use Case Simulation Categories
-          </h1>
-          <p className="text-slate-300 text-xs md:text-sm max-w-2xl mx-auto leading-relaxed">
-            Explore interactive AI automation flows, system API integrations, and safe guardrail architectures tailored for your industry.
-          </p>
+        {/* Hero Banner with Prominent Search Input */}
+        <div className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 space-y-6 text-center shadow-lg relative overflow-hidden">
+          <div className="space-y-2">
+            <h1 className="font-black text-3xl md:text-5xl tracking-tight leading-tight">
+              Showcase & Use Case Simulation Categories
+            </h1>
+            <p className="text-slate-300 text-xs md:text-sm max-w-2xl mx-auto leading-relaxed">
+              Explore interactive AI automation flows, system API integrations, and safe guardrail architectures tailored for your industry.
+            </p>
+          </div>
+
+          {/* Large Hero Search Input Bar */}
+          <div className="max-w-2xl mx-auto relative">
+            <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search categories, industries, or keywords (e.g. Healthcare, Banking, Flow)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-slate-400 text-xs md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xl transition"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Search & Filter Controls Bar */}
+        {/* Filter Chips & Sorting Bar */}
         <div className="bg-slate-50 border border-slate-200 rounded-3xl p-4 md:p-6 space-y-4 shadow-xs">
-          
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             
-            {/* Live Search Input */}
-            <div className="relative w-full md:w-96">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search categories, keywords, or tags..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-9 py-2.5 rounded-2xl border border-slate-300 text-xs bg-white font-medium focus:outline-none focus:border-blue-600 shadow-xs"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
-                >
-                  <X size={14} />
-                </button>
-              )}
+            {/* Quick Filter Tag Chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] font-extrabold text-slate-500 uppercase flex items-center gap-1 mr-1">
+                <Filter size={11} /> Filter Badge:
+              </span>
+              
+              <button
+                onClick={() => setSelectedTag('ALL')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer border ${
+                  selectedTag === 'ALL'
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                All ({categories.length})
+              </button>
+
+              {availableTags.map((tag) => {
+                const count = categories.filter(c => c.badge.toLowerCase().trim() === tag.toLowerCase().trim()).length;
+                return (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedTag(tag)}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer border ${
+                      selectedTag.toLowerCase().trim() === tag.toLowerCase().trim()
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    {tag} ({count})
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Sort & Filter Controls */}
-            <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+            {/* Sort Controls */}
+            <div className="flex items-center gap-3 shrink-0">
               <div className="flex items-center gap-1.5 text-xs text-slate-600 font-bold">
                 <SlidersHorizontal size={14} className="text-blue-600" />
                 <span>Sort by:</span>
@@ -128,45 +164,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
           </div>
-
-          {/* Quick Filter Tag Chips */}
-          <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-200">
-            <span className="text-[11px] font-extrabold text-slate-500 uppercase flex items-center gap-1 mr-1">
-              <Filter size={11} /> Filter Badge:
-            </span>
-            
-            <button
-              onClick={() => setSelectedTag('ALL')}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer border ${
-                selectedTag === 'ALL'
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
-                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              All ({categories.length})
-            </button>
-
-            {availableTags.map((tag) => {
-              const count = categories.filter(c => c.badge.toLowerCase().trim() === tag.toLowerCase().trim()).length;
-              return (
-                <button
-                  key={tag}
-                  onClick={() => setSelectedTag(tag)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer border ${
-                    selectedTag.toLowerCase().trim() === tag.toLowerCase().trim()
-                      ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
-                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  {tag} ({count})
-                </button>
-              );
-            })}
-          </div>
-
         </div>
 
-        {/* Category Cards Grid Header */}
+        {/* Category Cards Grid */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-extrabold text-xl text-slate-900 flex items-center gap-2">

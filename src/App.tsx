@@ -125,6 +125,8 @@ export function App() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  const [scenarioSearchQuery, setScenarioSearchQuery] = useState('');
+
   // Filter scenarios by active category
   const activeCategoryScenarios = selectedCategory
     ? allScenarios.filter(s => {
@@ -133,6 +135,12 @@ export function App() {
         return sCatId === curCatId;
       })
     : [];
+
+  const filteredCategoryScenarios = activeCategoryScenarios.filter(s => {
+    const q = scenarioSearchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return s.name.toLowerCase().includes(q) || s.title.toLowerCase().includes(q) || s.tag.toLowerCase().includes(q);
+  });
 
   // Synchronize current scenario when selected category or scenarios list changes
   useEffect(() => {
@@ -512,10 +520,10 @@ export function App() {
           )}
         </div>
 
-        {/* Top Tabs Carousel */}
-        <div className="w-full max-w-6xl flex items-center justify-between gap-2">
+        {/* Top Tabs Carousel with Scenario Search Input */}
+        <div className="w-full max-w-6xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
           <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 flex-1">
-            {activeCategoryScenarios.map(wf => (
+            {filteredCategoryScenarios.map(wf => (
               <button
                 key={wf.id}
                 onClick={() => handleSelectScenario(wf)}
@@ -533,6 +541,28 @@ export function App() {
               <p className="text-xs text-slate-500 italic py-1">No scenario available for this category. Click "+ Create Mockup" or "Import JSON" to add a new scenario.</p>
             )}
           </div>
+
+          {/* Quick Scenario Search Bar inside Simulator */}
+          {activeCategoryScenarios.length > 0 && (
+            <div className="relative shrink-0">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search scenarios..."
+                value={scenarioSearchQuery}
+                onChange={(e) => setScenarioSearchQuery(e.target.value)}
+                className="pl-8 pr-7 py-1.5 rounded-full border border-slate-200 text-xs bg-white font-medium focus:outline-none focus:border-blue-600 shadow-xs w-full sm:w-48"
+              />
+              {scenarioSearchQuery && (
+                <button
+                  onClick={() => setScenarioSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Collapsible Controls Bar - Render only when valid scenario exists */}
