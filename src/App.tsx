@@ -618,6 +618,31 @@ export function App() {
                 <span>Reset</span>
               </button>
 
+              {currentScenario && currentScenario.steps && currentScenario.steps.length > 0 && (
+                <>
+                  <div className="h-3 w-px bg-slate-200"></div>
+                  <div className="flex items-center gap-1.5 font-semibold text-slate-700">
+                    <span className="text-[11px]">📍 Jump:</span>
+                    <select
+                      value={startFromStepIdx}
+                      onChange={(e) => {
+                        const idx = Number(e.target.value);
+                        setStartFromStepIdx(idx);
+                        handleJumpToStep(idx);
+                      }}
+                      className="bg-slate-100 border border-slate-300 text-slate-800 font-bold rounded-lg px-2 py-0.5 text-[11px] focus:outline-none focus:border-blue-600 cursor-pointer"
+                    >
+                      <option value={0}>Step 1 ({currentScenario.triggerType === 'OUTBOUND_SYSTEM' ? 'System Start' : 'User Start'})</option>
+                      {currentScenario.steps.map((st, i) => (
+                        <option key={i} value={i + 1}>
+                          Step {i + 2}: "{st.userReply.length > 15 ? st.userReply.slice(0, 15) + '...' : st.userReply}"
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
               {currentScenario && (
                 <>
                   <div className="h-3 w-px bg-slate-200"></div>
