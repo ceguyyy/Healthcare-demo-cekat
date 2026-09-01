@@ -8,11 +8,12 @@ import { MockupGeneratorModal } from './components/MockupGeneratorModal';
 import { CategoryModal } from './components/CategoryModal';
 import { ImportJsonModal } from './components/ImportJsonModal';
 import { VideoExporterModal } from './components/VideoExporterModal';
+import { MoveScenarioModal } from './components/MoveScenarioModal';
 import { 
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, Video
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, Video, FolderOutput
 } from 'lucide-react';
 
 export function App() {
@@ -34,6 +35,7 @@ export function App() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isImportJsonOpen, setIsImportJsonOpen] = useState(false);
   const [isVideoExporterOpen, setIsVideoExporterOpen] = useState(false);
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
 
   // Call Modal State
@@ -517,8 +519,17 @@ export function App() {
             <span>Export Video</span>
           </button>
 
-          {currentScenario && currentScenario.id.startsWith('custom_') && (
+          {currentScenario && (
             <>
+              <div className="h-3 w-px bg-slate-200"></div>
+              <button
+                onClick={() => setIsMoveModalOpen(true)}
+                className="flex items-center gap-1 text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
+                title="Pindahkan Skenario Ini ke Kategori Lain"
+              >
+                <FolderOutput size={13} />
+                <span>Pindah Kategori</span>
+              </button>
               <div className="h-3 w-px bg-slate-200"></div>
               <button
                 onClick={() => handleDeleteScenario(currentScenario.id)}
@@ -819,6 +830,30 @@ export function App() {
             setSelectedCategory(targetCat);
           }
           handleSelectScenario(importedSc);
+        }}
+      />
+
+      <MoveScenarioModal
+        isOpen={isMoveModalOpen}
+        onClose={() => setIsMoveModalOpen(false)}
+        scenario={currentScenario}
+        categories={categories}
+        onScenarioMoved={(updatedSc) => {
+          setAllScenarios(prev => {
+            const idx = prev.findIndex(s => s.id === updatedSc.id);
+            if (idx >= 0) {
+              const updated = [...prev];
+              updated[idx] = updatedSc;
+              return updated;
+            }
+            return prev;
+          });
+          const targetCat = categories.find(c => c.id === updatedSc.categoryId);
+          if (targetCat) {
+            setSelectedCategory(targetCat);
+          }
+          setCurrentScenario(updatedSc);
+          window.location.hash = `#/category/${updatedSc.categoryId}/scenario/${updatedSc.id}`;
         }}
       />
 
