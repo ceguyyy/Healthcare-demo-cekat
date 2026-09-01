@@ -32,7 +32,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               onClick={onAddCategory}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
             >
-              <Plus size={15} /> Tambah Kategori (SA Team)
+              <Plus size={15} /> Tambah Kategori
             </button>
           </div>
         </div>

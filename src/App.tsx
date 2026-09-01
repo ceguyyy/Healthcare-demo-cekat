@@ -491,23 +491,25 @@ export function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsImportJsonOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <FileJson size={14} /> Import JSON
-            </button>
-            <button
-              onClick={() => {
-                setScenarioToEdit(null);
-                setIsGeneratorOpen(true);
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
-            >
-              <Plus size={14} /> Create Mockup (SA Team)
-            </button>
-          </div>
+          {hasValidScenario && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsImportJsonOpen(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <FileJson size={14} /> Import JSON
+              </button>
+              <button
+                onClick={() => {
+                  setScenarioToEdit(null);
+                  setIsGeneratorOpen(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <Plus size={14} /> Create Mockup
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Top Tabs Carousel */}
@@ -528,7 +530,7 @@ export function App() {
             ))}
 
             {activeCategoryScenarios.length === 0 && (
-              <p className="text-xs text-slate-500 italic py-1">Belum ada skenario untuk kategori ini. Klik "+ Create Mockup" atau "Import JSON" untuk menambahkan skenario!</p>
+              <p className="text-xs text-slate-500 italic py-1">No scenario available for this category. Click "+ Create Mockup" or "Import JSON" to add a new scenario.</p>
             )}
           </div>
         </div>
@@ -1106,7 +1108,7 @@ export function App() {
               <div className="flex-1 space-y-3 w-full">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">
-                    🚫 Scenario Unavailable
+                    🚫 SCENARIO UNAVAILABLE
                   </span>
                   <span className="bg-slate-200 text-slate-600 font-mono text-[10px] px-2 py-0.5 rounded-full font-bold">
                     WIREFRAME PLACEHOLDER
@@ -1114,7 +1116,7 @@ export function App() {
                 </div>
                 <h3 className="font-extrabold text-slate-900 text-xl tracking-tight">Unavailable Scenario</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Skenario use case untuk kategori <span className="font-bold text-blue-600">"{selectedCategory?.title}"</span> belum tersedia atau belum ditambahkan oleh SA Team.
+                  The use case scenario for the <span className="font-bold text-blue-600">"{selectedCategory?.title}"</span> category is currently unavailable or has not been added yet.
                 </p>
                 <div className="space-y-1.5 pt-1">
                   <div className="h-2.5 bg-slate-200 rounded-full w-full"></div>
@@ -1132,15 +1134,15 @@ export function App() {
                   setScenarioToEdit(null);
                   setIsGeneratorOpen(true);
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition cursor-pointer"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition cursor-pointer active:scale-95"
               >
-                <Plus size={15} /> Buat Mockup Skenario Baru
+                <Plus size={15} /> Create Mockup
               </button>
               <button
                 onClick={() => setIsImportJsonOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition cursor-pointer"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition cursor-pointer active:scale-95"
               >
-                <FileJson size={15} /> Import Skenario via JSON
+                <FileJson size={15} /> Import JSON Scenario
               </button>
             </div>
 
