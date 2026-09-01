@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Category } from '../types/scenario';
-import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
+import { Plus, Settings, ArrowRight, Search, X, Filter, SlidersHorizontal, ChevronLeft, ChevronRight, Lock, Globe } from 'lucide-react';
 
 interface LandingPageProps {
   categories: Category[];
   onSelectCategory: (category: Category) => void;
   onAddCategory: () => void;
   onEditCategory: (category: Category) => void;
+  onOpenLiveChat?: () => void;
 }
 
 const ITEMS_PER_PAGE = 6;
@@ -15,7 +16,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   categories,
   onSelectCategory,
   onAddCategory,
-  onEditCategory
+  onEditCategory,
+  onOpenLiveChat
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('ALL');
@@ -84,6 +86,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {onOpenLiveChat && (
+              <button
+                onClick={onOpenLiveChat}
+                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <Globe size={14} className="text-emerald-600" /> Live Web Chat
+              </button>
+            )}
             <button
               onClick={onAddCategory}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"

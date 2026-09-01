@@ -10,11 +10,12 @@ import { CategoryModal } from './components/CategoryModal';
 import { ImportJsonModal } from './components/ImportJsonModal';
 import { MoveScenarioModal } from './components/MoveScenarioModal';
 import { ShareModal } from './components/ShareModal';
+import { CekatChatIframeModal } from './components/CekatChatIframeModal';
 import { 
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, ChevronRight, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp, Copy, FileText, X, Search, Share2, MessageSquare, ExternalLink, Check
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp, Copy, FileText, X, Search, Share2, MessageSquare, ExternalLink, Check, Globe
 } from 'lucide-react';
 
 export function App() {
@@ -58,6 +59,7 @@ export function App() {
   const [isImportJsonOpen, setIsImportJsonOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isLiveChatOpen, setIsLiveChatOpen] = useState(false);
   const [copiedToast, setCopiedToast] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
 
@@ -497,6 +499,7 @@ export function App() {
             setCategoryToEdit(cat);
             setIsCategoryModalOpen(true);
           }}
+          onOpenLiveChat={() => setIsLiveChatOpen(true)}
         />
 
         <CategoryModal
@@ -548,6 +551,13 @@ export function App() {
 
           {hasValidScenario && (
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsLiveChatOpen(true)}
+                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+                title="Open Live Cekat Web Chat (chat.cekat.ai)"
+              >
+                <Globe size={14} className="text-emerald-600" /> Live Web Chat
+              </button>
               <button
                 onClick={() => setIsImportJsonOpen(true)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
@@ -1416,6 +1426,11 @@ export function App() {
         onClose={() => setIsShareModalOpen(false)}
         scenario={currentScenario}
         category={selectedCategory}
+      />
+
+      <CekatChatIframeModal
+        isOpen={isLiveChatOpen}
+        onClose={() => setIsLiveChatOpen(false)}
       />
 
       {copiedToast && (
