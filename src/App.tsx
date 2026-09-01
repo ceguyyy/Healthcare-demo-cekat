@@ -6,11 +6,12 @@ import { SupabaseService } from './services/supabase';
 import { LandingPage } from './components/LandingPage';
 import { MockupGeneratorModal } from './components/MockupGeneratorModal';
 import { CategoryModal } from './components/CategoryModal';
+import { ImportJsonModal } from './components/ImportJsonModal';
 import { 
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson
 } from 'lucide-react';
 
 export function App() {
@@ -30,6 +31,7 @@ export function App() {
   // Modals State
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isImportJsonOpen, setIsImportJsonOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
 
   // Call Modal State
@@ -355,6 +357,12 @@ export function App() {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsImportJsonOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <FileJson size={14} /> Import JSON
+            </button>
+            <button
               onClick={() => setIsGeneratorOpen(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
             >
@@ -381,7 +389,7 @@ export function App() {
             ))}
 
             {activeCategoryScenarios.length === 0 && (
-              <p className="text-xs text-slate-500 italic py-1">Belum ada skenario untuk kategori ini. Klik "+ Create Mockup" untuk membuat skenario!</p>
+              <p className="text-xs text-slate-500 italic py-1">Belum ada skenario untuk kategori ini. Klik "+ Create Mockup" atau "Import JSON" untuk menambahkan skenario!</p>
             )}
           </div>
         </div>
@@ -706,7 +714,7 @@ export function App() {
         ) : (
           <div className="bg-slate-50 border border-slate-200 rounded-3xl p-12 text-center space-y-3 w-full max-w-3xl">
             <h3 className="font-bold text-slate-800 text-lg">Belum Ada Skenario</h3>
-            <p className="text-xs text-slate-500">Kategori ini belum memiliki skenario use case. Klik tombol "+ Create Mockup" di atas untuk menambahkan skenario baru!</p>
+            <p className="text-xs text-slate-500">Kategori ini belum memiliki skenario use case. Klik tombol "+ Create Mockup" atau "Import JSON" untuk menambahkan skenario baru!</p>
           </div>
         )}
 
@@ -720,14 +728,25 @@ export function App() {
         categories={categories}
         onScenarioCreated={(newSc) => {
           setAllScenarios(prev => [...prev, newSc]);
-          
-          // Switch to the target category of the newly created scenario!
           const targetCat = categories.find(c => c.id === newSc.categoryId) || selectedCategory;
           if (targetCat) {
             setSelectedCategory(targetCat);
           }
-          setCurrentScenario(newSc);
-          window.location.hash = `#/category/${newSc.categoryId}/scenario/${newSc.id}`;
+          handleSelectScenario(newSc);
+        }}
+      />
+
+      <ImportJsonModal
+        isOpen={isImportJsonOpen}
+        onClose={() => setIsImportJsonOpen(false)}
+        activeCategory={selectedCategory}
+        onScenarioImported={(importedSc) => {
+          setAllScenarios(prev => [...prev, importedSc]);
+          const targetCat = categories.find(c => c.id === importedSc.categoryId) || selectedCategory;
+          if (targetCat) {
+            setSelectedCategory(targetCat);
+          }
+          handleSelectScenario(importedSc);
         }}
       />
 
