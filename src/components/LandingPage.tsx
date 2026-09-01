@@ -208,7 +208,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl border border-blue-200 font-black">
-                          <i className={cat.icon.includes('fa-') && (cat.icon.includes('fa-brands') || cat.icon.includes('fa-regular') || cat.icon.includes('fa-solid')) ? cat.icon : `fa-solid ${cat.icon}`}></i>
+                          {(() => {
+                            const ic = cat.icon || 'fa-layer-group';
+                            const isFaClass = ic.includes('fa-') && (ic.includes('fa-brands') || ic.includes('fa-regular') || ic.includes('fa-solid'));
+                            return <i className={isFaClass ? ic : `fa-solid ${ic}`}></i>;
+                          })()}
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="bg-slate-100 text-slate-700 font-mono font-bold text-[10px] px-3 py-1 rounded-full border border-slate-200">

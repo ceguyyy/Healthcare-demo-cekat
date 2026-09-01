@@ -12,7 +12,7 @@ import {
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp, Copy, FileText, X
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp, Copy, FileText, X, Search
 } from 'lucide-react';
 
 export function App() {
