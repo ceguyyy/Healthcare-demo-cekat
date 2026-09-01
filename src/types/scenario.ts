@@ -17,6 +17,7 @@ export interface Step {
   aiResponse: string;
   chips?: string[];
   card?: CardData;
+  enableCard?: boolean;
 }
 
 export interface Scenario {
@@ -34,14 +35,4 @@ export interface Scenario {
   stepsDetail: string[];
   initialText: string;
   steps: Step[];
-}
-
-export interface LoadBalancerNode {
-  id: string;
-  name: string;
-  endpoint: string;
-  status: 'ONLINE' | 'DEGRADED' | 'OFFLINE';
-  latencyMs: number;
-  activeRequests: number;
-  trafficPercent: number;
 }

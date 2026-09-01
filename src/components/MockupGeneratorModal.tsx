@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Scenario, Step, TriggerType } from '../types/scenario';
+import { Scenario, Step, TriggerType, CardData, CardItem } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
-import { Lock, Plus, Trash2, CheckCircle2, ShieldCheck, Database, Layers, ArrowRight } from 'lucide-react';
+import { Lock, Plus, Trash2, CheckCircle2, ShieldCheck, Database, Layers, ArrowRight, CreditCard } from 'lucide-react';
 
 interface MockupGeneratorModalProps {
   isOpen: boolean;
@@ -38,9 +38,10 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       userReply: 'Konfirmasi Booking',
       aiResponse: 'Terima kasih, janji temu Anda telah terkonfirmasi di SIMRS.',
       chips: ['📍 Petunjuk Lokasi', 'Menu Utama'],
+      enableCard: true,
       card: {
         title: '🎫 E-Tiket Janji Dokter',
-        sub: "RS Sehat Utama",
+        sub: 'RS Sehat Utama',
         items: [
           { label: 'Kode Booking', val: '#BK-10029' },
           { label: 'Status', val: 'CONFIRMED' }
@@ -66,7 +67,8 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       {
         userReply: `Langkah ${steps.length + 1}`,
         aiResponse: 'Respons otomatis dari AI Bot...',
-        chips: ['Lanjut', 'Batal']
+        chips: ['Lanjut', 'Batal'],
+        enableCard: false
       }
     ]);
   };
@@ -81,11 +83,73 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
     setSteps(newSteps);
   };
 
+  const toggleCardForStep = (stepIdx: number, enable: boolean) => {
+    const newSteps = [...steps];
+    newSteps[stepIdx].enableCard = enable;
+    if (enable && !newSteps[stepIdx].card) {
+      newSteps[stepIdx].card = {
+        title: '🎫 E-Tiket Janji Dokter',
+        sub: 'RS Sehat Utama',
+        items: [
+          { label: 'Kode Booking', val: `#BK-${Math.floor(10000 + Math.random() * 90000)}` },
+          { label: 'Status', val: 'CONFIRMED' }
+        ],
+        status: 'SIMRS LOCKED'
+      };
+    }
+    setSteps(newSteps);
+  };
+
+  const updateCardField = (stepIdx: number, field: keyof CardData, val: any) => {
+    const newSteps = [...steps];
+    if (!newSteps[stepIdx].card) {
+      newSteps[stepIdx].card = {
+        title: '🎫 E-Tiket Janji Dokter',
+        sub: 'RS Sehat Utama',
+        items: [],
+        status: 'SIMRS LOCKED'
+      };
+    }
+    newSteps[stepIdx].card = { ...newSteps[stepIdx].card!, [field]: val };
+    setSteps(newSteps);
+  };
+
+  const addCardItem = (stepIdx: number) => {
+    const newSteps = [...steps];
+    if (!newSteps[stepIdx].card) return;
+    const currentItems = newSteps[stepIdx].card!.items || [];
+    newSteps[stepIdx].card!.items = [...currentItems, { label: 'Field Baru', val: 'Nilai' }];
+    setSteps(newSteps);
+  };
+
+  const updateCardItem = (stepIdx: number, itemIdx: number, field: keyof CardItem, val: string) => {
+    const newSteps = [...steps];
+    if (!newSteps[stepIdx].card || !newSteps[stepIdx].card!.items) return;
+    const items = [...newSteps[stepIdx].card!.items];
+    items[itemIdx] = { ...items[itemIdx], [field]: val };
+    newSteps[stepIdx].card!.items = items;
+    setSteps(newSteps);
+  };
+
+  const removeCardItem = (stepIdx: number, itemIdx: number) => {
+    const newSteps = [...steps];
+    if (!newSteps[stepIdx].card || !newSteps[stepIdx].card!.items) return;
+    newSteps[stepIdx].card!.items = newSteps[stepIdx].card!.items.filter((_, i) => i !== itemIdx);
+    setSteps(newSteps);
+  };
+
   const handleSaveScenario = async () => {
     if (!name || !title || !initialText) {
       alert('Mohon lengkapi Nama, Judul, dan Pesan Awal Skenario!');
       return;
     }
+
+    const cleanSteps = steps.map(s => {
+      if (!s.enableCard) {
+        return { ...s, card: undefined };
+      }
+      return s;
+    });
 
     const newScenario: Scenario = {
       id: `custom_${Date.now()}`,
@@ -101,7 +165,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       apiScopes: apiScopesStr.split(',').map(s => s.trim()).filter(Boolean),
       ruleNote,
       stepsDetail: stepsDetailStr.split('\n').map(s => s.trim()).filter(Boolean),
-      steps
+      steps: cleanSteps
     };
 
     await SupabaseService.saveScenario(newScenario);
@@ -299,6 +363,103 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                         className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-xs font-mono"
                       />
                     </div>
+                  </div>
+
+                  {/* 💳 E-Tiket / Payload Card Customizer per Step */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-2 cursor-pointer font-bold text-xs text-emerald-700">
+                        <input
+                          type="checkbox"
+                          checked={step.enableCard || false}
+                          onChange={(e) => toggleCardForStep(idx, e.target.checked)}
+                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                        />
+                        <CreditCard size={15} /> Lampirkan Kartu E-Tiket / Payload SIMRS pada Step ini
+                      </label>
+                      {step.enableCard && (
+                        <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                          CARD ACTIVE
+                        </span>
+                      )}
+                    </div>
+
+                    {step.enableCard && step.card && (
+                      <div className="space-y-2.5 pt-1">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                          <div>
+                            <label className="block text-[9.5px] font-semibold text-slate-600 mb-0.5">Judul Kartu</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 🎫 E-Tiket Janji Dokter"
+                              value={step.card.title}
+                              onChange={(e) => updateCardField(idx, 'title', e.target.value)}
+                              className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white font-bold"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9.5px] font-semibold text-slate-600 mb-0.5">Sub-Judul / Keterangan</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. RS Sehat Utama"
+                              value={step.card.sub}
+                              onChange={(e) => updateCardField(idx, 'sub', e.target.value)}
+                              className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[9.5px] font-semibold text-slate-600 mb-0.5">Footer Status Banner</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. SIMRS LOCKED"
+                              value={step.card.status}
+                              onChange={(e) => updateCardField(idx, 'status', e.target.value)}
+                              className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white font-mono uppercase"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Dynamic Key-Value Pairs List */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-slate-700">Daftar Baris Data (Key - Value):</span>
+                            <button
+                              type="button"
+                              onClick={() => addCardItem(idx)}
+                              className="text-[10px] text-blue-600 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <Plus size={12} /> Tambah Row Data
+                            </button>
+                          </div>
+
+                          {step.card.items.map((item, itemIdx) => (
+                            <div key={itemIdx} className="flex items-center gap-2 bg-white p-1.5 rounded border border-slate-200">
+                              <input
+                                type="text"
+                                placeholder="Label (e.g. Kode Booking)"
+                                value={item.label}
+                                onChange={(e) => updateCardItem(idx, itemIdx, 'label', e.target.value)}
+                                className="flex-1 px-2 py-1 rounded border border-slate-200 text-xs"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Value (e.g. #BK-10029)"
+                                value={item.val}
+                                onChange={(e) => updateCardItem(idx, itemIdx, 'val', e.target.value)}
+                                className="flex-1 px-2 py-1 rounded border border-slate-200 text-xs font-bold"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeCardItem(idx, itemIdx)}
+                                className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
