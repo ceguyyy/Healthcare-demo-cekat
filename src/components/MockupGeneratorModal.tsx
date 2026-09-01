@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Scenario, Category, TriggerType, Step, FlowInputField, FlowData, generateUUID } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
+import { ScenarioSchema } from '../schemas/scenarioSchema';
 import { Lock, Database, Layers, ArrowRight, Plus, Trash2, CheckCircle2, ShieldCheck, CreditCard, Palette, FileText } from 'lucide-react';
 
 interface MockupGeneratorModalProps {
@@ -171,6 +172,14 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       stepsDetail,
       steps
     };
+
+    // Zod Schema Validation
+    const validation = ScenarioSchema.safeParse(newScenario);
+    if (!validation.success) {
+      const errorMsg = validation.error.errors.map(err => `• ${err.path.join('.') || 'root'}: ${err.message}`).join('\n');
+      alert(`Validasi Form Gagal (Zod Schema Error):\n${errorMsg}`);
+      return;
+    }
 
     await SupabaseService.saveScenario(newScenario);
 

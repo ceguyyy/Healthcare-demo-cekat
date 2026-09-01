@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Scenario, Category, generateUUID } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
+import { ImportJsonPayloadSchema } from '../schemas/scenarioSchema';
 import { Lock, FileJson, Upload, Download, Copy, CheckCircle2, ShieldCheck, AlertCircle, Bot, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ImportJsonModalProps {
@@ -171,21 +172,19 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
 
     try {
       const parsed = JSON.parse(jsonText);
-      const itemsToProcess = Array.isArray(parsed) ? parsed : [parsed];
 
-      if (itemsToProcess.length === 0) {
-        setParseError('JSON Array kosong!');
+      // Zod Schema Validation
+      const validation = ImportJsonPayloadSchema.safeParse(parsed);
+      if (!validation.success) {
+        const firstErrors = validation.error.errors.slice(0, 3).map(err => 
+          `• Path '${err.path.join('.') || 'root'}': ${err.message}`
+        ).join('\n');
+        setParseError(`JSON Schema Validation Failed (Zod Error):\n${firstErrors}`);
         return;
       }
 
-      // Validate all items
-      for (let i = 0; i < itemsToProcess.length; i++) {
-        const item = itemsToProcess[i];
-        if (!item.name || !item.title || !item.initialText) {
-          setParseError(`Elemen ke-${i + 1} harus memiliki field wajib: name, title, dan initialText!`);
-          return;
-        }
-      }
+      const validData = validation.data;
+      const itemsToProcess = Array.isArray(validData) ? validData : [validData];
 
       const importedScenarios: Scenario[] = [];
 
