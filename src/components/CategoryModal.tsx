@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Category } from '../types/scenario';
+import { Category, generateUUID } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
-import { Lock, Plus, Trash2, CheckCircle2, ShieldCheck, Layers } from 'lucide-react';
+import { Lock, Trash2, CheckCircle2, ShieldCheck, ExternalLink, HelpCircle, Info } from 'lucide-react';
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -10,6 +10,21 @@ interface CategoryModalProps {
   onCategorySaved: (cat: Category) => void;
   onCategoryDeleted?: (id: string) => void;
 }
+
+export const cleanFontAwesomeClass = (input: string): string => {
+  if (!input) return 'fa-layer-group';
+  let str = input.trim();
+  
+  // Extract class from <i class="..."> or <i className="...">
+  const match = str.match(/class(?:Name)?=["']([^"']+)["']/i);
+  if (match && match[1]) {
+    str = match[1].trim();
+  }
+  
+  // Strip html tags if any remain
+  str = str.replace(/<[^>]*>/g, '').trim();
+  return str || 'fa-layer-group';
+};
 
 export const CategoryModal: React.FC<CategoryModalProps> = ({
   isOpen,
@@ -27,6 +42,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   const [description, setDescription] = useState(categoryToEdit?.description || '');
   const [icon, setIcon] = useState(categoryToEdit?.icon || 'fa-layer-group');
   const [badge, setBadge] = useState(categoryToEdit?.badge || 'Custom Category');
+  const [showTooltip, setShowTooltip] = useState(false);
 
   React.useEffect(() => {
     if (categoryToEdit) {
@@ -53,6 +69,12 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     }
   };
 
+  const handleIconChange = (val: string) => {
+    // Auto extract FontAwesome class if user pastes full HTML tag like <i class="fa-brands fa-shopify"></i>
+    const cleaned = cleanFontAwesomeClass(val);
+    setIcon(cleaned);
+  };
+
   const handleSaveCategory = async () => {
     if (!title) {
       alert('Mohon isi Judul Kategori!');
@@ -63,7 +85,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
       id: categoryToEdit ? categoryToEdit.id : generateUUID(),
       title,
       description,
-      icon,
+      icon: cleanFontAwesomeClass(icon),
       badge,
       isCustom: true
     };
@@ -158,27 +180,69 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Ikon (FontAwesome Class)</label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5">
+                  <span>Ikon FontAwesome</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowTooltip(!showTooltip)}
+                    className="text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer font-bold"
+                  >
+                    <HelpCircle size={14} /> Cara Custom Icon
+                  </button>
+                </label>
+                
+                <a
+                  href="https://fontawesome.com/search?o=r&m=free"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full transition"
+                >
+                  <ExternalLink size={12} /> Explore FontAwesome.com
+                </a>
+              </div>
+
+              {/* Tooltip & Step-by-Step Guide Box */}
+              {showTooltip && (
+                <div className="bg-blue-50/90 border border-blue-200 rounded-xl p-3 text-[11px] text-slate-700 space-y-1.5 animate-fade-up">
+                  <div className="font-bold text-blue-900 flex items-center gap-1">
+                    <Info size={14} className="text-blue-600" /> Panduan Paste Kode Ikon FontAwesome:
+                  </div>
+                  <ol className="list-decimal list-inside space-y-1 text-slate-700 leading-relaxed">
+                    <li>Buka <a href="https://fontawesome.com/search?o=r&m=free" target="_blank" rel="noreferrer" className="text-blue-700 underline font-bold">FontAwesome Search (Free)</a>.</li>
+                    <li>Cari & klik ikon yang Anda inginkan (misal: Shopify, Cart, Building).</li>
+                    <li>Klik tombol **Copy HTML** di web FontAwesome (contoh: <code className="bg-white px-1 py-0.5 rounded text-blue-800 font-mono">&lt;i class="fa-brands fa-shopify"&gt;&lt;/i&gt;</code>).</li>
+                    <li>Tempelkan (Paste) langsung ke kolom input di bawah. Sistem akan otomatis mengekstrak classnya!</li>
+                  </ol>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                {/* Icon Preview Box */}
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-lg font-black shrink-0 shadow-xs">
+                  <i className={icon.includes('fa-') && (icon.includes('fa-brands') || icon.includes('fa-regular') || icon.includes('fa-solid')) ? icon : `fa-solid ${icon}`}></i>
+                </div>
+
                 <input
                   type="text"
-                  placeholder="e.g. fa-building-columns"
+                  placeholder='Tempelkan kode HTML e.g. <i class="fa-brands fa-shopify"></i> atau fa-building-columns'
                   value={icon}
-                  onChange={(e) => setIcon(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-mono"
+                  onChange={(e) => handleIconChange(e.target.value)}
+                  className="flex-1 px-3 py-2.5 rounded-lg border border-slate-300 text-xs bg-white font-mono focus:outline-none focus:border-blue-600"
                 />
               </div>
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-1">Teks Badge Label</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Finance & Banking"
-                  value={badge}
-                  onChange={(e) => setBadge(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-semibold text-blue-700"
-                />
-              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Teks Badge Label</label>
+              <input
+                type="text"
+                placeholder="e.g. Finance & Banking"
+                value={badge}
+                onChange={(e) => setBadge(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-semibold text-blue-700"
+              />
             </div>
 
             <div className="flex items-center justify-between pt-3 border-t border-slate-200">
