@@ -8,7 +8,7 @@ interface VideoExporterModalProps {
   onClose: () => void;
   iphoneElement: HTMLElement | null;
   scenario: Scenario;
-  onPlayScenarioForVideo: () => Promise<void>;
+  onPlayScenarioForVideo: (onStepCaptured: (stepName: string) => Promise<void>) => Promise<void>;
 }
 
 export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
@@ -22,36 +22,27 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
   const [progressText, setProgressText] = useState('');
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isRecordingRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
       setStatus('idle');
       setProgressText('');
       setVideoUrl(null);
-    } else {
-      isRecordingRef.current = false;
     }
   }, [isOpen]);
 
-  const captureFullCanvas = async (targetEl: HTMLElement): Promise<HTMLCanvasElement> => {
-    // Ensure scroll is at current bottom
-    const scrollContainer = targetEl.querySelector('.custom-scrollbar');
-    if (scrollContainer) {
-      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+  const captureIphoneCanvas = async (targetEl: HTMLElement): Promise<HTMLCanvasElement> => {
+    // Scroll chat area to bottom before snapshot
+    const scrollArea = targetEl.querySelector('.custom-scrollbar');
+    if (scrollArea) {
+      scrollArea.scrollTop = scrollArea.scrollHeight;
     }
 
-    const rect = targetEl.getBoundingClientRect();
-
     return await html2canvas(targetEl, {
-      scale: 2, // High resolution HD
+      scale: 2, // 2x HD Resolution (730x1380)
       useCORS: true,
       allowTaint: true,
-      backgroundColor: '#ffffff',
-      width: rect.width,
-      height: rect.height,
-      scrollX: 0,
-      scrollY: -window.scrollY, // Correct offset so header isn't cropped by page scroll
+      backgroundColor: '#1c1c1e', // Dark iPhone case outer frame
       logging: false
     });
   };
@@ -64,21 +55,21 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
 
     try {
       setStatus('recording');
-      setProgressText('Menyiapkan rekaman video smooth 30 FPS...');
+      setProgressText('Menyiapkan perekaman video HD...');
 
-      // 1. Initial snapshot to set exact canvas dimensions
-      const initialSnap = await captureFullCanvas(iphoneElement);
+      // 1. Capture initial frame to set exact 1:1 aspect ratio
+      const firstSnap = await captureIphoneCanvas(iphoneElement);
+      
       const outputCanvas = document.createElement('canvas');
-      outputCanvas.width = initialSnap.width;
-      outputCanvas.height = initialSnap.height;
+      outputCanvas.width = firstSnap.width;
+      outputCanvas.height = firstSnap.height;
       const ctx = outputCanvas.getContext('2d');
 
-      if (!ctx) throw new Error('Canvas Context 2D error');
+      if (!ctx) throw new Error('Context 2D error');
 
-      // Draw initial frame
-      ctx.drawImage(initialSnap, 0, 0);
+      ctx.drawImage(firstSnap, 0, 0);
 
-      // 2. Setup MediaRecorder at 30 FPS with VP9/WebM
+      // 2. Setup 30 FPS Stream & MediaRecorder
       const stream = outputCanvas.captureStream(30);
       
       let mimeType = 'video/webm;codecs=vp9';
@@ -87,7 +78,7 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 6000000 // 6 Mbps Ultra HD
+        videoBitsPerSecond: 8000000 // 8 Mbps Crisp Quality
       });
 
       const chunks: Blob[] = [];
@@ -100,40 +91,50 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
         const url = URL.createObjectURL(blob);
         setVideoUrl(url);
         setStatus('done');
-        setProgressText('Video animasi smooth berhasil direkam!');
+        setProgressText('Video HD 1080p berhasil direkam!');
       };
 
       mediaRecorder.start();
-      isRecordingRef.current = true;
 
-      // 3. Continuous 25-30 FPS rendering loop during scenario playback
-      const continuousCaptureLoop = async () => {
-        while (isRecordingRef.current) {
-          try {
-            const snap = await captureFullCanvas(iphoneElement);
-            if (ctx && isRecordingRef.current) {
-              ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
-              ctx.drawImage(snap, 0, 0);
-            }
-          } catch (e) {
-            // ignore frame capture delay
-          }
-          await new Promise(r => setTimeout(r, 40)); // ~25 FPS continuous sampling
+      // 3. Constant 30 FPS Draw Loop to maintain smooth video recording
+      let activeSnap: HTMLCanvasElement = firstSnap;
+      let isRecording = true;
+
+      const renderLoop = () => {
+        if (ctx && activeSnap) {
+          ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+          ctx.drawImage(activeSnap, 0, 0);
+        }
+        if (isRecording) {
+          requestAnimationFrame(renderLoop);
         }
       };
 
-      // Start continuous screen capture loop in background
-      continuousCaptureLoop();
+      requestAnimationFrame(renderLoop);
 
-      // 4. Run real-time scenario playback with typing animations
-      setProgressText('Perekaman berlangsung: Alur percakapan simulasi live...');
-      await onPlayScenarioForVideo();
+      // 4. Step-by-Step Scenario Playback with Controlled Frame Capture
+      let stepCounter = 0;
 
-      // Hold final screen state for 1.5 seconds
-      await new Promise(r => setTimeout(r, 1500));
+      await onPlayScenarioForVideo(async (stepName: string) => {
+        stepCounter++;
+        setProgressText(`Merekam Step ${stepCounter}: ${stepName}...`);
+        
+        // Wait 350ms for React DOM & CSS fadeUp animations to finish
+        await new Promise(r => setTimeout(r, 350));
 
-      // 5. Stop recorder
-      isRecordingRef.current = false;
+        // Capture crisp new snapshot
+        activeSnap = await captureIphoneCanvas(iphoneElement);
+
+        // Hold frame for 2.2 seconds so user can comfortably read the chat
+        await new Promise(r => setTimeout(r, 2200));
+      });
+
+      // Capture final screen state & hold for 2 seconds
+      activeSnap = await captureIphoneCanvas(iphoneElement);
+      await new Promise(r => setTimeout(r, 2000));
+
+      // Stop MediaRecorder
+      isRecording = false;
       await new Promise(r => setTimeout(r, 200));
 
       if (mediaRecorder.state !== 'inactive') {
@@ -142,7 +143,6 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
 
     } catch (err: any) {
       console.error('Export Video error:', err);
-      isRecordingRef.current = false;
       setStatus('error');
       setProgressText(`Error: ${err.message || 'Gagal merekam video'}`);
     }
@@ -170,14 +170,14 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
               <Video size={18} />
             </div>
             <div>
-              <h3 className="font-extrabold text-base leading-tight">Export Smooth Simulator Video</h3>
-              <p className="text-[11px] text-slate-400">Rekam animasi live WhatsApp tanpa terpotong</p>
+              <h3 className="font-extrabold text-base leading-tight">Export Video HD Simulator</h3>
+              <p className="text-[11px] text-slate-400">Rekam video WhatsApp presisi 1:1 tanpa terpotong</p>
             </div>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer">✕</button>
         </div>
 
-        {/* Content Body */}
+        {/* Body Content */}
         <div className="p-6 space-y-4 text-center overflow-y-auto custom-scrollbar">
           
           {status === 'idle' && (
@@ -186,9 +186,9 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
                 <Video size={30} />
               </div>
               <div>
-                <h4 className="font-extrabold text-slate-900 text-base">Rekam Video Live Animasi</h4>
+                <h4 className="font-extrabold text-slate-900 text-base">Rekam Video Simulator HD</h4>
                 <p className="text-xs text-slate-500 mt-1 leading-relaxed max-w-sm mx-auto">
-                  Sistem akan merekam percakapan WhatsApp secara live 30 FPS lengkap dengan efek ketik, scroll, dan tanpa terpotong pada bagian header Cekat AI.
+                  Sistem akan merekam percakapan WhatsApp frame-by-frame dengan rasio aspek iPhone 1:1 sempurna, jernih, dan tanpa gepeng/terpotong.
                 </p>
               </div>
 
@@ -208,15 +208,15 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
               </div>
               <div className="space-y-1">
                 <p className="font-extrabold text-slate-900 text-sm">{progressText}</p>
-                <p className="text-[11px] text-slate-500">Video sedang merekam pergerakan chat live secara real-time...</p>
+                <p className="text-[11px] text-slate-500">Merekam alur percakapan WhatsApp. Mohon tunggu...</p>
               </div>
             </div>
           )}
 
           {status === 'done' && videoUrl && (
             <div className="space-y-4">
-              {/* Full Uncropped Video Player Preview */}
-              <div className="border border-slate-300 rounded-3xl overflow-hidden shadow-lg bg-slate-900 p-2 max-w-[320px] mx-auto">
+              {/* Full Uncropped 1:1 Aspect Ratio Video Player */}
+              <div className="border border-slate-300 rounded-3xl overflow-hidden shadow-lg bg-slate-950 max-w-[280px] mx-auto p-1">
                 <video
                   ref={videoRef}
                   src={videoUrl}
@@ -224,16 +224,15 @@ export const VideoExporterModal: React.FC<VideoExporterModalProps> = ({
                   autoPlay
                   loop
                   playsInline
-                  className="w-full h-auto rounded-2xl block"
-                  style={{ maxHeight: '460px', objectFit: 'contain' }}
+                  className="w-full h-auto rounded-2xl block object-contain"
                 />
               </div>
               
               <div className="space-y-1">
                 <p className="font-extrabold text-emerald-600 text-sm flex items-center justify-center gap-1">
-                  <CheckCircle2 size={16} /> Video Live Chat Berhasil Direkam!
+                  <CheckCircle2 size={16} /> Video HD Sempurna Ready!
                 </p>
-                <p className="text-[11px] text-slate-500">Tampilan Fullscreen utuh, header Cekat AI tidak terpotong, dan animasi smooth.</p>
+                <p className="text-[11px] text-slate-500">Bentuk rasio iPhone utuh, header Cekat AI jernih, dan tidak gepeng.</p>
               </div>
 
               <div className="flex items-center gap-2 pt-2">

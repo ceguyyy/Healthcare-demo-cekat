@@ -247,7 +247,7 @@ export function App() {
   };
 
   // Real-Time Play Scenario for Video Recording
-  const handlePlayScenarioForVideo = async (): Promise<void> => {
+  const handlePlayScenarioForVideo = async (onStepCaptured: (stepName: string) => Promise<void>): Promise<void> => {
     setIsPlaying(false);
     clearTimeout(timerRef.current);
 
@@ -260,7 +260,7 @@ export function App() {
       setChatHistory([{ id: 'init', role: 'patient', text: currentScenario.initialText, time: nowStr }]);
     }
 
-    await new Promise(r => setTimeout(r, 1200));
+    await onStepCaptured('Awal Percakapan');
 
     if (currentScenario.steps && currentScenario.steps.length > 0) {
       for (let i = 0; i < currentScenario.steps.length; i++) {
@@ -272,10 +272,7 @@ export function App() {
           { id: `vid_user_${i}`, role: 'patient', text: step.userReply, time: nowStr }
         ]);
 
-        // Show typing indicator
-        setIsTyping(true);
-        await new Promise(r => setTimeout(r, 1500));
-        setIsTyping(false);
+        await onStepCaptured(`Balasan User Step ${i + 1}`);
 
         // 2. AI Bot response + card
         setChatHistory(prev => [
@@ -283,7 +280,7 @@ export function App() {
           { id: `vid_bot_${i}`, role: 'rs-bot', text: step.aiResponse, time: nowStr, card: step.card }
         ]);
 
-        await new Promise(r => setTimeout(r, 2200));
+        await onStepCaptured(`Jawaban AI Bot Step ${i + 1}`);
       }
     }
   };
