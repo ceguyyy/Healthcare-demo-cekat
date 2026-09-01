@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Scenario, Step, TriggerType, CardData, CardItem, Category } from '../types/scenario';
+import { Scenario, Step, TriggerType, CardData, CardItem, Category, generateUUID } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
 import { Lock, Plus, Trash2, CheckCircle2, ShieldCheck, Database, Layers, ArrowRight, CreditCard } from 'lucide-react';
 

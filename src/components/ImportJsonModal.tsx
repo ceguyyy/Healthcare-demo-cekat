@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scenario, Category } from '../types/scenario';
+import { Scenario, Category, generateUUID } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
 import { Lock, FileJson, Upload, Download, Copy, CheckCircle2, ShieldCheck, AlertCircle } from 'lucide-react';
 
