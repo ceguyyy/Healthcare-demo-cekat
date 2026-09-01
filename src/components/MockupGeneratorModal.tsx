@@ -37,6 +37,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   const [description, setDescription] = useState('');
   const [initialText, setInitialText] = useState('');
   const [hideInitialMessage, setHideInitialMessage] = useState(false);
+  const [startFromStepIdx, setStartFromStepIdx] = useState<number>(0);
   const [cekatComponentsStr, setCekatComponentsStr] = useState('AI Agent, API Tools, WA Flows');
   const [apiScopesStr, setApiScopesStr] = useState('GET /api/v1/status');
   const [ruleNote, setRuleNote] = useState('Data dibaca real-time dari backend sistem.');
@@ -73,6 +74,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       setDescription(scenarioToEdit.description || '');
       setInitialText(scenarioToEdit.initialText || '');
       setHideInitialMessage(Boolean(scenarioToEdit.hideInitialMessage));
+      setStartFromStepIdx(scenarioToEdit.startFromStepIdx || 0);
       setCekatComponentsStr(scenarioToEdit.cekatComponents ? scenarioToEdit.cekatComponents.join(', ') : '');
       setApiScopesStr(scenarioToEdit.apiScopes ? scenarioToEdit.apiScopes.join(', ') : '');
       setRuleNote(scenarioToEdit.ruleNote || '');
@@ -96,6 +98,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       setDescription('');
       setInitialText('');
       setHideInitialMessage(false);
+      setStartFromStepIdx(0);
       setCekatComponentsStr('AI Agent, API Tools, WA Flows');
       setApiScopesStr('GET /api/v1/status');
       setRuleNote('Data dibaca real-time dari backend sistem.');
@@ -483,6 +486,26 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                 >
                   <Plus size={13} /> Tambah Step Percakapan
                 </button>
+              </div>
+
+              {/* Start / Jump Step Selection inside Modal */}
+              <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span className="font-extrabold text-blue-900 text-xs block">📍 Mulai Percakapan Dari Step Mana Saat Dijalankan:</span>
+                  <span className="text-[10.5px] text-slate-600 font-medium">Pilih step awal simulasi ketika skenario ini dibuka oleh presenter.</span>
+                </div>
+                <select
+                  value={startFromStepIdx}
+                  onChange={(e) => setStartFromStepIdx(Number(e.target.value))}
+                  className="bg-white border border-blue-300 rounded-lg px-3 py-1.5 text-xs font-bold text-blue-700 focus:outline-none focus:border-blue-600 shadow-xs cursor-pointer"
+                >
+                  <option value={0}>Step 1 (Awal Percakapan)</option>
+                  {steps.map((st, i) => (
+                    <option key={i} value={i + 1}>
+                      Jump ke Step {i + 2}: "{st.userReply.length > 20 ? st.userReply.slice(0, 20) + '...' : st.userReply}"
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {steps.map((st, idx) => (

@@ -36,6 +36,7 @@ export interface Scenario {
   stepsDetail: string[];
   initialText: string;
   hideInitialMessage?: boolean;
+  startFromStepIdx?: number;
   steps: Step[];
 }
 

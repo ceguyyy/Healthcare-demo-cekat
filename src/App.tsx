@@ -458,49 +458,6 @@ export function App() {
             </button>
             
             <div className="h-3 w-px bg-slate-200"></div>
-
-            {/* Jump to Specific Step Selector */}
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-[11px] text-slate-500">Mulai dari:</span>
-              <select
-                value={startFromStepIdx}
-                onChange={(e) => {
-                  const idx = Number(e.target.value);
-                  setStartFromStepIdx(idx);
-                  handleJumpToStep(idx);
-                }}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-2.5 py-1 rounded-full border border-slate-300 focus:outline-none cursor-pointer"
-              >
-                <option value={0}>Awal Percakapan (Step 1)</option>
-                {currentScenario?.steps?.map((st, i) => (
-                  <option key={i} value={i + 1}>
-                    Jump ke Step {i + 2}: "{st.userReply.length > 18 ? st.userReply.slice(0, 18) + '...' : st.userReply}"
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="h-3 w-px bg-slate-200"></div>
-
-            {/* Hide/Show Welcome Message Toggle */}
-            <button
-              onClick={() => {
-                const newHide = !hideInitialMsgState;
-                setHideInitialMsgState(newHide);
-                handleJumpToStep(startFromStepIdx, newHide);
-              }}
-              className={`flex items-center gap-1 font-bold px-2.5 py-1 rounded-full transition cursor-pointer border ${
-                hideInitialMsgState
-                  ? 'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200'
-                  : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
-              }`}
-              title="Sembunyikan / Tampilkan Pesan Awal (Welcome Text)"
-            >
-              {hideInitialMsgState ? <EyeOff size={13} /> : <Eye size={13} />}
-              <span>{hideInitialMsgState ? 'Welcome Hidden' : 'Welcome Visible'}</span>
-            </button>
-            
-            <div className="h-3 w-px bg-slate-200"></div>
             
             <div className="flex items-center gap-1">
               {[1, 1.5, 2].map(sp => (
@@ -548,19 +505,10 @@ export function App() {
                     setIsGeneratorOpen(true);
                   }}
                   className="flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
-                  title="Edit Skenario Ini"
+                  title="Edit Skenario, Pindah Kategori, & Jump Step"
                 >
                   <Edit3 size={13} />
                   <span>Edit Skenario</span>
-                </button>
-                <div className="h-3 w-px bg-slate-200"></div>
-                <button
-                  onClick={() => setIsMoveModalOpen(true)}
-                  className="flex items-center gap-1 text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
-                  title="Pindahkan Skenario Ini ke Kategori Lain"
-                >
-                  <FolderOutput size={13} />
-                  <span>Pindah Kategori</span>
                 </button>
                 <div className="h-3 w-px bg-slate-200"></div>
                 <button
