@@ -225,23 +225,27 @@ export function App() {
     const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     const history: Array<{ id: string; role: 'rs-bot' | 'patient'; text: string; time: string; card?: any; flow?: FlowData; stepIdx?: number }> = [];
 
-    // 1. Initial Welcome Message (if not hidden)
-    if (!hideInitial && scenario.initialText) {
+    // 1. Initial Welcome Message (if on Step 1 and not hidden)
+    if (jumpStepIdx === 0 && !hideInitial && scenario.initialText) {
       if (scenario.triggerType === 'OUTBOUND_SYSTEM') {
         history.push({ id: 'init', role: 'rs-bot', text: scenario.initialText, time: nowStr });
       } else {
         history.push({ id: 'init', role: 'patient', text: scenario.initialText, time: nowStr });
       }
-    }
+    } else if (jumpStepIdx > 0 && scenario.steps && scenario.steps.length > 0) {
+      // 2. When jumping to a specific step, start cleanly directly at that target step's message & WA Flow form/card!
+      const targetIdx = Math.min(jumpStepIdx - 1, scenario.steps.length - 1);
+      const targetStep = scenario.steps[targetIdx];
 
-    // 2. Pre-fill chat history up to jumpStepIdx - 1
-    if (scenario.steps && scenario.steps.length > 0 && jumpStepIdx > 0) {
-      const limit = Math.min(jumpStepIdx, scenario.steps.length);
-      for (let i = 0; i < limit; i++) {
-        const s = scenario.steps[i];
-        history.push({ id: `hist_user_${i}`, role: 'patient', text: s.userReply, time: nowStr });
-        history.push({ id: `hist_bot_${i}`, role: 'rs-bot', text: s.aiResponse, time: nowStr, card: s.card, flow: s.flow, stepIdx: i });
-      }
+      history.push({
+        id: `target_bot_${targetIdx}`,
+        role: 'rs-bot',
+        text: targetStep.aiResponse,
+        time: nowStr,
+        card: targetStep.card,
+        flow: targetStep.flow,
+        stepIdx: targetIdx
+      });
     }
 
     setChatHistory(history);
