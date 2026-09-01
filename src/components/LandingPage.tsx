@@ -81,9 +81,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex items-center gap-3">
             <img src="/cekat-logo.png" alt="Cekat.AI Logo" className="w-10 h-10 object-contain rounded-xl shadow-xs" />
             <span className="font-extrabold text-2xl tracking-tight text-slate-900">Cekat.AI</span>
-            <span className="bg-amber-50 text-amber-800 border border-amber-300 font-extrabold text-[10.5px] uppercase px-3 py-1 rounded-full tracking-wider flex items-center gap-1.5 shadow-2xs">
-              <Lock size={12} className="text-amber-600" /> Internal Use Only
-            </span>
           </div>
 
           <div className="flex items-center gap-2">
