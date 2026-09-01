@@ -9,11 +9,12 @@ import { MockupGeneratorModal } from './components/MockupGeneratorModal';
 import { CategoryModal } from './components/CategoryModal';
 import { ImportJsonModal } from './components/ImportJsonModal';
 import { MoveScenarioModal } from './components/MoveScenarioModal';
+import { ShareModal } from './components/ShareModal';
 import { 
   Play, Pause, RotateCcw, VolumeX, Volume2, Plus, 
   Wifi, Battery, ChevronLeft, ChevronRight, Phone, MoreVertical, 
   Smile, Paperclip, Send, CheckCheck, Info, Workflow, Cpu, 
-  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp, Copy, FileText, X, Search
+  Network, ShieldCheck, ListOrdered, PhoneOff, Lock, CheckCircle2, ArrowLeft, Trash2, FileJson, FolderOutput, Edit3, Eye, EyeOff, ChevronDown, ChevronUp, Copy, FileText, X, Search, Share2, MessageSquare, ExternalLink, Check
 } from 'lucide-react';
 
 export function App() {
@@ -56,7 +57,18 @@ export function App() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isImportJsonOpen, setIsImportJsonOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [copiedToast, setCopiedToast] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
+
+  const handleShareScenario = () => {
+    if (!currentScenario || !selectedCategory) return;
+    const shareUrl = `${window.location.origin}${window.location.pathname}#/category/${selectedCategory.id}/scenario/${currentScenario.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedToast(true);
+    setTimeout(() => setCopiedToast(false), 3000);
+    setIsShareModalOpen(true);
+  };
 
   // Call Modal State
   const [isCallActive, setIsCallActive] = useState(false);
@@ -732,6 +744,18 @@ export function App() {
                   </button>
 
                   <div className="h-3 w-px bg-slate-200"></div>
+                  
+                  {/* Share Link Button */}
+                  <button
+                    onClick={handleShareScenario}
+                    className="flex items-center gap-1 text-purple-700 bg-purple-50 border border-purple-200 hover:bg-purple-100 font-bold px-2.5 py-0.5 rounded-full transition cursor-pointer"
+                    title="Share Use Case Link"
+                  >
+                    <Share2 size={13} />
+                    <span>Share</span>
+                  </button>
+
+                  <div className="h-3 w-px bg-slate-200"></div>
                   <button
                     onClick={() => handleDeleteScenario(currentScenario.id)}
                     className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold transition cursor-pointer"
@@ -1129,8 +1153,18 @@ export function App() {
             <div className="w-full lg:flex-1 bg-white border border-slate-200 rounded-3xl p-5 shadow-sm h-[690px] overflow-y-auto custom-scrollbar space-y-4 text-xs text-slate-800">
               
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
-                <div className="font-extrabold text-sm text-blue-700 flex items-center gap-2">
-                  <Workflow size={16} /> {currentScenario.title}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-extrabold text-sm text-blue-700 flex items-center gap-2">
+                    <Workflow size={16} /> {currentScenario.title}
+                  </div>
+                  <button
+                    onClick={handleShareScenario}
+                    className="flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-1 rounded-full transition cursor-pointer shrink-0 shadow-2xs"
+                    title="Share Use Case Link"
+                  >
+                    <Share2 size={13} />
+                    <span>Share Link</span>
+                  </button>
                 </div>
                 <div className="flex items-center gap-2 pt-1">
                   <span className={`font-bold px-2.5 py-0.5 rounded-full text-[10px] ${
@@ -1376,6 +1410,20 @@ export function App() {
           }
         }}
       />
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        scenario={currentScenario}
+        category={selectedCategory}
+      />
+
+      {copiedToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white font-bold text-xs px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 border border-slate-700 animate-bounce">
+          <Check size={16} className="text-emerald-400" />
+          <span>Use Case Share Link Copied to Clipboard!</span>
+        </div>
+      )}
 
     </div>
   );
