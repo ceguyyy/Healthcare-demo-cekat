@@ -716,13 +716,18 @@ export function App() {
       <MockupGeneratorModal
         isOpen={isGeneratorOpen}
         onClose={() => setIsGeneratorOpen(false)}
+        activeCategoryId={selectedCategory ? selectedCategory.id : 'healthcare'}
+        categories={categories}
         onScenarioCreated={(newSc) => {
-          const scWithCategory = {
-            ...newSc,
-            categoryId: selectedCategory ? selectedCategory.id : 'healthcare'
-          };
-          setAllScenarios(prev => [...prev, scWithCategory]);
-          handleSelectScenario(scWithCategory);
+          setAllScenarios(prev => [...prev, newSc]);
+          
+          // Switch to the target category of the newly created scenario!
+          const targetCat = categories.find(c => c.id === newSc.categoryId) || selectedCategory;
+          if (targetCat) {
+            setSelectedCategory(targetCat);
+          }
+          setCurrentScenario(newSc);
+          window.location.hash = `#/category/${newSc.categoryId}/scenario/${newSc.id}`;
         }}
       />
 

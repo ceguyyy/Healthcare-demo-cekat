@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Scenario, Step, TriggerType, CardData, CardItem } from '../types/scenario';
+import React, { useState, useEffect } from 'react';
+import { Scenario, Step, TriggerType, CardData, CardItem, Category } from '../types/scenario';
 import { SupabaseService } from '../services/supabase';
 import { Lock, Plus, Trash2, CheckCircle2, ShieldCheck, Database, Layers, ArrowRight, CreditCard } from 'lucide-react';
 
@@ -7,21 +7,26 @@ interface MockupGeneratorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onScenarioCreated: (newScenario: Scenario) => void;
+  activeCategoryId?: string;
+  categories?: Category[];
 }
 
 export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   isOpen,
   onClose,
-  onScenarioCreated
+  onScenarioCreated,
+  activeCategoryId = 'healthcare',
+  categories = []
 }) => {
   const [passwordInput, setPasswordInput] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authError, setAuthError] = useState('');
 
   // Form State
+  const [targetCategoryId, setTargetCategoryId] = useState(activeCategoryId);
   const [name, setName] = useState('');
   const [title, setTitle] = useState('');
-  const [tag, setTag] = useState('Core HIS');
+  const [tag, setTag] = useState('Core Feature');
   const [saAuthor, setSaAuthor] = useState('SA Team Cekat');
   const [triggerType, setTriggerType] = useState<TriggerType>('INBOUND_USER');
   const [outboundPill, setOutboundPill] = useState('🔔 OUTBOUND SYSTEM TRIGGER');
@@ -29,24 +34,28 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   const [initialText, setInitialText] = useState('');
   const [cekatComponentsStr, setCekatComponentsStr] = useState('AI Agent, API Tools, n8n');
   const [apiScopesStr, setApiScopesStr] = useState('GET /api/v1/availability, POST /api/v1/booking');
-  const [ruleNote, setRuleNote] = useState('Data dibaca real-time dari SIMRS.');
+  const [ruleNote, setRuleNote] = useState('Data dibaca real-time dari backend sistem.');
   const [stepsDetailStr, setStepsDetailStr] = useState('Step 1 — Intake\nStep 2 — Processing\nStep 3 — Confirmation');
+
+  useEffect(() => {
+    setTargetCategoryId(activeCategoryId);
+  }, [activeCategoryId, isOpen]);
 
   // Step Sequence Builder State
   const [steps, setSteps] = useState<Step[]>([
     {
       userReply: 'Konfirmasi Booking',
-      aiResponse: 'Terima kasih, janji temu Anda telah terkonfirmasi di SIMRS.',
-      chips: ['📍 Petunjuk Lokasi', 'Menu Utama'],
+      aiResponse: 'Terima kasih, janji/transaksi Anda telah terkonfirmasi di sistem.',
+      chips: ['📍 Lihat Detail', 'Menu Utama'],
       enableCard: true,
       card: {
-        title: '🎫 E-Tiket Janji Dokter',
-        sub: 'RS Sehat Utama',
+        title: '🎫 E-Tiket / Struk Transaksi',
+        sub: 'Cekat AI Enterprise',
         items: [
-          { label: 'Kode Booking', val: '#BK-10029' },
+          { label: 'Kode Transaksi', val: '#TRX-10029' },
           { label: 'Status', val: 'CONFIRMED' }
         ],
-        status: 'SIMRS LOCKED'
+        status: 'SYSTEM LOCKED'
       }
     }
   ]);
@@ -89,13 +98,13 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
     newSteps[stepIdx].enableCard = enable;
     if (enable && !newSteps[stepIdx].card) {
       newSteps[stepIdx].card = {
-        title: '🎫 E-Tiket Janji Dokter',
-        sub: 'RS Sehat Utama',
+        title: '🎫 E-Tiket / Struk Transaksi',
+        sub: 'Cekat AI Enterprise',
         items: [
-          { label: 'Kode Booking', val: `#BK-${Math.floor(10000 + Math.random() * 90000)}` },
+          { label: 'Kode Transaksi', val: `#TRX-${Math.floor(10000 + Math.random() * 90000)}` },
           { label: 'Status', val: 'CONFIRMED' }
         ],
-        status: 'SIMRS LOCKED'
+        status: 'SYSTEM LOCKED'
       };
     }
     setSteps(newSteps);
@@ -105,10 +114,10 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
     const newSteps = [...steps];
     if (!newSteps[stepIdx].card) {
       newSteps[stepIdx].card = {
-        title: '🎫 E-Tiket Janji Dokter',
-        sub: 'RS Sehat Utama',
+        title: '🎫 E-Tiket / Struk Transaksi',
+        sub: 'Cekat AI Enterprise',
         items: [],
-        status: 'SIMRS LOCKED'
+        status: 'SYSTEM LOCKED'
       };
     }
     newSteps[stepIdx].card = { ...newSteps[stepIdx].card!, [field]: val };
@@ -154,6 +163,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
 
     const newScenario: Scenario = {
       id: `custom_${Date.now()}`,
+      categoryId: targetCategoryId,
       name,
       title,
       tag,
@@ -233,7 +243,20 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                 <Layers size={16} /> 1. Metadata Skenario & Trigger
               </h4>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Target Kategori Industri</label>
+                  <select
+                    value={targetCategoryId}
+                    onChange={(e) => setTargetCategoryId(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white font-bold text-blue-700 focus:outline-none"
+                  >
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1">Nama Tab Carousel</label>
                   <input
@@ -244,6 +267,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
                   />
                 </div>
+
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1">Judul Skenario Lengkap</label>
                   <input
@@ -286,7 +310,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                   <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tag / Kategori</label>
                   <input
                     type="text"
-                    placeholder="e.g. Core HIS / Broadcast / Routing"
+                    placeholder="e.g. Core Feature / Broadcast / Routing"
                     value={tag}
                     onChange={(e) => setTag(e.target.value)}
                     className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:border-blue-600"
@@ -347,7 +371,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] font-semibold text-slate-600 mb-1">Balasan Pasien (Pesan Kanan)</label>
+                      <label className="block text-[10px] font-semibold text-slate-600 mb-1">Balasan User (Pesan Kanan)</label>
                       <input
                         type="text"
                         value={step.userReply}
@@ -376,7 +400,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                           onChange={(e) => toggleCardForStep(idx, e.target.checked)}
                           className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300"
                         />
-                        <CreditCard size={15} /> Lampirkan Kartu E-Tiket / Payload SIMRS pada Step ini
+                        <CreditCard size={15} /> Lampirkan Kartu E-Tiket / Struk Transaksi pada Step ini
                       </label>
                       {step.enableCard && (
                         <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
@@ -402,7 +426,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                             <label className="block text-[9.5px] font-semibold text-slate-600 mb-0.5">Sub-Judul / Keterangan</label>
                             <input
                               type="text"
-                              placeholder="e.g. RS Sehat Utama"
+                              placeholder="e.g. Cekat AI Enterprise"
                               value={step.card.sub}
                               onChange={(e) => updateCardField(idx, 'sub', e.target.value)}
                               className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white"
@@ -412,7 +436,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                             <label className="block text-[9.5px] font-semibold text-slate-600 mb-0.5">Footer Status Banner</label>
                             <input
                               type="text"
-                              placeholder="e.g. SIMRS LOCKED"
+                              placeholder="e.g. SYSTEM LOCKED"
                               value={step.card.status}
                               onChange={(e) => updateCardField(idx, 'status', e.target.value)}
                               className="w-full px-2 py-1 rounded border border-slate-300 text-xs bg-white font-mono uppercase"
@@ -469,7 +493,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
             {/* Technical Architecture Specs */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
               <h4 className="font-bold text-blue-700 flex items-center gap-2 text-xs">
-                <Database size={16} /> 3. Komponen Cekat & API Scope SIMRS
+                <Database size={16} /> 3. Komponen Cekat & Scope API
               </h4>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -483,7 +507,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Scope API SIMRS (Pisahkan koma)</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">Scope API Systems (Pisahkan koma)</label>
                   <input
                     type="text"
                     value={apiScopesStr}
