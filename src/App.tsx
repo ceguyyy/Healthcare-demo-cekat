@@ -246,6 +246,50 @@ export function App() {
     }, 2000 / playbackSpeed);
   };
 
+  // Record Frames Step-by-Step for GIF Exporter
+  const handleRecordFrames = async (captureFrame: (stepLabel: string) => Promise<string>): Promise<string[]> => {
+    setIsPlaying(false);
+    clearTimeout(timerRef.current);
+
+    const frames: string[] = [];
+    const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+    // Step 0: Initial message
+    if (currentScenario.triggerType === 'OUTBOUND_SYSTEM') {
+      setChatHistory([{ id: 'init', role: 'rs-bot', text: currentScenario.initialText, time: nowStr }]);
+    } else {
+      setChatHistory([{ id: 'init', role: 'patient', text: currentScenario.initialText, time: nowStr }]);
+    }
+
+    await new Promise(r => setTimeout(r, 600));
+    frames.push(await captureFrame('Awal Percakapan'));
+
+    // Step 1..N: Step by Step
+    if (currentScenario.steps && currentScenario.steps.length > 0) {
+      for (let i = 0; i < currentScenario.steps.length; i++) {
+        const step = currentScenario.steps[i];
+
+        // 1. User Reply Frame
+        setChatHistory(prev => [
+          ...prev,
+          { id: `rec_user_${i}`, role: 'patient', text: step.userReply, time: nowStr }
+        ]);
+        await new Promise(r => setTimeout(r, 600));
+        frames.push(await captureFrame(`User Step ${i + 1}`));
+
+        // 2. AI Bot Response + Card Frame
+        setChatHistory(prev => [
+          ...prev,
+          { id: `rec_bot_${i}`, role: 'rs-bot', text: step.aiResponse, time: nowStr, card: step.card }
+        ]);
+        await new Promise(r => setTimeout(r, 700));
+        frames.push(await captureFrame(`Bot Step ${i + 1}`));
+      }
+    }
+
+    return frames;
+  };
+
   const handleChipClick = (txt: string) => {
     clearTimeout(timerRef.current);
     if (txt.includes('Telepon') || txt.includes('Panggilan')) {
@@ -781,6 +825,7 @@ export function App() {
         onClose={() => setIsGifExporterOpen(false)}
         iphoneElement={iphoneRef.current}
         scenario={currentScenario}
+        onRecordFrames={handleRecordFrames}
       />
 
       <CategoryModal
