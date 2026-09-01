@@ -193,10 +193,12 @@ export function App() {
   };
 
   // Update URL Hash when selecting Scenario
-  const handleSelectScenario = (sc: Scenario) => {
+  const handleSelectScenario = (sc: Scenario, overrideCategory?: Category | null) => {
     setCurrentScenario(sc);
-    if (selectedCategory) {
-      window.location.hash = `#/category/${selectedCategory.id}/scenario/${sc.id}`;
+    const cat = overrideCategory || selectedCategory || categories.find(c => c.id === sc.categoryId) || defaultCategories[0];
+    if (cat) {
+      setSelectedCategory(cat);
+      window.location.hash = `#/category/${cat.id}/scenario/${sc.id}`;
     }
   };
 
@@ -1193,11 +1195,8 @@ export function App() {
         scenarioToEdit={scenarioToEdit}
         onScenarioCreated={(newSc) => {
           setAllScenarios(prev => [...prev, newSc]);
-          const targetCat = categories.find(c => c.id === newSc.categoryId) || selectedCategory;
-          if (targetCat) {
-            setSelectedCategory(targetCat);
-          }
-          handleSelectScenario(newSc);
+          const targetCat = categories.find(c => c.id === newSc.categoryId) || selectedCategory || categories[0];
+          handleSelectScenario(newSc, targetCat);
         }}
         onScenarioUpdated={(updatedSc) => {
           setAllScenarios(prev => {
@@ -1209,11 +1208,8 @@ export function App() {
             }
             return prev;
           });
-          const targetCat = categories.find(c => c.id === updatedSc.categoryId) || selectedCategory;
-          if (targetCat) {
-            setSelectedCategory(targetCat);
-          }
-          setCurrentScenario(updatedSc);
+          const targetCat = categories.find(c => c.id === updatedSc.categoryId) || selectedCategory || categories[0];
+          handleSelectScenario(updatedSc, targetCat);
         }}
       />
 
@@ -1239,10 +1235,7 @@ export function App() {
           if (scList.length > 0) {
             const firstSc = scList[0];
             const targetCat = categories.find(c => c.id === firstSc.categoryId) || selectedCategory || categories[0];
-            if (targetCat) {
-              setSelectedCategory(targetCat);
-            }
-            handleSelectScenario(firstSc);
+            handleSelectScenario(firstSc, targetCat);
           }
         }}
       />
