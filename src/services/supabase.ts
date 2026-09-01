@@ -75,7 +75,7 @@ export class SupabaseService {
   }
 
   static async saveScenario(scenario: Scenario): Promise<boolean> {
-    // 1. Immediately save to localStorage guaranteed
+    // 1. Immediately save full scenario object to localStorage
     const localData = localStorage.getItem(this.SCENARIOS_KEY);
     const existing: Scenario[] = localData ? JSON.parse(localData) : [];
     const idx = existing.findIndex(s => s.id === scenario.id);
@@ -86,9 +86,30 @@ export class SupabaseService {
     }
     localStorage.setItem(this.SCENARIOS_KEY, JSON.stringify(existing));
 
-    // 2. Sync to Supabase REST API
+    // 2. Sync to Supabase REST API using cleansed payload (only existing Postgres columns)
     const key = this.getApiKey();
     if (!key) return true;
+
+    const supabasePayload: Record<string, any> = {
+      id: scenario.id,
+      categoryId: scenario.categoryId || 'healthcare',
+      name: scenario.name,
+      title: scenario.title,
+      tag: scenario.tag || 'Core Feature',
+      triggerType: scenario.triggerType || 'INBOUND_USER',
+      outboundPill: scenario.outboundPill || null,
+      description: scenario.description || '',
+      initialText: scenario.initialText || '',
+      cekatComponents: scenario.cekatComponents || [],
+      apiScopes: scenario.apiScopes || [],
+      ruleNote: scenario.ruleNote || '',
+      stepsDetail: scenario.stepsDetail || [],
+      steps: scenario.steps || []
+    };
+
+    if (scenario.saAuthor) {
+      supabasePayload.saAuthor = scenario.saAuthor;
+    }
 
     try {
       const response = await fetch(`${SUPABASE_REST_URL}/scenarios`, {
@@ -97,7 +118,7 @@ export class SupabaseService {
           ...this.getHeaders(),
           'Prefer': 'resolution=merge-duplicates'
         },
-        body: JSON.stringify(scenario)
+        body: JSON.stringify(supabasePayload)
       });
       return response.ok;
     } catch (err) {
