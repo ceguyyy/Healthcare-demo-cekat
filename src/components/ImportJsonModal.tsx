@@ -220,9 +220,9 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({
             aiResponse: st.aiResponse || '',
             chips: Array.isArray(st.chips) ? st.chips : [],
             enableCard: st.enableCard !== undefined ? Boolean(st.enableCard) : Boolean(st.card),
-            card: st.card || undefined,
+            card: st.enableCard === false ? undefined : st.card,
             enableFlow: st.enableFlow !== undefined ? Boolean(st.enableFlow) : Boolean(st.flow),
-            flow: st.flow || undefined
+            flow: st.enableFlow === false ? undefined : st.flow
           })) : []
         };
 

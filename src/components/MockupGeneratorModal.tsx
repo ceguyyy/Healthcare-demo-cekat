@@ -152,6 +152,18 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       headerColor: headerColor || '#075E54'
     } : undefined;
 
+    const cleanedSteps = steps.map(st => {
+      const cardEnabled = st.enableCard !== undefined ? Boolean(st.enableCard) : Boolean(st.card);
+      const flowEnabled = st.enableFlow !== undefined ? Boolean(st.enableFlow) : Boolean(st.flow);
+      return {
+        ...st,
+        enableCard: cardEnabled,
+        card: cardEnabled ? st.card : undefined,
+        enableFlow: flowEnabled,
+        flow: flowEnabled ? st.flow : undefined
+      };
+    });
+
     const newScenario: Scenario = {
       id: scenarioToEdit ? scenarioToEdit.id : generateUUID(),
       categoryId: targetCategoryId || 'healthcare',
@@ -170,7 +182,7 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       apiScopes,
       ruleNote,
       stepsDetail,
-      steps
+      steps: cleanedSteps
     };
 
     // Zod Schema Validation

@@ -323,6 +323,20 @@ export function App() {
     }
   }, [chatHistory, isTyping]);
 
+  const isStepCardEnabled = (st?: any) => {
+    if (!st) return false;
+    if (st.enableCard === false) return false;
+    if (st.enableCard === true) return Boolean(st.card);
+    return Boolean(st.card);
+  };
+
+  const isStepFlowEnabled = (st?: any) => {
+    if (!st) return false;
+    if (st.enableFlow === false) return false;
+    if (st.enableFlow === true) return Boolean(st.flow);
+    return Boolean(st.flow);
+  };
+
   // Jump to specific step or restart scenario
   const handleJumpToStep = (jumpStepIdx: number, hideInitial = hideInitialMsgState, scenario = currentScenario) => {
     clearTimeout(timerRef.current);
@@ -352,8 +366,8 @@ export function App() {
         role: 'rs-bot',
         text: targetStep.aiResponse,
         time: nowStr,
-        card: targetStep.card,
-        flow: targetStep.enableFlow ? targetStep.flow : undefined,
+        card: isStepCardEnabled(targetStep) ? targetStep.card : undefined,
+        flow: isStepFlowEnabled(targetStep) ? targetStep.flow : undefined,
         stepIdx: targetIdx
       });
     }
@@ -438,8 +452,8 @@ export function App() {
           role: 'rs-bot', 
           text: botResponse, 
           time: nowStr, 
-          card: step?.card,
-          flow: step?.enableFlow ? step?.flow : undefined,
+          card: isStepCardEnabled(step) ? step?.card : undefined,
+          flow: isStepFlowEnabled(step) ? step?.flow : undefined,
           stepIdx
         }
       ]);
