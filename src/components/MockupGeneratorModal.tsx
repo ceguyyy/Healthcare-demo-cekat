@@ -88,9 +88,22 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
       setApiScopesStr(scenarioToEdit.apiScopes ? scenarioToEdit.apiScopes.join(', ') : '');
       setRuleNote(scenarioToEdit.ruleNote || '');
       setStepsDetailStr(scenarioToEdit.stepsDetail ? scenarioToEdit.stepsDetail.join('\n') : '');
-      setSteps(scenarioToEdit.steps && scenarioToEdit.steps.length > 0 ? scenarioToEdit.steps : [
+      
+      const rawSteps = scenarioToEdit.steps && scenarioToEdit.steps.length > 0 ? scenarioToEdit.steps : [
         { userReply: 'Subjek', aiResponse: 'Teks balasan...', chips: [] }
-      ]);
+      ];
+      const initializedSteps = rawSteps.map(s => {
+        const cardEnabled = s.enableCard !== undefined ? Boolean(s.enableCard) : Boolean(s.card);
+        const flowEnabled = s.enableFlow !== undefined ? Boolean(s.enableFlow) : Boolean(s.flow);
+        return {
+          ...s,
+          enableCard: cardEnabled,
+          card: cardEnabled ? s.card : undefined,
+          enableFlow: flowEnabled,
+          flow: flowEnabled ? s.flow : undefined
+        };
+      });
+      setSteps(initializedSteps);
     } else {
       setTargetCategoryId(activeCategoryId || 'healthcare');
       setName('');
@@ -232,7 +245,9 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   const toggleStepCard = (idx: number, enable: boolean) => {
     const newSteps = [...steps];
     newSteps[idx].enableCard = enable;
-    if (enable && !newSteps[idx].card) {
+    if (!enable) {
+      delete newSteps[idx].card;
+    } else if (!newSteps[idx].card) {
       newSteps[idx].card = {
         title: '💳 Summary Card Title',
         sub: 'Verified · System Service',
@@ -272,7 +287,9 @@ export const MockupGeneratorModal: React.FC<MockupGeneratorModalProps> = ({
   const toggleStepFlow = (stepIdx: number, enable: boolean) => {
     const newSteps = [...steps];
     newSteps[stepIdx].enableFlow = enable;
-    if (enable && !newSteps[stepIdx].flow) {
+    if (!enable) {
+      delete newSteps[stepIdx].flow;
+    } else if (!newSteps[stepIdx].flow) {
       newSteps[stepIdx].flow = {
         title: '📋 Interactive WA Flow Form',
         description: 'Please complete the registration form below.',
